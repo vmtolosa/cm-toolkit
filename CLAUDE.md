@@ -17,9 +17,25 @@ Los usuarios son estudiantes que recién aprenden Mathematica.
 - Correr todos los tests: wolframscript -file Tests/RunTests.wls
 - Para revisar un gráfico: exportarlo a PNG en /tmp con wolframscript y abrir la imagen.
 
+## Versión de Mathematica
+- Mínima: 15.0 (los alumnos usan 15.0.1). Se puede usar todo lo disponible en 15.0.
+
+## Esquema bilingüe (inglés y español)
+- Nombre canónico de cada función pública en inglés y CamelCase (HarmonicExpansion, NormalModes).
+- Cada función pública tiene un alias en español creado con defineAlias[alias, canonical]
+  al final del archivo (ExpansionArmonica, ModosNormales). El alias hereda atributos y opciones.
+  Ambos nombres se declaran con ::usage en la sección pública.
+- ::usage de ambos nombres: un solo texto, primero en español y luego en inglés, separados por \n.
+  El del nombre canónico menciona el alias; el del alias dice de qué función es alias.
+- Mensajes de error, textos de "Steps" y etiquetas de gráficos: en un solo idioma, el de
+  $CMLanguage ("Spanish" por defecto, o "English"). Leerlo siempre con cmLanguage[], nunca directo.
+  Los textos traducibles van en una tabla privada con las dos versiones, no repartidos por el código.
+- Claves de las Association: solo en inglés ("Omega2", "EffectiveMass"). ShowSteps muestra su
+  significado en el idioma de $CMLanguage.
+- Cada alias tiene un test que comprueba que da el mismo resultado que la función canónica.
+- Notebooks del curso (Examples/) usan los nombres en español; el README usa los nombres en inglés.
+
 ## Convenciones de código
-- Nombres públicos en inglés y CamelCase (NormalModes, ResonanceCurve).
-- Mensajes ::usage y de error en español.
 - Nada en el contexto Global`. Variables locales con Module, With o Block.
 - No usar como variables las letras reservadas de Mathematica (C, D, E, I, K, N, O).
 - Las funciones de análisis devuelven una Association con los resultados y una clave
