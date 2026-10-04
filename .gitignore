@@ -1,0 +1,16 @@
+# Paclets construidos
+build/
+*.paclet
+
+# Respaldos y temporales de editores
+*~
+.~*
+*.swp
+.directory
+
+# Configuración personal de Claude Code (la compartida sí se sube)
+.claude/settings.local.json
+
+# Material de referencia del curso (la ayudantía): queda en tu PC, no se publica.
+# Borra esta línea si el profesor autoriza publicarlo.
+reference/
