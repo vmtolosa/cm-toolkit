@@ -252,14 +252,18 @@ HarmonicExpansion[___] := (cmMessage[HarmonicExpansion, "args"]; $Failed);
 ShowSteps[$Failed] := $Failed;
 
 ShowSteps[res_Association /; KeyExistsQ[res, "Steps"]] :=
-  Module[{style = Lookup[$CMPlotStyle, LabelStyle, {}]},
+  Module[{style = Lookup[$CMPlotStyle, LabelStyle, {}], margins},
+    (* Grid no dibuja el espaciado exterior; los Spacer dejan margen en los bordes
+       para que la expresión más larga no quede pegada al borde *)
+    margins = {Row[{Spacer[8], #1}], #2, Row[{#3, Spacer[16]}]} &;
     Grid[
       Prepend[
-        MapIndexed[{First[#2], #1["Description"], TraditionalForm[#1["Expression"]]} &,
+        MapIndexed[margins[First[#2], #1["Description"], TraditionalForm[#1["Expression"]]] &,
           res["Steps"]],
-        Style[tr[#], Bold] & /@ {"ShowSteps:step", "ShowSteps:description", "ShowSteps:expression"}],
+        margins @@ (Style[tr[#], Bold] & /@
+          {"ShowSteps:step", "ShowSteps:description", "ShowSteps:expression"})],
       Alignment -> {{Right, Left, Left}, Center},
-      ItemSize -> {{Automatic, 24, Automatic}},
+      ItemSize -> {{Automatic, 32, Automatic}},
       Spacings -> {1.5, 0.8},
       Dividers -> {None, {{Directive[GrayLevel[0.8], AbsoluteThickness[0.5]]}}},
       BaseStyle -> If[Head[style] === Directive, List @@ style, style]]
