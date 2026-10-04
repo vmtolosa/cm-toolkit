@@ -6,6 +6,7 @@ Estado: aprobada para implementar. Versión 3 (4 de octubre de 2026).
   que acepta números inexactos.
 - v3.1: zeroQ también se usa en la detección del término lineal en q̇ y en ExactlyQuadratic,
   y los coeficientes nulos de "PotentialSeries" se escriben como 0 exacto.
+- v3.2: las expresiones de "Steps" se muestran en el orden en que se escriben a mano.
 Referencia: Ayudantía 6, Problema 1, incisos (b) y (c) y sección «¿y si ω > ωc?».
 
 ## Llamada
@@ -105,6 +106,18 @@ Cada coeficiente cn que zeroQ declara cero se escribe como 0 exacto en "Potentia
 | "EquationOfMotion" | x''[t] + Ω² x[t] == 0 |
 | "AmplitudeBound" | según la tabla anterior |
 | "Steps" | lista de <\|"Description" -> texto, "Expression" -> expresión\|> |
+
+### Orden de presentación en "Steps" (v3.2)
+
+Mathematica reordena las sumas al mostrarlas. Para que "Steps" se lea como en la ayudantía,
+"Expression" puede guardar una forma retenida (HoldForm u otra que funcione en TraditionalForm):
+- la serie de U(q0 + x) en orden creciente de grado: c0 + c1 x + c2 x² + …;
+- la ecuación de movimiento como x''(t) + Ω² x(t) = 0, con Ω² ya simplificado en su lugar;
+- U(q0 + x) escrito con q0 primero.
+Las claves principales ("PotentialSeries", "EquationOfMotion", etc.) siguen guardando las
+expresiones normales, sin retener, para que el alumno pueda calcular con ellas.
+Se verifica visualmente (PNG) y con un test que compruebe que "Steps" sigue teniendo 10 entradas
+y que ShowSteps devuelve un Grid.
 
 Caso crítico (k_ef = 0): se emite `HarmonicExpansion::critical`, que sugiere ClassifyEquilibrium,
 y se devuelve igual la Association completa, para que se vea la serie con el término x⁴.
