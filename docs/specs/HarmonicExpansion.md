@@ -1,7 +1,9 @@
 # Especificación: HarmonicExpansion / ExpansionArmonica
 
-Estado: aprobada para implementar. Versión 2 (4 de octubre de 2026): resuelve las 12 dudas
-de la revisión de Claude Code.
+Estado: aprobada para implementar. Versión 3 (4 de octubre de 2026).
+- v2: resuelve las 12 dudas de la revisión de Claude Code.
+- v3: LessLess en vez de MuchLess (que no existe en Mathematica) y criterio de cero único
+  que acepta números inexactos.
 Referencia: Ayudantía 6, Problema 1, incisos (b) y (c) y sección «¿y si ω > ωc?».
 
 ## Llamada
@@ -30,12 +32,26 @@ Referencia: Ayudantía 6, Problema 1, incisos (b) y (c) y sección «¿y si ω >
 | Número de argumentos distinto de 4, o el 4.º argumento es una opción (falta `x`) | `HarmonicExpansion::args`: explica la forma de la llamada con un ejemplo |
 | `x` no es un símbolo sin valor, coincide con `q` o `t`, o aparece en `L` o en `q0` | `HarmonicExpansion::dev` |
 | `L` contiene `q''[t]` o depende explícitamente de `t` (después de reemplazar q[t] y q'[t]) | `HarmonicExpansion::time`: la función requiere un lagrangiano autónomo |
-| m_ef se simplifica a 0 | `HarmonicExpansion::mass` |
+| zeroQ[m_ef] | `HarmonicExpansion::mass` |
 | U'(q0) no se puede demostrar igual a 0 (ver abajo) | `HarmonicExpansion::noteq` con el valor simplificado de U'(q0) y la sugerencia de revisar q0 o las suposiciones |
 
-Criterio de equilibrio: `Simplify[U'(q0), supuestos]`; si no da 0, `FullSimplify`; si tampoco da 0,
-es `noteq`, aunque no se haya demostrado que sea distinto de cero. Es estricto a propósito: el
-alumno debe dar un equilibrio verificable o las suposiciones que lo hacen verificable.
+## Criterio de cero (único para toda la función)
+
+Una función privada `zeroQ[e, supuestos]` decide si algo es cero, y se usa en todos los lugares
+donde la especificación pregunta por un cero: U'(q0), m_ef, c2 (caso crítico) y cada cn.
+
+    zeroQ[e, supuestos]: sea s = Simplify[e, supuestos]
+      - si TrueQ[s == 0], es cero;
+      - si s es un número inexacto (InexactNumberQ) y Chop[s] == 0, es cero;
+      - en cualquier otro caso, no es cero.
+
+Para expresiones simbólicas equivale a `=== 0`, porque `expr == 0` queda sin evaluar y TrueQ da
+False. Para números acepta `0.` y ruido de máquina (por ejemplo, un q0 dado como N[Pi]; en cambio 3.14159 está a 2.7·10⁻⁶ rad de π y correctamente no es equilibrio).
+
+Criterio de equilibrio: zeroQ de U'(q0); si da False, se intenta con `FullSimplify` en vez de
+`Simplify`; si tampoco, es `noteq`, aunque no se haya demostrado que sea distinto de cero. Es
+estricto a propósito: el alumno debe dar un equilibrio verificable o las suposiciones que lo
+hacen verificable.
 
 ## Qué calcula, en orden (cada paso es una entrada de "Steps"; el orden sigue a la ayudantía)
 
@@ -53,7 +69,7 @@ alumno debe dar un equilibrio verificable o las suposiciones que lo hacen verifi
 
 ### Coeficientes «no nulos»
 
-Un coeficiente cn es nulo si `Simplify[cn, supuestos] === 0`. Un coeficiente que se anula solo
+Un coeficiente cn es nulo si `zeroQ[cn, supuestos]`. Un coeficiente que se anula solo
 para valores particulares de los parámetros (como c4 en ω = ωc/2 con ω simbólico) cuenta como
 no nulo: el resultado es el genérico.
 
@@ -64,7 +80,7 @@ Sea n el primer orden entre 3 y 8 con cn no nulo.
 | Caso | "AmplitudeBound" |
 | --- | --- |
 | c2 = 0 (punto crítico) | `Missing["CriticalPoint"]` (y se emite `HarmonicExpansion::critical`) |
-| existe n | `<\|"Order" -> n, "Bound" -> Abs[c2/cn], "Condition" -> MuchLess[Abs[x]^(n-2), Abs[c2/cn]]\|>` |
+| existe n | `<\|"Order" -> n, "Bound" -> Abs[c2/cn], "Condition" -> LessLess[Abs[x]^(n-2), Abs[c2/cn]]\|>` |
 | no existe n y U(q0 + x) es exactamente c0 + c1 x + c2 x² | `Missing["ExactlyQuadratic"]` |
 | no existe n y U no es exactamente cuadrático | `Missing["BeyondOrder8"]` |
 
@@ -121,7 +137,7 @@ con `Assumptions -> Automatic` salvo que se indique:
 | q0 = Pi: "EffectiveMass" | m b^2 | ec. (19) |
 | q0 = Pi: "EffectiveStiffness" | b m (g − b w^2) | ec. (19) |
 | q0 = Pi: "Omega2" | g/b − w^2 | ec. (23) |
-| q0 = Pi: "AmplitudeBound" | Order 4; Bound equivalente a Abs[12 (g/b − w^2)/(4 w^2 − g/b)] | ecs. (20)–(21) |
+| q0 = Pi: "AmplitudeBound" | Order 4; Bound equivalente a Abs[12 (g/b − w^2)/(4 w^2 − g/b)]; "Condition" con Head LessLess | ecs. (20)–(21) |
 | q0 = Pi, numérico (g = b = m = 1) con w = 0; 0.6; 0.9; 0.95; 0.99 | Bound = 12; 17.4545; 1.0179; 0.4483; 0.0818 (tolerancia 10⁻³) | texto tras ec. (21) |
 | q0 = Pi con w → Sqrt[g/b]/2 | Order 6, Bound 90 | «el coeficiente cuártico se anula» (p. 6) |
 | q0 = Pi con w → Sqrt[g/b] | mensaje critical; "Omega2" 0; AmplitudeBound Missing["CriticalPoint"] | ec. (13) |
@@ -131,6 +147,9 @@ con `Assumptions -> Automatic` salvo que se indique:
 | Llamada con 3 argumentos | $Failed con mensaje args | |
 | 4.º argumento `Assumptions -> {}` | $Failed con mensaje args | |
 | x = t; x que aparece en L | $Failed con mensaje dev | |
+| L = −k/2 th[t]^2 (sin término cinético), q0 = 0 | $Failed con mensaje mass | |
+| q0 = N[Pi], con g = b = m = 1, w = 0.6 | no da noteq; Order 4 | criterio de cero |
+| q0 = 3.14159, con g = b = m = 1, w = 0.6 | $Failed con mensaje noteq (no es equilibrio) | criterio de cero |
 | L con un término `t q[t]` | $Failed con mensaje time | |
 | Steps | 10 entradas, cada una con "Description" (String) y "Expression" | |
 | ExpansionArmonica[...] | igual a HarmonicExpansion[...] | |

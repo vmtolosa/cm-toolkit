@@ -52,17 +52,26 @@ Los usuarios son estudiantes que recién aprenden Mathematica.
   Si la especificación no los fija, proponerlos y esperar confirmación antes de implementar.
 - Primero el test, luego la implementación, luego correr RunTests.wls.
 - No cambiar la firma de una función pública existente sin preguntar.
-- Commits pequeños, un tema por commit, mensajes en español. Push solo con el visto bueno
-  del usuario y nunca a main (ver "Flujo de trabajo con ramas y revisión").
+- Commits pequeños, un tema por commit, mensajes en español. Los commits, el push y el PR
+  los hace el usuario, no Claude Code (ver "Flujo de trabajo con ramas y revisión").
 - Si un Simplify tarda más de unos 10 s, avisar en vez de insistir.
 
 ## Flujo de trabajo con ramas y revisión
 - Cada función o cambio de diseño parte de una especificación en docs/specs/, escrita y aprobada en el chat de claude.ai. Las especificaciones no se editan desde Claude Code; si una está mal o es ambigua, detenerse y explicar el problema.
 - Antes de empezar una tarea: git switch main && git pull. Luego crear una rama: git switch -c feat/<nombre-corto> (o test/, fix/, docs/ según corresponda).
 - En la rama: tests primero, luego implementación, hasta que RunTests.wls pase completo.
-- Al terminar: resumir lo hecho y preguntar antes de hacer push. Con el visto bueno: git push -u origin <rama> y abrir un PR con gh pr create, en español, que incluya: qué implementa (con la ruta de la especificación), resultado de RunTests.wls, cómo probarlo en un notebook y cualquier desvío o duda respecto a la especificación.
-- Nunca hacer merge ni push directo a main: el merge lo hace el usuario después de la revisión.
-- Los cambios pedidos en la revisión se hacen en la misma rama y se suben con push; el PR se actualiza solo.
+- Claude Code no ejecuta git commit, git push ni gh pr create. Al cerrar cada punto del plan:
+  corre RunTests.wls, muestra git status y git diff --stat, y propone el comando de commit
+  listo para copiar: los archivos para git add y el mensaje en español, terminado en una línea
+  en blanco y "Co-Authored-By: Claude <noreply@anthropic.com>". Luego espera a que el usuario
+  confirme que hizo el commit antes de seguir con el punto siguiente.
+- Al terminar la tarea: escribir la descripción del PR en /tmp/pr-<rama>.md, en español, con:
+  qué implementa (con la ruta de la especificación), resultado de RunTests.wls, cómo probarlo
+  en un notebook y cualquier desvío o duda respecto a la especificación. Indicar al usuario los
+  comandos: git push -u origin <rama> y gh pr create --base main --title "..." --body-file /tmp/pr-<rama>.md
+- Nunca hacer merge ni push a main: el merge lo hace el usuario después de la revisión.
+- Los cambios pedidos en la revisión se hacen en la misma rama, con el mismo procedimiento de
+  commit; al hacer push, el PR se actualiza solo.
 
 ## Notación física
 - Matrices de masas y constantes elásticas: Mmat y Kmat en el código (m_μν y k_μν en el curso).
