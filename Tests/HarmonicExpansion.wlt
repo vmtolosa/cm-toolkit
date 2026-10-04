@@ -148,6 +148,15 @@ VerificationTest[
 ]
 
 VerificationTest[
+  With[{ser = HarmonicExpansion[ringL /. {g -> 1, b -> 1, m -> 1, w -> 0.6}, {th, t}, N[Pi], x][
+      "PotentialSeries"]},
+    {Coefficient[ser, x, 1], Coefficient[ser, x, 3]}],
+  {0, 0},
+  {},
+  TestID -> "q0-N-Pi-serie-sin-ruido"
+]
+
+VerificationTest[
   HarmonicExpansion[ringL /. {g -> 1, b -> 1, m -> 1, w -> 0.6}, {th, t}, 3.14159, x],
   $Failed,
   {HarmonicExpansion::noteq},

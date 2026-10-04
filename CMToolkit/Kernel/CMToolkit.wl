@@ -203,6 +203,8 @@ HarmonicExpansion[L_, {q_Symbol, t_Symbol}, q0_, x_ /; !OptionQ[x], opts : Optio
     n = SelectFirst[Range[3, 8], (AppendTo[c, coef[#]]; !zeroQ[Last[c], asm]) &, None];
     nmax = If[n === None, 4, Max[4, n]];
     c = Join[Take[c, UpTo[nmax + 1]], Table[coef[k], {k, Length[c], nmax}]];
+    (* Lo que zeroQ declara cero se escribe como 0 exacto: sin ruido de máquina en la serie *)
+    c = If[zeroQ[#, asm], 0, #] & /@ c;
     series = c . x^Range[0, nmax];
 
     kef = Simplify[2 c[[3]], asm];
