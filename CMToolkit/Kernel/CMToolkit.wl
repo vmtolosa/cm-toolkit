@@ -38,6 +38,23 @@ $CMLanguage = "Spanish";
 (* Idioma vigente; cualquier valor no reconocido vuelve al español *)
 cmLanguage[] := If[MemberQ[{"Spanish", "English"}, $CMLanguage], $CMLanguage, "Spanish"];
 
+(* Textos traducibles: clave -> <|"Spanish" -> ..., "English" -> ...|>.
+   Los mensajes usan la clave "Símbolo::etiqueta" *)
+$texts = <|
+  "ShowSteps:step" -> <|"Spanish" -> "Paso", "English" -> "Step"|>,
+  "ShowSteps:description" -> <|"Spanish" -> "Descripción", "English" -> "Description"|>,
+  "ShowSteps:expression" -> <|"Spanish" -> "Expresión", "English" -> "Expression"|>
+|>;
+
+(* Texto en el idioma vigente; una clave inexistente se devuelve tal cual *)
+tr[key_String] := Lookup[Lookup[$texts, key, <||>], cmLanguage[], key];
+
+(* Asigna el texto traducido al mensaje justo antes de emitirlo *)
+cmMessage[sym_Symbol, tag_String, args___] := (
+  MessageName[sym, tag] = tr[SymbolName[sym] <> "::" <> tag];
+  Message[MessageName[sym, tag], args]
+);
+
 (* Alias en español: misma definición, atributos y opciones que la función en inglés *)
 defineAlias[alias_Symbol, canonical_Symbol] := (
   SetAttributes[alias, Attributes[canonical]];
