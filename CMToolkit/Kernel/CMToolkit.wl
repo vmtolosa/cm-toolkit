@@ -226,11 +226,15 @@ HarmonicExpansion[L_, {q_Symbol, t_Symbol}, q0_, x_ /; !OptionQ[x], opts : Optio
       {"potential", "U"[q] == (U /. qs -> q)},
       {"mass", Subscript["m", "ef"] == mef},
       {"equilibrium", Derivative[1]["U"][q0] == 0},
-      {"series", "U"[q0 + x] == series},
+      (* Formas retenidas para mostrar en el orden de la ayudantía: q0 + x, grados crecientes
+         y x'' + Ω² x = 0 (TraditionalForm respeta HoldForm, verificado en el PNG) *)
+      {"series", With[{q0h = q0, terms = DeleteCases[c x^Range[0, nmax], 0]},
+        HoldForm["U"[q0h + x]] ==
+          If[terms === {}, 0, HoldForm[Plus[##]] & @@ terms]]},
       {"stiffness", Subscript["k", "ef"] == kef},
       {"lagrangian", "L" == lagH},
       {"bound", If[AssociationQ[bound], bound["Condition"], bound]},
-      {"eom", eom},
+      {"eom", With[{o = omega2}, HoldForm[x''[t] + o x[t] == 0]]},
       {"omega2", "\[CapitalOmega]"^2 == omega2}};
     steps = <|"Description" -> tr["HarmonicExpansion:" <> #[[1]]] <>
           If[#[[1]] === "mass" && !zeroQ[lin, asm], tr["HarmonicExpansion:linear"], ""],

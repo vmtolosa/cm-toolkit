@@ -131,6 +131,19 @@ VerificationTest[
   TestID -> "anillo-pi-steps"
 ]
 
+(* v3.2: la serie y la ecuación de movimiento se guardan retenidas en "Steps", en el orden
+   en que se escriben a mano; las claves principales siguen sin retener *)
+VerificationTest[
+  With[{steps = ringPi["Steps"]},
+    {!FreeQ[steps[[5]]["Expression"], HoldForm],
+     !FreeQ[steps[[9]]["Expression"], HoldForm],
+     FreeQ[{ringPi["PotentialSeries"], ringPi["EquationOfMotion"]}, HoldForm],
+     ReleaseHold[steps[[5]]["Expression"]] === ("U"[Pi + x] == ringPi["PotentialSeries"]),
+     ReleaseHold[steps[[9]]["Expression"]] === ringPi["EquationOfMotion"]}],
+  {True, True, True, True, True},
+  TestID -> "steps-orden-de-presentacion"
+]
+
 VerificationTest[
   ExpansionArmonica[ringL, {th, t}, Pi, x] === ringPi,
   True,
