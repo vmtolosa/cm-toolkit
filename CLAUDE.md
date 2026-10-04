@@ -44,7 +44,8 @@ Los usuarios son estudiantes que recién aprenden Mathematica.
   "Steps" con los pasos intermedios, en el orden en que se harían a mano.
 - Las funciones gráficas usan $CMPlotStyle; las opciones del usuario tienen prioridad.
 - Argumentos inválidos: emitir un mensaje (f::arg) y devolver $Failed.
-- Toda función pública tiene tests. Los valores de referencia salen de reference/ayudantia6.
+- Toda función pública tiene tests. Los valores de referencia salen del material del curso en
+  reference/ o de casos con solución conocida que la especificación documente explícitamente.
 
 ## Forma de trabajar
 - La firma y el valor de retorno de algo nuevo salen de su especificación en docs/specs/.
