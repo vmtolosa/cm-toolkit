@@ -11,6 +11,8 @@ Los usuarios son estudiantes que recién aprenden Mathematica.
 - CMToolkit/Kernel/CMToolkit.wl: el código. Símbolos públicos con ::usage antes de Begin["`Private`"].
 - Tests/*.wlt: tests con VerificationTest. Tests/RunTests.wls los corre todos.
 - Examples/: notebooks de ejemplo, guardados sin salidas.
+- docs/specs/: especificaciones aprobadas de cada función. Implementar exactamente lo que dicen;
+  si algo no cuadra o falta, preguntar antes de decidir.
 - reference/ayudantia6/: material de referencia del curso (está en .gitignore, solo existe localmente). No modificar.
 
 ## Comandos
