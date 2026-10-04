@@ -4,6 +4,8 @@ Estado: aprobada para implementar. Versión 3 (4 de octubre de 2026).
 - v2: resuelve las 12 dudas de la revisión de Claude Code.
 - v3: LessLess en vez de MuchLess (que no existe en Mathematica) y criterio de cero único
   que acepta números inexactos.
+- v3.1: zeroQ también se usa en la detección del término lineal en q̇ y en ExactlyQuadratic,
+  y los coeficientes nulos de "PotentialSeries" se escriben como 0 exacto.
 Referencia: Ayudantía 6, Problema 1, incisos (b) y (c) y sección «¿y si ω > ωc?».
 
 ## Llamada
@@ -85,6 +87,8 @@ Sea n el primer orden entre 3 y 8 con cn no nulo.
 | no existe n y U no es exactamente cuadrático | `Missing["BeyondOrder8"]` |
 
 "PotentialSeries" llega hasta el orden max(4, n).
+Cada coeficiente cn que zeroQ declara cero se escribe como 0 exacto en "PotentialSeries"
+(así no aparece ruido de máquina como −7.8·10⁻¹⁷ x cuando q0 = N[Pi]).
 
 ## Qué devuelve
 
@@ -148,7 +152,7 @@ con `Assumptions -> Automatic` salvo que se indique:
 | 4.º argumento `Assumptions -> {}` | $Failed con mensaje args | |
 | x = t; x que aparece en L | $Failed con mensaje dev | |
 | L = −k/2 th[t]^2 (sin término cinético), q0 = 0 | $Failed con mensaje mass | |
-| q0 = N[Pi], con g = b = m = 1, w = 0.6 | no da noteq; Order 4 | criterio de cero |
+| q0 = N[Pi], con g = b = m = 1, w = 0.6 | no da noteq; Order 4; "PotentialSeries" sin términos en x ni x³ (coeficientes 0 exactos) | criterio de cero |
 | q0 = 3.14159, con g = b = m = 1, w = 0.6 | $Failed con mensaje noteq (no es equilibrio) | criterio de cero |
 | L con un término `t q[t]` | $Failed con mensaje time | |
 | Steps | 10 entradas, cada una con "Description" (String) y "Expression" | |
