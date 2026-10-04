@@ -58,7 +58,8 @@ VerificationTest[
   With[{ab = ringPi["AmplitudeBound"]},
     ab["Order"] === 4 &&
     Simplify[ab["Bound"] - Abs[12 (g/b - w^2)/(4 w^2 - g/b)], asmRing] === 0 &&
-    ab["Condition"] === MuchLess[Abs[x]^2, ab["Bound"]]],
+    Head[ab["Condition"]] === LessLess &&
+    ab["Condition"] === LessLess[Abs[x]^2, ab["Bound"]]],
   True,
   TestID -> "anillo-pi-cota-orden-4"
 ]
@@ -134,6 +135,23 @@ VerificationTest[
   ExpansionArmonica[ringL, {th, t}, Pi, x] === ringPi,
   True,
   TestID -> "alias-ExpansionArmonica"
+]
+
+(* --- Criterio de cero con números inexactos (g = b = m = 1, w = 0.6) --- *)
+
+VerificationTest[
+  HarmonicExpansion[ringL /. {g -> 1, b -> 1, m -> 1, w -> 0.6}, {th, t}, N[Pi], x][
+    "AmplitudeBound"]["Order"],
+  4,
+  {},
+  TestID -> "q0-N-Pi-es-equilibrio"
+]
+
+VerificationTest[
+  HarmonicExpansion[ringL /. {g -> 1, b -> 1, m -> 1, w -> 0.6}, {th, t}, 3.14159, x],
+  $Failed,
+  {HarmonicExpansion::noteq},
+  TestID -> "q0-3.14159-no-es-equilibrio"
 ]
 
 (* --- HarmonicExpansion: errores --- *)
