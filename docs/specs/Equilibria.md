@@ -1,6 +1,8 @@
 # Especificación: EquilibriumPoints y ClassifyEquilibrium
 
-Estado: aprobada para implementar. Versión 1 (4 de octubre de 2026).
+Estado: aprobada para implementar. Versión 1.1 (4 de octubre de 2026).
+- v1.1: resuelve las cinco dudas de la revisión de Claude Code (puntos repetidos, condición de
+  existencia en la clasificación, suposiciones sin q0 ni x, textos por función, factorización).
 Requiere: `docs/specs/Modulos.md` ya mergeado (usa sus funciones privadas compartidas).
 Rama: `feat/equilibria`. Módulo: `Oscillations1D.wl`.
 Referencia: Ayudantía 6, Problema 1, inciso (a), ecs. (7)–(13).
@@ -26,6 +28,21 @@ Encuentra los puntos de equilibrio de un lagrangiano de un grado de libertad.
 3. U'(q) factorizada (`Factor`, simplificada con las suposiciones).
 4. Para cada factor que depende de q: sus soluciones de factor == 0 en el dominio.
 5. Lista final de puntos, cada uno con su condición de existencia.
+
+### Factorización
+
+    dU = D[U, q];  fac = Factor[Simplify[dU, supuestos]]
+
+"Derivative" es `fac`. Los factores son los de `FactorList[fac]` que dependen de q (las constantes
+se descartan). Si `fac` no queda como producto, hay un solo factor: la expresión completa.
+
+### Puntos repetidos
+
+Dos soluciones distintas pueden coincidir para ciertos valores de los parámetros (en el anillo,
+θ0 y 2π − θ0 coinciden con π cuando b w² = g). Regla: se recorren los puntos en orden y, a la
+condición de cada punto, se le quita (con `And`/`Not` y simplificando) la condición en que coincide
+con un punto anterior de la lista. Así cada equilibrio aparece una sola vez para cada valor de los
+parámetros. En el anillo, las condiciones de θ0 y 2π − θ0 quedan estrictas: b w² > g.
 
 ### Dominio
 
@@ -80,15 +97,27 @@ Los valores de "Type" son datos (en inglés). La descripción en "Steps" está e
 «punto de inflexión: inestable», «mínimo no armónico: estable, pero el período depende de la
 amplitud».
 
+### Condición de existencia
+
+Si q0 depende de parámetros, puede no existir para todos sus valores (θ0 = ArcCos[−g/(b w²)] solo
+es real si b w² ≥ g). Se calcula "ExistenceCondition" = condición de que q0 sea real, simplificada con
+las suposiciones (`Simplify` de `Element[q0, Reals]` y, si no se decide, `Reduce`). Si no se puede
+decidir, se toma True y se anota en "Steps".
+
+Cada condición de la clasificación se intersecta con "ExistenceCondition", y se descartan las ramas
+cuya condición queda False. Si queda una sola rama, "Type" es esa rama (no "Conditional").
+
 Caso "Conditional": se agrega la clave "Conditions" ->
 <|"Minimum" -> cond(c2 > 0), "Maximum" -> cond(c2 < 0), "Critical" -> cond(c2 == 0)|>,
-cada condición simplificada con las suposiciones (por ejemplo g > b w^2).
+cada condición simplificada con las suposiciones (por ejemplo g > b w^2), ya intersectada con la
+condición de existencia y sin las ramas que quedan en False.
 
 ### Qué devuelve
 
 | Clave | Contenido |
 | --- | --- |
 | "Equilibrium", "Deviation", "Assumptions" | q0, x, suposiciones usadas |
+| "ExistenceCondition" | condición para que q0 sea real (True si siempre existe) |
 | "SecondDerivative" | U''(q0), simplificada |
 | "LeadingOrder" | 2 si c2 no es nulo; si no, el primer n no nulo (o Missing["Undetermined"]) |
 | "LeadingCoefficient" | c2 o c_n correspondiente |
@@ -102,6 +131,20 @@ El mensaje `HarmonicExpansion::critical` ya sugiere usar `ClassifyEquilibrium`; 
 
 ---
 
+## Infraestructura compartida (cambios en Oscillations1D.wl)
+
+- `assumptions1D` se generaliza a `assumptions1D[opt, exprs_List, exclude_List]`: si opt es
+  Automatic, son positivos todos los símbolos libres de `exprs` salvo los de `exclude`.
+  HarmonicExpansion la llama con `{L, q0}` y `{q, t, x}`; ClassifyEquilibrium igual;
+  EquilibriumPoints con `{L}` y `{q, t}`. Los 48 tests existentes deben seguir pasando sin cambios.
+- Cada función tiene sus propias entradas en `$texts` para todos sus mensajes (`args`, `dev`, `time`,
+  `noteq`, `periodic`, `unsolved`, `none`, según corresponda), con su propio nombre y su propio
+  ejemplo de llamada en `args`. Se permite redactarlas igual que las de HarmonicExpansion.
+  `validateDeviation1D` y `autonomousForm` ya reciben el símbolo de la función, así que emiten el
+  mensaje con el nombre correcto.
+
+---
+
 ## Tests (Tests/Equilibria.wlt)
 
 Anillo que rota, `L = m b^2/2 (th'[t]^2 + w^2 Sin[th[t]]^2) - m g b Cos[th[t]]`:
@@ -109,13 +152,14 @@ Anillo que rota, `L = m b^2/2 (th'[t]^2 + w^2 Sin[th[t]]^2) - m g b Cos[th[t]]`:
 | Caso | Esperado | Fuente |
 | --- | --- | --- |
 | EquilibriumPoints, "Domain" -> {0, 2 Pi}: "Derivative" | equivalente a −b m Sin[th] (g + b w^2 Cos[th]) | ec. (7) |
-| ídem: "Points" | 0 y Pi con condición True; ArcCos[−g/(b w^2)] y 2 Pi − ArcCos[−g/(b w^2)] con condición equivalente a b w^2 ≥ g | ecs. (8)–(10) |
+| ídem: "Points" | 0 y Pi con condición True; ArcCos[−g/(b w^2)] y 2 Pi − ArcCos[−g/(b w^2)] con condición equivalente a b w^2 > g (estricta: en b w^2 = g coinciden con Pi, ya listado) | ecs. (8)–(10) |
 | EquilibriumPoints sin Domain | $Failed con mensaje periodic | |
 | Classify en q0 = 0 | "Maximum", Stable False, U''(0) = −b m (g + b w^2) | ec. (11) |
 | Classify en q0 = Pi | "Conditional"; Minimum si g > b w^2, Maximum si g < b w^2; U''(Pi) = b m (g − b w^2) | ec. (11) |
 | Classify en q0 = Pi, Assumptions con b w^2 < g además de positividad | "Minimum" | ec. (11) |
 | Classify en q0 = Pi con w → Sqrt[g/b] | "Minimum", LeadingOrder 4, LeadingCoefficient b g m/8 | ec. (13) |
-| Classify en q0 = ArcCos[−g/(b w^2)] | "Conditional", Minimum si b w^2 > g; U'' = m (b^2 w^4 − g^2)/w^2 | ec. (12) |
+| Classify en q0 = ArcCos[−g/(b w^2)] | ExistenceCondition equivalente a b w^2 ≥ g; "Conditional" con solo dos ramas: Minimum si b w^2 > g y Critical si b w^2 = g (sin rama Maximum, porque donde sería máximo el punto no existe); U'' = m (b^2 w^4 − g^2)/w^2 | ec. (12) |
+| Classify en q0 = ArcCos[−g/(b w^2)] con Assumptions que incluyen b w^2 > g | "Minimum", Stable True | ec. (12) |
 | Classify en q0 = Pi/2 | $Failed con mensaje noteq | |
 
 Casos con solución conocida (no están en la ayudantía):
