@@ -9,7 +9,15 @@ Mathematica. El paquete es genérico: no menciona ningún curso, institución ni
 
 ## Estructura
 - CMToolkit/PacletInfo.wl: metadatos. La versión se cambia solo aquí.
-- CMToolkit/Kernel/CMToolkit.wl: el código. Símbolos públicos con ::usage antes de Begin["`Private`"].
+- CMToolkit/Kernel/CMToolkit.wl: cargador. BeginPackage, carga los módulos en orden explícito
+  (Core.wl primero) y EndPackage. Sin variables: se crearían como símbolos públicos.
+- CMToolkit/Kernel/Core.wl: idioma, $texts, tr, cmMessage, defineAlias, zeroQ, $CMPlotStyle,
+  CMPlot, ShowSteps y CMToolkitVersion.
+- CMToolkit/Kernel/Oscillations1D.wl: un grado de libertad (HarmonicExpansion) y sus funciones
+  privadas compartidas (validateDeviation1D, autonomousForm, assumptions1D, potentialCoefficients).
+- Cada módulo: símbolos públicos con ::usage antes de Begin["`Private`"]; sus textos se agregan
+  a $texts con AssociateTo; sus defineAlias van al final del módulo. Un módulo nuevo se agrega
+  al cargador.
 - Tests/*.wlt: tests con VerificationTest. Tests/RunTests.wls los corre todos.
 - Examples/: notebooks de ejemplo, guardados sin salidas.
 - docs/specs/: especificaciones aprobadas de cada función. Implementar exactamente lo que dicen;
