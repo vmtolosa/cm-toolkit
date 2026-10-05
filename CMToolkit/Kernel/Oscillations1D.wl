@@ -69,31 +69,60 @@ AssociateTo[$texts, <|
     "English" -> "Frequency of small oscillations: \[CapitalOmega]\.b2 = k_eff/m_eff."|>
 |>];
 
-(* --- HarmonicExpansion: especificación en docs/specs/HarmonicExpansion.md --- *)
+(* --- Funciones privadas compartidas por las funciones de un grado de libertad
+   (especificación en docs/specs/Modulos.md). f es la función que llama: los mensajes
+   salen con su nombre --- *)
 
-Options[HarmonicExpansion] = {Assumptions -> Automatic};
+(* La desviación x debe ser un símbolo sin valor, distinto de q y t, que no aparezca en L ni en q0 *)
+validateDeviation1D[f_Symbol, x_, q_, t_, L_, q0_] :=
+  If[MatchQ[x, _Symbol] && !MemberQ[Attributes[x], Protected] &&
+       x =!= q && x =!= t && FreeQ[{L, q0}, x],
+    True,
+    cmMessage[f, "dev", x, q, t]; False];
+
+(* L con q[t] -> qs y q'[t] -> qd; devuelve {Lr, qs, qd}, o $Failed si queda t
+   (t explícito o derivadas de orden superior) *)
+autonomousForm[f_Symbol, L_, q_, t_] := Module[{qs, qd, Lr},
+  Lr = L /. {Derivative[1][q][t] -> qd, q[t] -> qs};
+  If[FreeQ[Lr, t], {Lr, qs, qd}, cmMessage[f, "time", q, t]; $Failed]];
 
 (* Automatic: todos los símbolos libres de L y q0, salvo q, t y x, son reales positivos *)
-heAssumptions[Automatic, L_, q_, t_, q0_, x_] :=
+assumptions1D[Automatic, L_, q_, t_, q0_, x_] :=
   And @@ Thread[
     DeleteCases[
       Union[Cases[{L, q0}, s_Symbol /; Context[s] =!= "System`", {0, Infinity}, Heads -> False]],
       q | t | x] > 0];
-heAssumptions[asm_, ___] := asm;
+assumptions1D[asm_, ___] := asm;
+
+(* Coeficientes c_k = U^(k)(q0)/k! de la serie de U en torno a q0. Calcula siempre hasta
+   c_nmin y después sigue hasta el primer no nulo de orden >= 3 ("FirstNonzero") o hasta
+   nmax (None). Lo que zeroQ declara cero queda como 0 exacto: sin ruido de máquina *)
+potentialCoefficients[U_, qs_, q0_, asm_, nmax_, nmin_ : 2] :=
+  Module[{dk = U, ck, coeffs = {}, n = None, k = 0},
+    While[k <= nmax && (k <= nmin || n === None),
+      If[k > 0, dk = D[dk, qs]];
+      ck = Simplify[(dk /. qs -> q0)/k!, asm];
+      If[zeroQ[ck, asm], ck = 0];
+      If[k >= 3 && n === None && ck =!= 0, n = k];
+      AppendTo[coeffs, ck];
+      k++];
+    <|"Coefficients" -> coeffs, "FirstNonzero" -> n|>];
+
+(* --- HarmonicExpansion: especificación en docs/specs/HarmonicExpansion.md --- *)
+
+Options[HarmonicExpansion] = {Assumptions -> Automatic};
 
 HarmonicExpansion[L_, {q_Symbol, t_Symbol}, q0_, x_ /; !OptionQ[x], opts : OptionsPattern[]] :=
-  Module[{asm, Lr, qs, qd, U, mef, lin, dU, derivs, coef, c, n, nmax, bound, series,
+  Module[{form, asm, Lr, qs, qd, U, mef, lin, dU, coeffs, c, n, nmax, bound, series,
       kef, omega2, lagH, eom, steps},
 
     (* Validación, en el orden de la especificación *)
-    If[!(MatchQ[x, _Symbol] && !MemberQ[Attributes[x], Protected] &&
-         x =!= q && x =!= t && FreeQ[{L, q0}, x]),
-      cmMessage[HarmonicExpansion, "dev", x, q, t]; Return[$Failed]];
+    If[!validateDeviation1D[HarmonicExpansion, x, q, t, L, q0], Return[$Failed]];
+    form = autonomousForm[HarmonicExpansion, L, q, t];
+    If[form === $Failed, Return[$Failed]];
+    {Lr, qs, qd} = form;
 
-    Lr = L /. {Derivative[1][q][t] -> qd, q[t] -> qs};
-    If[!FreeQ[Lr, t], cmMessage[HarmonicExpansion, "time", q, t]; Return[$Failed]];
-
-    asm = heAssumptions[OptionValue[Assumptions], L, q, t, q0, x];
+    asm = assumptions1D[OptionValue[Assumptions], L, q, t, q0, x];
 
     mef = Simplify[D[Lr, {qd, 2}] /. {qd -> 0, qs -> q0}, asm];
     If[zeroQ[mef, asm], cmMessage[HarmonicExpansion, "mass", q0]; Return[$Failed]];
@@ -104,17 +133,11 @@ HarmonicExpansion[L_, {q_Symbol, t_Symbol}, q0_, x_ /; !OptionQ[x], opts : Optio
     If[!zeroQ[dU, asm] && !zeroQ[FullSimplify[dU, asm], asm],
       cmMessage[HarmonicExpansion, "noteq", q0, Simplify[dU, asm]]; Return[$Failed]];
 
-    (* Coeficientes c_k = U^(k)(q0)/k!; las derivadas se calculan solo hasta donde hacen falta *)
-    derivs = {U};
-    coef[k_] := (
-      While[Length[derivs] <= k, AppendTo[derivs, D[Last[derivs], qs]]];
-      Simplify[(derivs[[k + 1]] /. qs -> q0)/k!, asm]);
-    c = Table[coef[k], {k, 0, 2}];
-    n = SelectFirst[Range[3, 8], (AppendTo[c, coef[#]]; !zeroQ[Last[c], asm]) &, None];
+    (* La serie llega hasta x^4, o hasta el primer no nulo de orden >= 3 si es mayor *)
+    coeffs = potentialCoefficients[U, qs, q0, asm, 8, 4];
+    n = coeffs["FirstNonzero"];
     nmax = If[n === None, 4, Max[4, n]];
-    c = Join[Take[c, UpTo[nmax + 1]], Table[coef[k], {k, Length[c], nmax}]];
-    (* Lo que zeroQ declara cero se escribe como 0 exacto: sin ruido de máquina en la serie *)
-    c = If[zeroQ[#, asm], 0, #] & /@ c;
+    c = Take[coeffs["Coefficients"], nmax + 1];
     series = c . x^Range[0, nmax];
 
     kef = Simplify[2 c[[3]], asm];
