@@ -1,6 +1,7 @@
 # Especificación: reorganización en módulos
 
-Estado: aprobada para implementar. Versión 1 (4 de octubre de 2026).
+Estado: aprobada para implementar. Versión 1.1 (4 de octubre de 2026).
+- v1.1: precisa lo que devuelve autonomousForm y agrega nmin a potentialCoefficients.
 Tipo: refactorización. **No cambia ningún comportamiento público.** Va en su propia rama y su
 propio PR (`refactor/modulos`), antes de las funciones nuevas de `docs/specs/Equilibria.md`.
 
@@ -40,9 +41,9 @@ Se extraen de `HarmonicExpansion` sin cambiar su resultado:
 | Función privada | Qué hace |
 | --- | --- |
 | `validateDeviation1D[f, x, q, t, L, q0]` | El chequeo de `dev`; emite `f::dev` y devuelve False si falla. |
-| `autonomousForm[f, L, q, t]` | Reemplaza q[t] y q'[t] por símbolos locales; emite `f::time` y devuelve $Failed si queda t. |
+| `autonomousForm[f, L, q, t]` | Reemplaza q[t] y q'[t] por símbolos locales creados dentro de la función y devuelve `{Lr, qs, qd}` (el lagrangiano reescrito y esos dos símbolos); emite `f::time` y devuelve $Failed si queda t. |
 | `assumptions1D[opt, L, q, t, q0, x]` | Las suposiciones automáticas o las del usuario (hoy `heAssumptions`). |
-| `potentialCoefficients[U, qs, q0, asm, nmax]` | Devuelve `<\|"Coefficients" -> {c0, …, c_m}, "FirstNonzero" -> n \| None\|>`: calcula c0, c1 y c2, y después c3, c4, … hasta encontrar el primer no nulo o llegar a nmax. Los coeficientes que `zeroQ` declara cero quedan como 0 exacto. Se escribe con un bucle simple y legible, no con efectos dentro de `SelectFirst`. |
+| `potentialCoefficients[U, qs, q0, asm, nmax, nmin : 2]` | Devuelve `<\|"Coefficients" -> {c0, …, c_m}, "FirstNonzero" -> n \| None\|>`: calcula siempre hasta c_nmin, y después sigue con c3, c4, … hasta encontrar el primer no nulo de orden ≥ 3 o llegar a nmax. HarmonicExpansion la llama con nmin = 4, porque su serie llega al menos a x⁴. Los coeficientes que `zeroQ` declara cero quedan como 0 exacto. Se escribe con un bucle simple y legible, no con efectos dentro de `SelectFirst`. |
 
 `f` es el símbolo de la función que llama (`HarmonicExpansion`, más adelante `ClassifyEquilibrium`),
 para que el mensaje salga con su nombre.
