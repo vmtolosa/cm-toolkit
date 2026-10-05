@@ -9,6 +9,13 @@ ExpansionArmonica::usage =
   "ExpansionArmonica[L, {q, t}, q0, x] es el alias en español de HarmonicExpansion. Los mensajes de error aparecen con el nombre HarmonicExpansion.\n\
 ExpansionArmonica[L, {q, t}, q0, x] is the Spanish alias of HarmonicExpansion. Error messages appear under the name HarmonicExpansion.";
 
+EquilibriumPoints::usage =
+  "EquilibriumPoints[L, {q, t}] encuentra los puntos de equilibrio del lagrangiano L de un grado de libertad: factoriza U'(q) y resuelve cada factor. Entrega una Association con el potencial, la derivada factorizada, los factores, los puntos con su condición de existencia (\"Points\") y los pasos intermedios (\"Steps\"). Opciones: \"Domain\" -> {qmin, qmax} (necesaria si q es un ángulo, por ejemplo {0, 2 Pi}) y Assumptions (Automatic: los parámetros son reales positivos). Alias: PuntosDeEquilibrio.\n\
+EquilibriumPoints[L, {q, t}] finds the equilibrium points of the one-degree-of-freedom Lagrangian L: it factors U'(q) and solves each factor. It returns an Association with the potential, the factored derivative, the factors, the points with their existence condition (\"Points\") and the intermediate steps (\"Steps\"). Options: \"Domain\" -> {qmin, qmax} (needed when q is an angle, for example {0, 2 Pi}) and Assumptions (Automatic: parameters are positive reals).";
+PuntosDeEquilibrio::usage =
+  "PuntosDeEquilibrio[L, {q, t}] es el alias en español de EquilibriumPoints. Los mensajes de error aparecen con el nombre EquilibriumPoints.\n\
+PuntosDeEquilibrio[L, {q, t}] is the Spanish alias of EquilibriumPoints. Error messages appear under the name EquilibriumPoints.";
+
 Begin["`Private`"];
 
 (* Textos de este módulo: se agregan a la tabla $texts de Core.wl *)
@@ -66,7 +73,47 @@ AssociateTo[$texts, <|
     "English" -> "Equation of motion (Euler-Lagrange for the harmonic Lagrangian)."|>,
   "HarmonicExpansion:omega2" -> <|
     "Spanish" -> "Frecuencia de las pequeñas oscilaciones: \[CapitalOmega]\.b2 = k_ef/m_ef.",
-    "English" -> "Frequency of small oscillations: \[CapitalOmega]\.b2 = k_eff/m_eff."|>
+    "English" -> "Frequency of small oscillations: \[CapitalOmega]\.b2 = k_eff/m_eff."|>,
+
+  (* EquilibriumPoints: mensajes *)
+  "EquilibriumPoints::args" -> <|
+    "Spanish" -> "EquilibriumPoints se llama con dos argumentos y, si hace falta, opciones: EquilibriumPoints[L, {q, t}, \"Domain\" -> {qmin, qmax}]. Por ejemplo, para un péndulo: EquilibriumPoints[m b^2/2 th'[t]^2 + m g b Cos[th[t]], {th, t}, \"Domain\" -> {0, 2 Pi}].",
+    "English" -> "EquilibriumPoints takes two arguments and, if needed, options: EquilibriumPoints[L, {q, t}, \"Domain\" -> {qmin, qmax}]. For example, for a pendulum: EquilibriumPoints[m b^2/2 th'[t]^2 + m g b Cos[th[t]], {th, t}, \"Domain\" -> {0, 2 Pi}]."|>,
+  "EquilibriumPoints::time" -> <|
+    "Spanish" -> "EquilibriumPoints requiere un lagrangiano autónomo: solo puede depender de `1`[`2`] y `1`'[`2`], sin `2` explícito ni derivadas de orden superior.",
+    "English" -> "EquilibriumPoints requires an autonomous Lagrangian: it may depend only on `1`[`2`] and `1`'[`2`], with no explicit `2` and no higher derivatives."|>,
+  "EquilibriumPoints::domain" -> <|
+    "Spanish" -> "\"Domain\" -> `1` no es válido: debe ser Automatic o una lista {qmin, qmax} de dos números reales con qmin < qmax. Por ejemplo, para un ángulo: \"Domain\" -> {0, 2 Pi}.",
+    "English" -> "\"Domain\" -> `1` is not valid: it must be Automatic or a list {qmin, qmax} of two real numbers with qmin < qmax. For example, for an angle: \"Domain\" -> {0, 2 Pi}."|>,
+  "EquilibriumPoints::periodic" -> <|
+    "Spanish" -> "Las soluciones de `1` == 0 se repiten periódicamente: `2` es un ángulo. Declara su rango con la opción \"Domain\", por ejemplo \"Domain\" -> {0, 2 Pi}.",
+    "English" -> "The solutions of `1` == 0 repeat periodically: `2` is an angle. Declare its range with the \"Domain\" option, for example \"Domain\" -> {0, 2 Pi}."|>,
+  "EquilibriumPoints::unsolved" -> <|
+    "Spanish" -> "Solve no logró resolver `1` == 0. Ese factor aparece como no resuelto en \"Steps\"; los demás puntos se entregan igual.",
+    "English" -> "Solve could not solve `1` == 0. That factor appears as unsolved in \"Steps\"; the other points are returned anyway."|>,
+  "EquilibriumPoints::none" -> <|
+    "Spanish" -> "No hay puntos de equilibrio: U'(q) no se anula en el dominio. \"Points\" es la lista vacía.",
+    "English" -> "There are no equilibrium points: U'(q) does not vanish in the domain. \"Points\" is the empty list."|>,
+
+  (* EquilibriumPoints: textos de "Steps", en el orden de la ayudantía *)
+  "EquilibriumPoints:assumptions" -> <|
+    "Spanish" -> "Suposiciones usadas.",
+    "English" -> "Assumptions used."|>,
+  "EquilibriumPoints:potential" -> <|
+    "Spanish" -> "Potencial efectivo: U(q) = \[Minus]L con q\:0307 = 0 (incluye los términos centrífugos).",
+    "English" -> "Effective potential: U(q) = \[Minus]L with q\:0307 = 0 (includes centrifugal terms)."|>,
+  "EquilibriumPoints:derivative" -> <|
+    "Spanish" -> "Derivada del potencial, factorizada: los equilibrios son los ceros de U'(q).",
+    "English" -> "Derivative of the potential, factored: the equilibria are the zeros of U'(q)."|>,
+  "EquilibriumPoints:factor" -> <|
+    "Spanish" -> "Un factor de U'(q) igualado a cero y sus soluciones en el dominio.",
+    "English" -> "A factor of U'(q) set to zero and its solutions in the domain."|>,
+  "EquilibriumPoints:unsolved" -> <|
+    "Spanish" -> "Un factor de U'(q) igualado a cero que Solve no logró resolver.",
+    "English" -> "A factor of U'(q) set to zero that Solve could not solve."|>,
+  "EquilibriumPoints:points" -> <|
+    "Spanish" -> "Puntos de equilibrio, cada uno con su condición de existencia, sin repetir los que coinciden.",
+    "English" -> "Equilibrium points, each with its existence condition, without repeating those that coincide."|>
 |>];
 
 (* --- Funciones privadas compartidas por las funciones de un grado de libertad
@@ -88,11 +135,12 @@ autonomousForm[f_Symbol, L_, q_, t_] := Module[{qs, qd, Lr},
 
 (* Automatic: todos los símbolos libres de exprs, salvo los de exclude, son reales positivos
    (HarmonicExpansion y ClassifyEquilibrium: {L, q0} y {q, t, x}; EquilibriumPoints: {L} y {q, t}) *)
-assumptions1D[Automatic, exprs_List, exclude_List] :=
-  And @@ Thread[
-    Complement[
-      Union[Cases[exprs, s_Symbol /; Context[s] =!= "System`", {0, Infinity}, Heads -> False]],
-      exclude] > 0];
+assumptions1D[Automatic, exprs_List, exclude_List] := And @@ Thread[freeSymbols[exprs, exclude] > 0];
+
+(* Símbolos libres (los parámetros) de exprs, salvo los de exclude *)
+freeSymbols[exprs_List, exclude_List] := Complement[
+  Union[Cases[exprs, s_Symbol /; Context[s] =!= "System`", {0, Infinity}, Heads -> False]],
+  exclude];
 assumptions1D[asm_, ___] := asm;
 
 (* Coeficientes c_k = U^(k)(q0)/k! de la serie de U en torno a q0. Calcula siempre hasta
@@ -184,7 +232,91 @@ HarmonicExpansion[L_, {q_Symbol, t_Symbol}, q0_, x_ /; !OptionQ[x], opts : Optio
 
 HarmonicExpansion[___] := (cmMessage[HarmonicExpansion, "args"]; $Failed);
 
+(* --- EquilibriumPoints: especificación en docs/specs/Equilibria.md --- *)
+
+Options[EquilibriumPoints] = {"Domain" -> Automatic, Assumptions -> Automatic};
+
+(* "Domain": Automatic o dos reales, exactos o no, con qmin < qmax *)
+domainQ[Automatic] = True;
+domainQ[{lo_, hi_}] := TrueQ[Element[{lo, hi}, Reals]] && TrueQ[lo < hi];
+domainQ[_] = False;
+
+(* Solve sin evaluar o con tiempo agotado: no resuelto *)
+solveFactor[f_, qs_, dom_] := Quiet[TimeConstrained[
+  Solve[f == 0 && If[dom === Automatic, True, dom[[1]] <= qs < dom[[2]]], qs, Reals],
+  10, $TimedOut]];
+
+(* Una solución {qs -> v} como {punto, condición}; la condición sale de su ConditionalExpression *)
+solutionPoint[qs_ -> ConditionalExpression[v_, cond_], asm_] := {v, Simplify[cond, asm]};
+solutionPoint[qs_ -> v_, asm_] := {v, True};
+
+EquilibriumPoints[L_, {q_Symbol, t_Symbol}, opts : OptionsPattern[]] :=
+  Module[{form, dom, asm, Lr, qs, qd, U, fac, factors, sols, bad, pts, params, coinc, steps},
+
+    (* Validación *)
+    form = autonomousForm[EquilibriumPoints, L, q, t];
+    If[form === $Failed, Return[$Failed]];
+    {Lr, qs, qd} = form;
+    dom = OptionValue["Domain"];
+    If[!domainQ[dom], cmMessage[EquilibriumPoints, "domain", dom]; Return[$Failed]];
+
+    asm = assumptions1D[OptionValue[Assumptions], {L}, {q, t}];
+
+    U = -Lr /. qd -> 0;
+    fac = Factor[Simplify[D[U, qs], asm]];
+    factors = Select[FactorList[fac][[All, 1]], !FreeQ[#, qs] &];
+    sols = solveFactor[#, qs, dom] & /@ factors;
+
+    (* Soluciones periódicas (constantes C[k] o enteros): hay que declarar el dominio *)
+    bad = FirstPosition[sols, s_ /; !FreeQ[s, _C | Element[_, Integers]], None, {1}];
+    If[bad =!= None,
+      cmMessage[EquilibriumPoints, "periodic", factors[[First[bad]]] /. qs -> q, q];
+      Return[$Failed]];
+
+    (* Puntos de los factores resueltos; primero los que existen siempre, cada grupo en el
+       orden de Solve *)
+    pts = Join @@ (Map[solutionPoint[First[#], asm] &, #] & /@ Select[sols, ListQ]);
+    pts = Select[pts, #[[2]] =!= False &];
+    pts = Join[Select[pts, #[[2]] === True &], Select[pts, #[[2]] =!= True &]];
+
+    (* Puntos repetidos: a cada punto se le quita la condición en que coincide con uno anterior *)
+    params = freeSymbols[{L, asm}, {q, t}];
+    coinc[{p1_, c1_}, {p2_, c2_}] := With[
+      {r = Quiet[TimeConstrained[Reduce[p1 == p2 && c1 && c2 && asm, params, Reals], 10, False]]},
+      If[MatchQ[r, _Reduce], False, r]];
+    Do[
+      pts[[i, 2]] = Simplify[pts[[i, 2]] && !Or @@ (coinc[pts[[i]], #] & /@ pts[[;; i - 1]]), asm],
+      {i, 2, Length[pts]}];
+    pts = Select[pts, #[[2]] =!= False &];
+
+    steps = Join[
+      {{"assumptions", asm},
+       {"potential", "U"[q] == (U /. qs -> q)},
+       {"derivative", Derivative[1]["U"][q] == (fac /. qs -> q)}},
+      MapThread[
+        If[ListQ[#2],
+          {"factor", ((#1 /. qs -> q) == 0) -> (q == First[solutionPoint[First[#], asm]] & /@ #2)},
+          {"unsolved", (#1 /. qs -> q) == 0}] &,
+        {factors, sols}],
+      {{"points", If[#[[2]] === True, q == #[[1]], ConditionalExpression[q == #[[1]], #[[2]]]] & /@
+        pts}}];
+    steps = <|"Description" -> tr["EquilibriumPoints:" <> #[[1]]], "Expression" -> #[[2]]|> & /@
+      steps;
+
+    Scan[If[!ListQ[sols[[#]]], cmMessage[EquilibriumPoints, "unsolved", factors[[#]] /. qs -> q]] &,
+      Range[Length[factors]]];
+    If[pts === {} && AllTrue[sols, ListQ], cmMessage[EquilibriumPoints, "none"]];
+
+    <|"Potential" -> (U /. qs -> q), "Derivative" -> (fac /. qs -> q),
+      "Factors" -> (factors /. qs -> q),
+      "Points" -> (<|"Point" -> #[[1]], "Condition" -> #[[2]]|> & /@ pts),
+      "Steps" -> steps|>
+  ];
+
+EquilibriumPoints[___] := (cmMessage[EquilibriumPoints, "args"]; $Failed);
+
 (* --- Alias en español (al final, cuando las funciones ya tienen sus atributos) --- *)
 defineAlias[ExpansionArmonica, HarmonicExpansion];
+defineAlias[PuntosDeEquilibrio, EquilibriumPoints];
 
 End[];
