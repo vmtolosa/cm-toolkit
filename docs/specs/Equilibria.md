@@ -1,8 +1,10 @@
 # Especificación: EquilibriumPoints y ClassifyEquilibrium
 
-Estado: aprobada para implementar. Versión 1.1 (4 de octubre de 2026).
+Estado: aprobada para implementar. Versión 1.2 (5 de octubre de 2026).
 - v1.1: resuelve las cinco dudas de la revisión de Claude Code (puntos repetidos, condición de
   existencia en la clasificación, suposiciones sin q0 ni x, textos por función, factorización).
+- v1.2: orden de recorrido en la regla de puntos repetidos, significado de "Stable" en el caso
+  "Conditional", mensaje `domain` y "LeadingCoefficient" en el caso "Undetermined".
 Requiere: `docs/specs/Modulos.md` ya mergeado (usa sus funciones privadas compartidas).
 Rama: `feat/equilibria`. Módulo: `Oscillations1D.wl`.
 Referencia: Ayudantía 6, Problema 1, inciso (a), ecs. (7)–(13).
@@ -39,7 +41,10 @@ se descartan). Si `fac` no queda como producto, hay un solo factor: la expresió
 ### Puntos repetidos
 
 Dos soluciones distintas pueden coincidir para ciertos valores de los parámetros (en el anillo,
-θ0 y 2π − θ0 coinciden con π cuando b w² = g). Regla: se recorren los puntos en orden y, a la
+θ0 y 2π − θ0 coinciden con π cuando b w² = g). Orden de recorrido: primero los puntos que existen siempre (condición True), en el orden en que
+los entrega `Solve`; después los condicionales, también en el orden de `Solve`. Así el punto que
+existe siempre conserva el caso de coincidencia. En el anillo: 0, π y después los dos de ArcCos.
+"Points" se devuelve en ese mismo orden. Regla: se recorren los puntos en ese orden y, a la
 condición de cada punto, se le quita (con `And`/`Not` y simplificando) la condición en que coincide
 con un punto anterior de la lista. Así cada equilibrio aparece una sola vez para cada valor de los
 parámetros. En el anillo, las condiciones de θ0 y 2π − θ0 quedan estrictas: b w² > g.
@@ -51,6 +56,9 @@ parámetros. En el anillo, las condiciones de θ0 y 2π − θ0 quedan estrictas
   con enteros), emite `EquilibriumPoints::periodic`, que sugiere `"Domain" -> {0, 2 Pi}`, y
   devuelve `$Failed`. Así el estudiante aprende a declarar el rango del ángulo.
 - Con `{qmin, qmax}`: soluciones en el intervalo [qmin, qmax).
+- Si el valor de "Domain" no es Automatic ni una lista de dos números reales con qmin < qmax
+  (se aceptan expresiones exactas como 2 Pi): mensaje `EquilibriumPoints::domain`, que muestra el
+  valor recibido y un ejemplo correcto, y `$Failed`.
 
 ### Qué devuelve
 
@@ -86,11 +94,17 @@ Con los coeficientes c_n de U(q0 + x) (función privada `potentialCoefficients`,
 | --- | --- | --- |
 | c2 > 0 bajo las suposiciones | "Minimum" | True |
 | c2 < 0 bajo las suposiciones | "Maximum" | False |
-| el signo de c2 depende de los parámetros | "Conditional" | la condición para c2 > 0 |
+| el signo de c2 depende de los parámetros | "Conditional" | la condición para c2 > 0 (ver nota) |
 | c2 = 0, primer no nulo n impar | "Inflection" | False |
 | c2 = 0, n par, cn > 0 | "Minimum" | True |
 | c2 = 0, n par, cn < 0 | "Maximum" | False |
 | c2 = 0 y ningún no nulo hasta orden 8 | "Undetermined" | Missing["Undetermined"] |
+
+Nota sobre "Stable" en el caso "Conditional": es la condición para que el punto sea un mínimo
+armónico (c2 > 0). La rama "Critical" (c2 = 0) no queda resuelta por esa condición: ahí la
+estabilidad depende de órdenes superiores (en el anillo, π con b w² = g es un mínimo cuártico
+estable). "Steps" lo dice con una nota en la conclusión: para el caso crítico, volver a llamar a
+ClassifyEquilibrium con ese valor del parámetro sustituido.
 
 Los valores de "Type" son datos (en inglés). La descripción en "Steps" está en el idioma de
 `$CMLanguage` y explica la física: «mínimo: equilibrio estable», «máximo: inestable»,
@@ -120,7 +134,7 @@ condición de existencia y sin las ramas que quedan en False.
 | "ExistenceCondition" | condición para que q0 sea real (True si siempre existe) |
 | "SecondDerivative" | U''(q0), simplificada |
 | "LeadingOrder" | 2 si c2 no es nulo; si no, el primer n no nulo (o Missing["Undetermined"]) |
-| "LeadingCoefficient" | c2 o c_n correspondiente |
+| "LeadingCoefficient" | c2 o c_n correspondiente (Missing["Undetermined"] si no hay ninguno hasta orden 8) |
 | "Type", "Stable" | según la tabla |
 | "Conditions" | solo en el caso "Conditional" |
 | "Steps" | suposiciones, potencial, comprobación de equilibrio, serie de U(q0 + x) en orden creciente, U''(q0) y su signo, (si c2 = 0) primer orden no nulo, conclusión |
@@ -138,7 +152,7 @@ El mensaje `HarmonicExpansion::critical` ya sugiere usar `ClassifyEquilibrium`; 
   HarmonicExpansion la llama con `{L, q0}` y `{q, t, x}`; ClassifyEquilibrium igual;
   EquilibriumPoints con `{L}` y `{q, t}`. Los 48 tests existentes deben seguir pasando sin cambios.
 - Cada función tiene sus propias entradas en `$texts` para todos sus mensajes (`args`, `dev`, `time`,
-  `noteq`, `periodic`, `unsolved`, `none`, según corresponda), con su propio nombre y su propio
+  `noteq`, `periodic`, `domain`, `unsolved`, `none`, según corresponda), con su propio nombre y su propio
   ejemplo de llamada en `args`. Se permite redactarlas igual que las de HarmonicExpansion.
   `validateDeviation1D` y `autonomousForm` ya reciben el símbolo de la función, así que emiten el
   mensaje con el nombre correcto.
@@ -154,6 +168,9 @@ Anillo que rota, `L = m b^2/2 (th'[t]^2 + w^2 Sin[th[t]]^2) - m g b Cos[th[t]]`:
 | EquilibriumPoints, "Domain" -> {0, 2 Pi}: "Derivative" | equivalente a −b m Sin[th] (g + b w^2 Cos[th]) | ec. (7) |
 | ídem: "Points" | 0 y Pi con condición True; ArcCos[−g/(b w^2)] y 2 Pi − ArcCos[−g/(b w^2)] con condición equivalente a b w^2 > g (estricta: en b w^2 = g coinciden con Pi, ya listado) | ecs. (8)–(10) |
 | EquilibriumPoints sin Domain | $Failed con mensaje periodic | |
+| EquilibriumPoints con "Domain" -> {2 Pi, 0} o "Domain" -> {0, a} (a simbólico) | $Failed con mensaje domain | |
+| ídem "Domain" -> {0, 2 Pi}: orden de "Points" | 0, Pi, y después los dos de ArcCos | regla de repetidos |
+| Classify en q0 = Pi: nota de la rama crítica | la descripción del último paso menciona el caso crítico | ec. (13) |
 | Classify en q0 = 0 | "Maximum", Stable False, U''(0) = −b m (g + b w^2) | ec. (11) |
 | Classify en q0 = Pi | "Conditional"; Minimum si g > b w^2, Maximum si g < b w^2; U''(Pi) = b m (g − b w^2) | ec. (11) |
 | Classify en q0 = Pi, Assumptions con b w^2 < g además de positividad | "Minimum" | ec. (11) |
