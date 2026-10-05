@@ -63,6 +63,7 @@ Mathematica. El paquete es genérico: no menciona ningún curso, institución ni
   reference/ o de casos con solución conocida que la especificación documente explícitamente.
 
 ## Forma de trabajar
+- Responder al usuario siempre en español, aunque las herramientas o los errores estén en inglés.
 - La firma y el valor de retorno de algo nuevo salen de su especificación en docs/specs/.
   Si la especificación no los fija, proponerlos y esperar confirmación antes de implementar.
 - Primero el test, luego la implementación, luego correr RunTests.wls.
