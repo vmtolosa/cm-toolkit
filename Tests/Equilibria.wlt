@@ -166,3 +166,193 @@ VerificationTest[
   Grid,
   TestID -> "puntos-ShowSteps-devuelve-Grid"
 ]
+
+(* === ClassifyEquilibrium === *)
+
+eqClassify[q0_, opts___] := ClassifyEquilibrium[eqRingL, {th, t}, q0, x, opts];
+eqCriticalNote := CMToolkit`Private`tr["ClassifyEquilibrium:criticalnote"];
+
+(* --- Anillo que rota (Problema 1) --- *)
+
+VerificationTest[
+  With[{res = eqClassify[0]},
+    {res["Type"], res["Stable"], res["ExistenceCondition"], res["LeadingOrder"],
+     Simplify[res["SecondDerivative"] + b m (g + b w^2), eqAsmRing]}],
+  {"Maximum", False, True, 2, 0},
+  TestID -> "clasificar-anillo-0-maximo-ec-11"
+]
+
+(* "Steps" muestra U''(0) = … < 0, con el signo dentro de la forma retenida *)
+VerificationTest[
+  With[{res = eqClassify[0]},
+    SelectFirst[res["Steps"][[All, "Expression"]], !FreeQ[#, Derivative[2]] &] ===
+      With[{s = res["SecondDerivative"]},
+        HoldForm[Inequality[Derivative[2]["U"][0], Equal, s, Less, 0]]]],
+  True,
+  TestID -> "clasificar-anillo-0-pasos-signo-de-U2"
+]
+
+VerificationTest[
+  With[{res = eqClassify[Pi]},
+    {res["Type"], Keys[res["Conditions"]],
+     eqEquivalentQ[res["Conditions"]["Minimum"], g > b w^2, eqAsmRing, {b, g, w}],
+     eqEquivalentQ[res["Conditions"]["Maximum"], g < b w^2, eqAsmRing, {b, g, w}],
+     eqEquivalentQ[res["Conditions"]["Critical"], g == b w^2, eqAsmRing, {b, g, w}],
+     eqEquivalentQ[res["Stable"], g > b w^2, eqAsmRing, {b, g, w}],
+     Simplify[res["SecondDerivative"] - b m (g - b w^2), eqAsmRing]}],
+  {"Conditional", {"Minimum", "Maximum", "Critical"}, True, True, True, True, 0},
+  TestID -> "clasificar-anillo-pi-condicional-ec-11"
+]
+
+VerificationTest[
+  StringContainsQ[Last[eqClassify[Pi]["Steps"]]["Description"], eqCriticalNote],
+  True,
+  TestID -> "clasificar-anillo-pi-nota-caso-critico"
+]
+
+VerificationTest[
+  With[{res = eqClassify[Pi, Assumptions -> eqAsmRing && b w^2 < g]},
+    {res["Type"], res["Stable"], KeyExistsQ[res, "Conditions"]}],
+  {"Minimum", True, False},
+  TestID -> "clasificar-anillo-pi-suposiciones-minimo"
+]
+
+VerificationTest[
+  With[{res = ClassifyEquilibrium[eqRingL /. w -> Sqrt[g/b], {th, t}, Pi, x]},
+    {res["Type"], res["Stable"], res["LeadingOrder"],
+     Simplify[res["LeadingCoefficient"] - b g m/8, b > 0 && g > 0 && m > 0]}],
+  {"Minimum", True, 4, 0},
+  TestID -> "clasificar-anillo-pi-critico-cuartico-ec-13"
+]
+
+VerificationTest[
+  With[{res = eqClassify[eqTheta0]},
+    {eqEquivalentQ[res["ExistenceCondition"], b w^2 >= g, eqAsmRing, {b, g, w}],
+     res["Type"], Keys[res["Conditions"]],
+     eqEquivalentQ[res["Conditions"]["Minimum"], b w^2 > g, eqAsmRing, {b, g, w}],
+     eqEquivalentQ[res["Conditions"]["Critical"], b w^2 == g, eqAsmRing, {b, g, w}],
+     Simplify[res["SecondDerivative"] - m (b^2 w^4 - g^2)/w^2, eqAsmRing]}],
+  {True, "Conditional", {"Minimum", "Critical"}, True, True, 0},
+  TestID -> "clasificar-anillo-theta0-condicional-ec-12"
+]
+
+VerificationTest[
+  With[{res = eqClassify[eqTheta0, Assumptions -> eqAsmRing && b w^2 > g]},
+    {res["Type"], res["Stable"]}],
+  {"Minimum", True},
+  TestID -> "clasificar-anillo-theta0-minimo-ec-12"
+]
+
+(* Solo queda la rama crítica (v1.3): con b w^2 <= g, θ0 existe solo si b w^2 = g *)
+VerificationTest[
+  With[{res = eqClassify[eqTheta0, Assumptions -> eqAsmRing && b w^2 <= g]},
+    {res["Type"], Keys[res["Conditions"]], res["Stable"],
+     StringContainsQ[Last[res["Steps"]]["Description"], eqCriticalNote]}],
+  {"Conditional", {"Critical"}, Missing["Undetermined"], True},
+  TestID -> "clasificar-anillo-theta0-solo-rama-critica"
+]
+
+(* --- Casos con solución conocida (no están en la ayudantía) --- *)
+
+eqCubicL = m/2 y'[t]^2 - (y[t]^3/3 - c y[t]);
+
+VerificationTest[
+  {#["Type"], #["SecondDerivative"]} & /@
+    {ClassifyEquilibrium[eqCubicL, {y, t}, Sqrt[c], x],
+     ClassifyEquilibrium[eqCubicL, {y, t}, -Sqrt[c], x]},
+  {{"Minimum", 2 Sqrt[c]}, {"Maximum", -2 Sqrt[c]}},
+  TestID -> "clasificar-cubico"
+]
+
+VerificationTest[
+  With[{res = ClassifyEquilibrium[m/2 y'[t]^2 - a y[t]^3, {y, t}, 0, x]},
+    {res["Type"], res["LeadingOrder"], res["LeadingCoefficient"], res["Stable"]}],
+  {"Inflection", 3, a, False},
+  TestID -> "clasificar-inflexion-y3"
+]
+
+VerificationTest[
+  With[{res = ClassifyEquilibrium[m/2 y'[t]^2 - a y[t]^4, {y, t}, 0, x]},
+    {res["Type"], res["LeadingOrder"], res["LeadingCoefficient"], res["Stable"]}],
+  {"Minimum", 4, a, True},
+  TestID -> "clasificar-minimo-no-armonico-y4"
+]
+
+(* Signo de c4 sin fijar (v1.3) *)
+VerificationTest[
+  With[{res = ClassifyEquilibrium[m/2 y'[t]^2 - a y[t]^4, {y, t}, 0, x, Assumptions -> m > 0]},
+    {res["Type"], res["LeadingOrder"], Keys[res["Conditions"]],
+     eqEquivalentQ[res["Conditions"]["Minimum"], a > 0, m > 0, {a, m}],
+     eqEquivalentQ[res["Conditions"]["Maximum"], a < 0, m > 0, {a, m}],
+     eqEquivalentQ[res["Stable"], a > 0, m > 0, {a, m}]}],
+  {"Conditional", 4, {"Minimum", "Maximum"}, True, True, True},
+  TestID -> "clasificar-y4-signo-condicional"
+]
+
+VerificationTest[
+  With[{res = ClassifyEquilibrium[m/2 y'[t]^2 - a y[t]^10, {y, t}, 0, x]},
+    {res["Type"], res["LeadingOrder"], res["LeadingCoefficient"], res["Stable"]}],
+  {"Undetermined", Missing["Undetermined"], Missing["Undetermined"], Missing["Undetermined"]},
+  TestID -> "clasificar-indeterminado-hasta-orden-8"
+]
+
+(* --- Errores, en el orden de validación --- *)
+
+VerificationTest[
+  ClassifyEquilibrium[eqRingL, {th, t}, Pi],
+  $Failed,
+  {ClassifyEquilibrium::args},
+  TestID -> "clasificar-error-tres-argumentos"
+]
+
+VerificationTest[
+  ClassifyEquilibrium[eqRingL, {th, t}, Pi, t],
+  $Failed,
+  {ClassifyEquilibrium::dev},
+  TestID -> "clasificar-error-x-igual-a-t"
+]
+
+VerificationTest[
+  ClassifyEquilibrium[eqRingL + t th[t], {th, t}, Pi, x],
+  $Failed,
+  {ClassifyEquilibrium::time},
+  TestID -> "clasificar-error-L-depende-de-t"
+]
+
+VerificationTest[
+  eqClassify[ArcCos[2]],
+  $Failed,
+  {ClassifyEquilibrium::notreal},
+  TestID -> "clasificar-error-q0-no-real"
+]
+
+VerificationTest[
+  eqClassify[Pi/2],
+  $Failed,
+  {ClassifyEquilibrium::noteq},
+  TestID -> "clasificar-error-no-es-equilibrio"
+]
+
+VerificationTest[
+  Module[{en},
+    en = Block[{$CMLanguage = "English"},
+      Quiet[eqClassify[Pi/2]];
+      ClassifyEquilibrium::noteq];
+    StringQ[en] && en === CMToolkit`Private`$texts["ClassifyEquilibrium::noteq"]["English"]],
+  True,
+  TestID -> "clasificar-mensaje-en-ingles"
+]
+
+(* --- Alias y ShowSteps --- *)
+
+VerificationTest[
+  ClasificarEquilibrio[eqRingL, {th, t}, Pi, x] === eqClassify[Pi],
+  True,
+  TestID -> "alias-ClasificarEquilibrio"
+]
+
+VerificationTest[
+  Head[ShowSteps[#]] & /@ {eqClassify[Pi], eqClassify[0]},
+  {Grid, Grid},
+  TestID -> "clasificar-ShowSteps-devuelve-Grid"
+]

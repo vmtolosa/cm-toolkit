@@ -16,6 +16,13 @@ PuntosDeEquilibrio::usage =
   "PuntosDeEquilibrio[L, {q, t}] es el alias en español de EquilibriumPoints. Los mensajes de error aparecen con el nombre EquilibriumPoints.\n\
 PuntosDeEquilibrio[L, {q, t}] is the Spanish alias of EquilibriumPoints. Error messages appear under the name EquilibriumPoints.";
 
+ClassifyEquilibrium::usage =
+  "ClassifyEquilibrium[L, {q, t}, q0, x] clasifica el equilibrio q0 del lagrangiano L de un grado de libertad (mínimo, máximo, punto de inflexión o condicional) con la serie de U(q0 + x), y entrega una Association con U''(q0), el primer orden no nulo, el tipo, la estabilidad, la condición de existencia de q0 y los pasos intermedios (\"Steps\"). Opción: Assumptions (Automatic: los parámetros son reales positivos). Alias: ClasificarEquilibrio.\n\
+ClassifyEquilibrium[L, {q, t}, q0, x] classifies the equilibrium q0 of the one-degree-of-freedom Lagrangian L (minimum, maximum, inflection point or conditional) from the series of U(q0 + x), and returns an Association with U''(q0), the leading nonzero order, the type, the stability, the existence condition of q0 and the intermediate steps (\"Steps\"). Option: Assumptions (Automatic: parameters are positive reals).";
+ClasificarEquilibrio::usage =
+  "ClasificarEquilibrio[L, {q, t}, q0, x] es el alias en español de ClassifyEquilibrium. Los mensajes de error aparecen con el nombre ClassifyEquilibrium.\n\
+ClasificarEquilibrio[L, {q, t}, q0, x] is the Spanish alias of ClassifyEquilibrium. Error messages appear under the name ClassifyEquilibrium.";
+
 Begin["`Private`"];
 
 (* Textos de este módulo: se agregan a la tabla $texts de Core.wl *)
@@ -113,7 +120,74 @@ AssociateTo[$texts, <|
     "English" -> "A factor of U'(q) set to zero that Solve could not solve."|>,
   "EquilibriumPoints:points" -> <|
     "Spanish" -> "Puntos de equilibrio, cada uno con su condición de existencia, sin repetir los que coinciden.",
-    "English" -> "Equilibrium points, each with its existence condition, without repeating those that coincide."|>
+    "English" -> "Equilibrium points, each with its existence condition, without repeating those that coincide."|>,
+
+  (* ClassifyEquilibrium: mensajes *)
+  "ClassifyEquilibrium::args" -> <|
+    "Spanish" -> "ClassifyEquilibrium se llama con cuatro argumentos: ClassifyEquilibrium[L, {q, t}, q0, x], donde x es el símbolo que eliges para la desviación q = q0 + x. Por ejemplo, para un péndulo: ClassifyEquilibrium[m b^2/2 th'[t]^2 + m g b Cos[th[t]], {th, t}, Pi, x].",
+    "English" -> "ClassifyEquilibrium takes four arguments: ClassifyEquilibrium[L, {q, t}, q0, x], where x is the symbol you choose for the deviation q = q0 + x. For example, for a pendulum: ClassifyEquilibrium[m b^2/2 th'[t]^2 + m g b Cos[th[t]], {th, t}, Pi, x]."|>,
+  "ClassifyEquilibrium::dev" -> <|
+    "Spanish" -> "La desviación `1` debe ser un símbolo sin valor, distinto de `2` y de `3`, que no aparezca en el lagrangiano ni en q0.",
+    "English" -> "The deviation `1` must be a symbol with no value, different from `2` and `3`, that does not appear in the Lagrangian or in q0."|>,
+  "ClassifyEquilibrium::time" -> <|
+    "Spanish" -> "ClassifyEquilibrium requiere un lagrangiano autónomo: solo puede depender de `1`[`2`] y `1`'[`2`], sin `2` explícito ni derivadas de orden superior.",
+    "English" -> "ClassifyEquilibrium requires an autonomous Lagrangian: it may depend only on `1`[`2`] and `1`'[`2`], with no explicit `2` and no higher derivatives."|>,
+  "ClassifyEquilibrium::notreal" -> <|
+    "Spanish" -> "q0 = `1` no es real para ningún valor de los parámetros: no es un punto de la coordenada. Revisa q0 o las suposiciones.",
+    "English" -> "q0 = `1` is not real for any value of the parameters: it is not a point of the coordinate. Check q0 or the assumptions."|>,
+  "ClassifyEquilibrium::noteq" -> <|
+    "Spanish" -> "No se pudo comprobar que q0 = `1` sea un equilibrio: U'(q0) se simplifica a `2`, no a 0. Revisa q0 o entrega con Assumptions las suposiciones que permiten comprobarlo.",
+    "English" -> "Could not verify that q0 = `1` is an equilibrium: U'(q0) simplifies to `2`, not 0. Check q0, or give with Assumptions the assumptions that make it verifiable."|>,
+
+  (* ClassifyEquilibrium: textos de "Steps", en el orden de la ayudantía *)
+  "ClassifyEquilibrium:assumptions" -> <|
+    "Spanish" -> "Suposiciones usadas.",
+    "English" -> "Assumptions used."|>,
+  "ClassifyEquilibrium:potential" -> <|
+    "Spanish" -> "Potencial efectivo: U(q) = \[Minus]L con q\:0307 = 0 (incluye los términos centrífugos).",
+    "English" -> "Effective potential: U(q) = \[Minus]L with q\:0307 = 0 (includes centrifugal terms)."|>,
+  "ClassifyEquilibrium:equilibrium" -> <|
+    "Spanish" -> "Comprobación de equilibrio: U'(q0) = 0.",
+    "English" -> "Equilibrium check: U'(q0) = 0."|>,
+  "ClassifyEquilibrium:existence" -> <|
+    "Spanish" -> "Condición de existencia: q0 debe ser real.",
+    "English" -> "Existence condition: q0 must be real."|>,
+  "ClassifyEquilibrium:undecided" -> <|
+    "Spanish" -> "Condición de existencia: no se pudo decidir si q0 es real; se supone que existe siempre.",
+    "English" -> "Existence condition: it could not be decided whether q0 is real; it is assumed to always exist."|>,
+  "ClassifyEquilibrium:series" -> <|
+    "Spanish" -> "Serie de Taylor del potencial en torno a q0, con q = q0 + x, hasta el primer término no nulo después de la constante.",
+    "English" -> "Taylor series of the potential about q0, with q = q0 + x, up to the first nonzero term after the constant."|>,
+  "ClassifyEquilibrium:second" -> <|
+    "Spanish" -> "Segunda derivada: su signo decide si U''(q0) \[NotEqual] 0.",
+    "English" -> "Second derivative: its sign decides when U''(q0) \[NotEqual] 0."|>,
+  "ClassifyEquilibrium:leading" -> <|
+    "Spanish" -> "U''(q0) = 0: decide el primer coeficiente no nulo de la serie (orden impar: inflexión; orden par: su signo).",
+    "English" -> "U''(q0) = 0: the first nonzero coefficient of the series decides (odd order: inflection; even order: its sign)."|>,
+  "ClassifyEquilibrium:Minimum" -> <|
+    "Spanish" -> "Conclusión: mínimo, equilibrio estable.",
+    "English" -> "Conclusion: minimum, stable equilibrium."|>,
+  "ClassifyEquilibrium:MinimumNonharmonic" -> <|
+    "Spanish" -> "Conclusión: mínimo no armónico, estable, pero el período depende de la amplitud.",
+    "English" -> "Conclusion: non-harmonic minimum, stable, but the period depends on the amplitude."|>,
+  "ClassifyEquilibrium:Maximum" -> <|
+    "Spanish" -> "Conclusión: máximo, equilibrio inestable.",
+    "English" -> "Conclusion: maximum, unstable equilibrium."|>,
+  "ClassifyEquilibrium:Inflection" -> <|
+    "Spanish" -> "Conclusión: punto de inflexión, equilibrio inestable.",
+    "English" -> "Conclusion: inflection point, unstable equilibrium."|>,
+  "ClassifyEquilibrium:Undetermined" -> <|
+    "Spanish" -> "Conclusión: indeterminado, todos los coeficientes hasta orden 8 son nulos.",
+    "English" -> "Conclusion: undetermined, all coefficients up to order 8 vanish."|>,
+  "ClassifyEquilibrium:Conditional" -> <|
+    "Spanish" -> "Conclusión: el tipo de equilibrio depende de los parámetros (mínimo: estable; máximo: inestable).",
+    "English" -> "Conclusion: the type of equilibrium depends on the parameters (minimum: stable; maximum: unstable)."|>,
+  "ClassifyEquilibrium:criticalnote" -> <|
+    "Spanish" -> " En el caso crítico (U''(q0) = 0) la estabilidad depende de órdenes superiores: vuelve a llamar a ClassifyEquilibrium con ese valor del parámetro sustituido.",
+    "English" -> " In the critical case (U''(q0) = 0) stability depends on higher orders: call ClassifyEquilibrium again with that parameter value substituted."|>,
+  "ClassifyEquilibrium:label:Minimum" -> <|"Spanish" -> "mínimo", "English" -> "minimum"|>,
+  "ClassifyEquilibrium:label:Maximum" -> <|"Spanish" -> "máximo", "English" -> "maximum"|>,
+  "ClassifyEquilibrium:label:Critical" -> <|"Spanish" -> "crítico", "English" -> "critical"|>
 |>];
 
 (* --- Funciones privadas compartidas por las funciones de un grado de libertad
@@ -157,12 +231,23 @@ potentialCoefficients[U_, qs_, q0_, asm_, nmax_, nmin_ : 2] :=
       k++];
     <|"Coefficients" -> coeffs, "FirstNonzero" -> n|>];
 
+(* U(q0 + x) == c0 + c1 x + … retenida, para "Steps": q0 + x sin reordenar y grados crecientes *)
+heldSeries[cs_List, q0_, x_] :=
+  With[{q0h = q0, terms = DeleteCases[cs x^Range[0, Length[cs] - 1], 0]},
+    HoldForm["U"[q0h + x]] == If[terms === {}, 0, HoldForm[Plus[##]] & @@ terms]];
+
+(* U'(q0) = 0 con zeroQ, o con FullSimplify si Simplify no basta; si no, emite f::noteq *)
+equilibriumQ1D[f_Symbol, U_, qs_, q0_, asm_] := With[{dU = D[U, qs] /. qs -> q0},
+  If[zeroQ[dU, asm] || zeroQ[FullSimplify[dU, asm], asm],
+    True,
+    cmMessage[f, "noteq", q0, Simplify[dU, asm]]; False]];
+
 (* --- HarmonicExpansion: especificación en docs/specs/HarmonicExpansion.md --- *)
 
 Options[HarmonicExpansion] = {Assumptions -> Automatic};
 
 HarmonicExpansion[L_, {q_Symbol, t_Symbol}, q0_, x_ /; !OptionQ[x], opts : OptionsPattern[]] :=
-  Module[{form, asm, Lr, qs, qd, U, mef, lin, dU, coeffs, c, n, nmax, bound, series,
+  Module[{form, asm, Lr, qs, qd, U, mef, lin, coeffs, c, n, nmax, bound, series,
       kef, omega2, lagH, eom, steps},
 
     (* Validación, en el orden de la especificación *)
@@ -178,9 +263,7 @@ HarmonicExpansion[L_, {q_Symbol, t_Symbol}, q0_, x_ /; !OptionQ[x], opts : Optio
     lin = D[Lr, qd] /. qd -> 0;
 
     U = -Lr /. qd -> 0;
-    dU = D[U, qs] /. qs -> q0;
-    If[!zeroQ[dU, asm] && !zeroQ[FullSimplify[dU, asm], asm],
-      cmMessage[HarmonicExpansion, "noteq", q0, Simplify[dU, asm]]; Return[$Failed]];
+    If[!equilibriumQ1D[HarmonicExpansion, U, qs, q0, asm], Return[$Failed]];
 
     (* La serie llega hasta x^4, o hasta el primer no nulo de orden >= 3 si es mayor *)
     coeffs = potentialCoefficients[U, qs, q0, asm, 8, 4];
@@ -210,9 +293,7 @@ HarmonicExpansion[L_, {q_Symbol, t_Symbol}, q0_, x_ /; !OptionQ[x], opts : Optio
       {"equilibrium", Derivative[1]["U"][q0] == 0},
       (* Formas retenidas para mostrar en el orden de la ayudantía: q0 + x, grados crecientes
          y x'' + Ω² x = 0 (TraditionalForm respeta HoldForm, verificado en el PNG) *)
-      {"series", With[{q0h = q0, terms = DeleteCases[c x^Range[0, nmax], 0]},
-        HoldForm["U"[q0h + x]] ==
-          If[terms === {}, 0, HoldForm[Plus[##]] & @@ terms]]},
+      {"series", heldSeries[c, q0, x]},
       {"stiffness", Subscript["k", "ef"] == kef},
       {"lagrangian", "L" == lagH},
       {"bound", If[AssociationQ[bound], bound["Condition"], bound]},
@@ -315,8 +396,125 @@ EquilibriumPoints[L_, {q_Symbol, t_Symbol}, opts : OptionsPattern[]] :=
 
 EquilibriumPoints[___] := (cmMessage[EquilibriumPoints, "args"]; $Failed);
 
+(* --- ClassifyEquilibrium: especificación en docs/specs/Equilibria.md --- *)
+
+Options[ClassifyEquilibrium] = {Assumptions -> Automatic};
+
+(* Condición simplificada con las suposiciones: Reduce sobre los parámetros y después Simplify;
+   si Reduce no lo logra en unos 10 s, solo Simplify *)
+reduceCondition[cond_, asm_, params_] :=
+  With[{r = Quiet[TimeConstrained[Reduce[cond && asm, params, Reals], 10, $TimedOut]]},
+    If[r === $TimedOut || !FreeQ[r, Reduce], Simplify[cond, asm], Simplify[r, asm]]];
+
+(* Condición de que q0 sea real; Missing["Undecided"] si no se puede decidir *)
+existenceCondition[q0_, asm_, params_] := Module[{s = Simplify[Element[q0, Reals], asm], r},
+  If[BooleanQ[s], Return[s, Module]];
+  r = Quiet[TimeConstrained[Reduce[Element[q0, Reals] && asm, params, Reals], 10, $TimedOut]];
+  If[r === $TimedOut || !FreeQ[r, Reduce], Missing["Undecided"], Simplify[r, asm]]];
+
+(* Ramas según el signo de c, intersectadas con la existencia; se descartan las que quedan False *)
+signBranches[c_, ex_, asm_, params_, withCritical_] := DeleteCases[
+  reduceCondition[# && ex, asm, params] & /@ Join[
+    <|"Minimum" -> c > 0, "Maximum" -> c < 0|>,
+    If[withCritical, <|"Critical" -> c == 0|>, <||>]],
+  False];
+
+ClassifyEquilibrium[L_, {q_Symbol, t_Symbol}, q0_, x_ /; !OptionQ[x], opts : OptionsPattern[]] :=
+  Module[{form, asm, Lr, qs, qd, U, params, ex, exc, coeffs, c, n, lead, cn, second, sign,
+      conds = <||>, type, stable, conclusion, steps},
+
+    (* Validación, en el orden de la especificación *)
+    If[!validateDeviation1D[ClassifyEquilibrium, x, q, t, L, q0], Return[$Failed]];
+    form = autonomousForm[ClassifyEquilibrium, L, q, t];
+    If[form === $Failed, Return[$Failed]];
+    {Lr, qs, qd} = form;
+
+    asm = assumptions1D[OptionValue[Assumptions], {L, q0}, {q, t, x}];
+    params = freeSymbols[{L, q0, asm}, {q, t, x}];
+
+    ex = existenceCondition[q0, asm, params];
+    If[ex === False, cmMessage[ClassifyEquilibrium, "notreal", q0]; Return[$Failed]];
+    exc = If[MissingQ[ex], True, ex];
+
+    U = -Lr /. qd -> 0;
+    If[!equilibriumQ1D[ClassifyEquilibrium, U, qs, q0, asm], Return[$Failed]];
+
+    (* Orden y coeficiente que deciden: c2, o el primer no nulo hasta orden 8 *)
+    coeffs = potentialCoefficients[U, qs, q0, asm, 8];
+    c = coeffs["Coefficients"];
+    n = coeffs["FirstNonzero"];
+    lead = Which[c[[3]] =!= 0, 2, n === None, Missing["Undetermined"], True, n];
+    cn = If[IntegerQ[lead], c[[lead + 1]], Missing["Undetermined"]];
+    second = Simplify[2 c[[3]], asm];
+
+    (* Clasificación según la tabla de la especificación *)
+    Which[
+      MissingQ[lead], type = "Undetermined"; stable = Missing["Undetermined"],
+      OddQ[lead], type = "Inflection"; stable = False,
+      True,
+        conds = signBranches[cn, exc, asm, params, lead === 2];
+        Switch[Keys[conds],
+          {"Minimum"}, type = "Minimum"; stable = True,
+          {"Maximum"}, type = "Maximum"; stable = False,
+          (* Solo la rama crítica, o ninguna: la estabilidad depende de órdenes superiores *)
+          {"Critical"} | {}, type = "Conditional"; stable = Missing["Undetermined"],
+          _, type = "Conditional"; stable = Lookup[conds, "Minimum", False]]];
+
+    (* Signo de U''(q0) para mostrarlo en "Steps", si se conoce *)
+    sign = Which[
+      c[[3]] === 0, None,
+      TrueQ[Simplify[c[[3]] > 0, asm]], Greater,
+      TrueQ[Simplify[c[[3]] < 0, asm]], Less,
+      True, None];
+
+    conclusion = {
+      Which[type === "Minimum" && lead > 2, "MinimumNonharmonic", True, type],
+      Which[
+        type === "Conditional",
+          KeyValueMap[tr["ClassifyEquilibrium:label:" <> #1] -> #2 &, conds],
+        type === "Undetermined",
+          With[{q0h = q0}, HoldForm["U"[q0h + x]] \[TildeTilde] c[[1]]],
+        True,
+          With[{q0h = q0, terms = DeleteCases[{c[[1]], cn x^lead}, 0]},
+            HoldForm["U"[q0h + x]] \[TildeTilde] (HoldForm[Plus[##]] & @@ terms)]]};
+
+    steps = Join[
+      {{"assumptions", asm},
+       {"potential", "U"[q] == (U /. qs -> q)},
+       {"equilibrium", Derivative[1]["U"][q0] == 0}},
+      Which[
+        MissingQ[ex], {{"undecided", With[{q0h = q0}, HoldForm[Element[q0h, Reals]]]}},
+        ex =!= True,
+          {{"existence", With[{q0h = q0, exh = ex}, HoldForm[Equivalent[Element[q0h, Reals], exh]]]}},
+        True, {}],
+      {{"series", heldSeries[c[[;; If[IntegerQ[lead], lead, 8] + 1]], q0, x]},
+       {"second", With[{q0h = q0, s = second, rel = sign},
+         If[rel === None,
+           HoldForm[Derivative[2]["U"][q0h] == s],
+           HoldForm[Inequality[Derivative[2]["U"][q0h], Equal, s, rel, 0]]]]}},
+      If[c[[3]] =!= 0, {},
+        {{"leading", If[IntegerQ[lead],
+          Subscript["c", lead] == cn,
+          Row[{Subscript["c", 2], " = \[Ellipsis] = ", Subscript["c", 8], " = 0"}]]}}],
+      {conclusion}];
+    steps = <|"Description" -> tr["ClassifyEquilibrium:" <> #[[1]]] <>
+          If[#[[1]] === "Conditional" && KeyExistsQ[conds, "Critical"],
+            tr["ClassifyEquilibrium:criticalnote"], ""],
+        "Expression" -> #[[2]]|> & /@ steps;
+
+    Join[
+      <|"Equilibrium" -> q0, "Deviation" -> x, "Assumptions" -> asm, "ExistenceCondition" -> exc,
+        "SecondDerivative" -> second, "LeadingOrder" -> lead, "LeadingCoefficient" -> cn,
+        "Type" -> type, "Stable" -> stable|>,
+      If[type === "Conditional", <|"Conditions" -> conds|>, <||>],
+      <|"Steps" -> steps|>]
+  ];
+
+ClassifyEquilibrium[___] := (cmMessage[ClassifyEquilibrium, "args"]; $Failed);
+
 (* --- Alias en español (al final, cuando las funciones ya tienen sus atributos) --- *)
 defineAlias[ExpansionArmonica, HarmonicExpansion];
 defineAlias[PuntosDeEquilibrio, EquilibriumPoints];
+defineAlias[ClasificarEquilibrio, ClassifyEquilibrium];
 
 End[];
