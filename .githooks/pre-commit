@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+# Hook de git: revisa lo que vas a commitear antes de crear el commit.
+# Se activa una vez por copia del repo con: git config core.hooksPath .githooks
+exec "$(git rev-parse --show-toplevel)/scripts/check-repo.sh" --staged

@@ -14,3 +14,13 @@ build/
 # Material de referencia del curso (la ayudantía): queda en tu PC, no se publica.
 # Borra esta línea si el profesor autoriza publicarlo.
 reference/
+
+# Carpeta personal: notas, borradores, palabras prohibidas, material de alumnos. Nunca se sube.
+privado/
+
+# Claves y credenciales (por si acaso)
+.env
+.env.*
+*.pem
+*.key
+mathpass
