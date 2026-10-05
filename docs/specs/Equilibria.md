@@ -1,10 +1,12 @@
 # Especificación: EquilibriumPoints y ClassifyEquilibrium
 
-Estado: aprobada para implementar. Versión 1.2 (5 de octubre de 2026).
+Estado: aprobada para implementar. Versión 1.3 (5 de octubre de 2026).
 - v1.1: resuelve las cinco dudas de la revisión de Claude Code (puntos repetidos, condición de
   existencia en la clasificación, suposiciones sin q0 ni x, textos por función, factorización).
 - v1.2: orden de recorrido en la regla de puntos repetidos, significado de "Stable" en el caso
   "Conditional", mensaje `domain` y "LeadingCoefficient" en el caso "Undetermined".
+- v1.3: signo de c_n dependiente de parámetros, q0 que nunca es real y caso en que solo queda la
+  rama crítica.
 Requiere: `docs/specs/Modulos.md` ya mergeado (usa sus funciones privadas compartidas).
 Rama: `feat/equilibria`. Módulo: `Oscillations1D.wl`.
 Referencia: Ayudantía 6, Problema 1, inciso (a), ecs. (7)–(13).
@@ -100,6 +102,11 @@ Con los coeficientes c_n de U(q0 + x) (función privada `potentialCoefficients`,
 | c2 = 0, n par, cn < 0 | "Maximum" | False |
 | c2 = 0 y ningún no nulo hasta orden 8 | "Undetermined" | Missing["Undetermined"] |
 
+Si c2 = 0 y el primer no nulo es de orden par n, pero el signo de c_n depende de los parámetros:
+"Type" -> "Conditional", igual que con c2, con "LeadingOrder" -> n,
+"Conditions" -> <|"Minimum" -> cond(c_n > 0), "Maximum" -> cond(c_n < 0)|> (intersectadas con la
+existencia) y "Stable" -> cond(c_n > 0).
+
 Nota sobre "Stable" en el caso "Conditional": es la condición para que el punto sea un mínimo
 armónico (c2 > 0). La rama "Critical" (c2 = 0) no queda resuelta por esa condición: ahí la
 estabilidad depende de órdenes superiores (en el anillo, π con b w² = g es un mínimo cuártico
@@ -120,6 +127,14 @@ decidir, se toma True y se anota en "Steps".
 
 Cada condición de la clasificación se intersecta con "ExistenceCondition", y se descartan las ramas
 cuya condición queda False. Si queda una sola rama, "Type" es esa rama (no "Conditional").
+
+Casos extremos:
+- "ExistenceCondition" es False (q0 no es real para ningún valor de los parámetros, por ejemplo
+  ArcCos[2]): mensaje `ClassifyEquilibrium::notreal` y `$Failed`. Este chequeo va después de `time`
+  y antes de `noteq`.
+- Solo queda la rama "Critical": "Type" -> "Conditional", "Conditions" con esa única rama y
+  "Stable" -> Missing["Undetermined"] (no False: en el punto crítico la estabilidad depende de
+  órdenes superiores), más la nota del caso crítico en "Steps".
 
 Caso "Conditional": se agrega la clave "Conditions" ->
 <|"Minimum" -> cond(c2 > 0), "Maximum" -> cond(c2 < 0), "Critical" -> cond(c2 == 0)|>,
@@ -152,7 +167,7 @@ El mensaje `HarmonicExpansion::critical` ya sugiere usar `ClassifyEquilibrium`; 
   HarmonicExpansion la llama con `{L, q0}` y `{q, t, x}`; ClassifyEquilibrium igual;
   EquilibriumPoints con `{L}` y `{q, t}`. Los 48 tests existentes deben seguir pasando sin cambios.
 - Cada función tiene sus propias entradas en `$texts` para todos sus mensajes (`args`, `dev`, `time`,
-  `noteq`, `periodic`, `domain`, `unsolved`, `none`, según corresponda), con su propio nombre y su propio
+  `noteq`, `notreal`, `periodic`, `domain`, `unsolved`, `none`, según corresponda), con su propio nombre y su propio
   ejemplo de llamada en `args`. Se permite redactarlas igual que las de HarmonicExpansion.
   `validateDeviation1D` y `autonomousForm` ya reciben el símbolo de la función, así que emiten el
   mensaje con el nombre correcto.
@@ -178,6 +193,7 @@ Anillo que rota, `L = m b^2/2 (th'[t]^2 + w^2 Sin[th[t]]^2) - m g b Cos[th[t]]`:
 | Classify en q0 = ArcCos[−g/(b w^2)] | ExistenceCondition equivalente a b w^2 ≥ g; "Conditional" con solo dos ramas: Minimum si b w^2 > g y Critical si b w^2 = g (sin rama Maximum, porque donde sería máximo el punto no existe); U'' = m (b^2 w^4 − g^2)/w^2 | ec. (12) |
 | Classify en q0 = ArcCos[−g/(b w^2)] con Assumptions que incluyen b w^2 > g | "Minimum", Stable True | ec. (12) |
 | Classify en q0 = Pi/2 | $Failed con mensaje noteq | |
+| Classify en q0 = ArcCos[2] | $Failed con mensaje notreal | |
 
 Casos con solución conocida (no están en la ayudantía):
 
@@ -187,6 +203,7 @@ Casos con solución conocida (no están en la ayudantía):
 | ídem, Classify en Sqrt[c] y en −Sqrt[c] | "Minimum" y "Maximum" (U'' = ±2 Sqrt[c]) |
 | `L = m/2 y'[t]^2 - a y[t]^3`, Classify en 0 | "Inflection", LeadingOrder 3, Stable False |
 | `L = m/2 y'[t]^2 - a y[t]^4`, Classify en 0 | "Minimum", LeadingOrder 4 |
+| ídem con Assumptions -> m > 0 (sin fijar el signo de a) | "Conditional", LeadingOrder 4, Minimum si a > 0, Maximum si a < 0 |
 | resorte vertical `L = m/2 y'[t]^2 - k/2 y[t]^2 + m g y[t]`, EquilibriumPoints | un punto, m g/k, condición True, sin pedir Domain |
 
 Además: errores args, dev y time de Classify; aliases PuntosDeEquilibrio y ClasificarEquilibrio
