@@ -86,12 +86,13 @@ autonomousForm[f_Symbol, L_, q_, t_] := Module[{qs, qd, Lr},
   Lr = L /. {Derivative[1][q][t] -> qd, q[t] -> qs};
   If[FreeQ[Lr, t], {Lr, qs, qd}, cmMessage[f, "time", q, t]; $Failed]];
 
-(* Automatic: todos los símbolos libres de L y q0, salvo q, t y x, son reales positivos *)
-assumptions1D[Automatic, L_, q_, t_, q0_, x_] :=
+(* Automatic: todos los símbolos libres de exprs, salvo los de exclude, son reales positivos
+   (HarmonicExpansion y ClassifyEquilibrium: {L, q0} y {q, t, x}; EquilibriumPoints: {L} y {q, t}) *)
+assumptions1D[Automatic, exprs_List, exclude_List] :=
   And @@ Thread[
-    DeleteCases[
-      Union[Cases[{L, q0}, s_Symbol /; Context[s] =!= "System`", {0, Infinity}, Heads -> False]],
-      q | t | x] > 0];
+    Complement[
+      Union[Cases[exprs, s_Symbol /; Context[s] =!= "System`", {0, Infinity}, Heads -> False]],
+      exclude] > 0];
 assumptions1D[asm_, ___] := asm;
 
 (* Coeficientes c_k = U^(k)(q0)/k! de la serie de U en torno a q0. Calcula siempre hasta
@@ -122,7 +123,7 @@ HarmonicExpansion[L_, {q_Symbol, t_Symbol}, q0_, x_ /; !OptionQ[x], opts : Optio
     If[form === $Failed, Return[$Failed]];
     {Lr, qs, qd} = form;
 
-    asm = assumptions1D[OptionValue[Assumptions], L, q, t, q0, x];
+    asm = assumptions1D[OptionValue[Assumptions], {L, q0}, {q, t, x}];
 
     mef = Simplify[D[Lr, {qd, 2}] /. {qd -> 0, qs -> q0}, asm];
     If[zeroQ[mef, asm], cmMessage[HarmonicExpansion, "mass", q0]; Return[$Failed]];
