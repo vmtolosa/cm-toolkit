@@ -1,8 +1,8 @@
 # CMToolkit
 
-Herramientas de Wolfram Language para mecánica clásica de pregrado:
-pequeñas oscilaciones, modos normales, oscilaciones amortiguadas y forzadas,
-y correcciones anarmónicas. Pensado para el curso FIS210.
+Herramientas de Wolfram Language para cursos de mecánica clásica de pregrado.
+Ayudan a calcular y, sobre todo, a visualizar la física: hoy cubren pequeñas
+oscilaciones, y la [hoja de ruta](docs/ROADMAP.md) describe lo que viene.
 
 ## Estado
 
@@ -26,6 +26,17 @@ Desde la raíz del repo:
 ```bash
 wolframscript -file Tests/RunTests.wls
 ```
+
+## Para contribuir
+
+Activa una vez, en tu copia del repo, la revisión automática antes de cada commit:
+
+```bash
+git config core.hooksPath .githooks
+```
+
+La revisión (`scripts/check-repo.sh`) rechaza claves, rutas personales, notebooks con salidas y
+archivos que no se publican. La misma revisión corre en cada pull request.
 
 ## Licencia
 

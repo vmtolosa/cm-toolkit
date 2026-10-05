@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "permissions": {
+    "deny": [
+      "Read(~/.ssh/**)",
+      "Read(~/.gnupg/**)",
+      "Read(~/.config/gh/**)",
+      "Read(~/.cache/Wolfram/**)",
+      "Read(~/.WolframEngine/Licensing/**)",
+      "Read(~/.Mathematica/Licensing/**)",
+      "Read(./privado/**)",
+      "Read(./.env)",
+      "Read(./.env.*)"
+    ]
+  }
+}

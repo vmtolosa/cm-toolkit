@@ -1,0 +1,14 @@
+name: Revisión del repositorio
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Buscar claves, rutas personales, notebooks con salidas y archivos que no se publican
+        run: bash scripts/check-repo.sh --all

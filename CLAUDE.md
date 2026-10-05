@@ -1,10 +1,11 @@
 # CMToolkit: guía para Claude
 
 ## Qué es
-Paquete (paclet) de Wolfram Language para el curso FIS210, mecánica clásica de pregrado.
-Ayuda a calcular y, sobre todo, a visualizar: pequeñas oscilaciones, modos normales,
-oscilaciones amortiguadas y forzadas, y correcciones anarmónicas por perturbaciones.
-Los usuarios son estudiantes que recién aprenden Mathematica.
+Paquete (paclet) de Wolfram Language para cursos de mecánica clásica de pregrado.
+Ayuda a calcular y, sobre todo, a visualizar. Hoy cubre oscilaciones: un grado de libertad,
+modos normales en N dimensiones, oscilaciones amortiguadas y forzadas, y funciones de Green.
+Los demás temas están en docs/ROADMAP.md. Los usuarios son estudiantes que recién aprenden
+Mathematica. El paquete es genérico: no menciona ningún curso, institución ni persona.
 
 ## Estructura
 - CMToolkit/PacletInfo.wl: metadatos. La versión se cambia solo aquí.
@@ -13,11 +14,25 @@ Los usuarios son estudiantes que recién aprenden Mathematica.
 - Examples/: notebooks de ejemplo, guardados sin salidas.
 - docs/specs/: especificaciones aprobadas de cada función. Implementar exactamente lo que dicen;
   si algo no cuadra o falta, preguntar antes de decidir.
-- reference/ayudantia6/: material de referencia del curso (está en .gitignore, solo existe localmente). No modificar.
+- docs/ROADMAP.md: visión, principios, módulos y versiones. Actualizar el estado al terminar un módulo.
+- reference/: material de referencia del curso (en .gitignore, solo existe localmente). No modificar.
+- privado/: carpeta personal del usuario (en .gitignore). No leer ni escribir.
+- scripts/check-repo.sh, .githooks/pre-commit, .github/workflows/check-repo.yml: revisión de seguridad.
 
 ## Comandos
 - Correr todos los tests: wolframscript -file Tests/RunTests.wls
 - Para revisar un gráfico: exportarlo a PNG en /tmp con wolframscript y abrir la imagen.
+
+## Seguridad
+- Nunca copiar al repo archivos de fuera de él, ni contenido de reference/ o privado/.
+- Nunca usar datos de estudiantes (nombres, notas, entregas) en ejemplos, tests ni documentación.
+  Los ejemplos se inventan o salen de material del curso que el usuario autorizó publicar.
+- Nunca escribir claves, tokens ni contraseñas en archivos. Si una tarea los necesita, detenerse
+  y preguntar.
+- No escribir el nombre ni el código de ningún curso, institución ni persona en el repo.
+- Notebooks en Examples/ siempre sin salidas (las salidas suelen incluir rutas personales).
+- Si scripts/check-repo.sh reporta un problema, detenerse y explicarlo. Nunca usar --no-verify
+  ni buscar otra forma de saltarse la revisión.
 
 ## Versión de Mathematica
 - Mínima: 15.0 (los alumnos usan 15.0.1). Se puede usar todo lo disponible en 15.0.
@@ -77,3 +92,5 @@ Los usuarios son estudiantes que recién aprenden Mathematica.
 - Matrices de masas y constantes elásticas: Mmat y Kmat en el código (m_μν y k_μν en el curso).
 - λ = m ω² cuando la matriz de masas es m·identidad.
 - Modos normalizados con A·Mmat·A = 1. En subespacios degenerados la base debe ser Mmat-ortonormal.
+- Oscilador amortiguado y forzado: ẍ + 2γ ẋ + ω₀² x = F(t)/m, con γ el coeficiente de
+  amortiguamiento y ω₀ la frecuencia natural.
