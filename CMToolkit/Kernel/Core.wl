@@ -88,10 +88,16 @@ $CMPlotStyle = {
   ImageSize -> 420
 };
 
-(* Las opciones del usuario van primero: Plot usa la primera que encuentra *)
+(* Las opciones del usuario van primero: Plot usa la primera que encuentra.
+   Con una sola curva, Plot combinaría la lista de PlotStyle de $CMPlotStyle en una sola
+   directiva; por eso se le entrega solo el primer estilo. Para saber si f es una lista se
+   evalúa con la variable sin valor (Block), en Quiet: algunas funciones emiten mensajes con
+   argumentos simbólicos y esa evaluación solo sirve para decidir el estilo *)
 SetAttributes[CMPlot, HoldAll];
-CMPlot[f_, dom_, opts : OptionsPattern[Plot]] :=
-  Plot[f, dom, opts, Evaluate[Sequence @@ $CMPlotStyle]];
+CMPlot[f_, dom : {x_Symbol, __}, opts : OptionsPattern[Plot]] :=
+  With[{style = If[TrueQ[Quiet[Block[{x}, ListQ[f]]]], {},
+      {PlotStyle -> First[Lookup[$CMPlotStyle, PlotStyle]]}]},
+    Plot[f, dom, opts, Evaluate[Sequence @@ style], Evaluate[Sequence @@ $CMPlotStyle]]];
 
 (* Criterio de cero único: simbólicamente equivale a === 0; para números inexactos
    acepta 0. y ruido de máquina (Chop) *)
