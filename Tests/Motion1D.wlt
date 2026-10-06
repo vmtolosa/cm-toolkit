@@ -311,3 +311,100 @@ VerificationTest[
   True,
   TestID -> "alias-CompararArmonica"
 ]
+
+(* === PhasePortrait === *)
+
+moPhase = PhasePortrait[moRing[0.6], {th, t}, {Pi + 0.15, 0}, 40];
+
+VerificationTest[
+  MatchQ[moPhase, _Graphics | _Legended],
+  True,
+  TestID -> "fase-anillo-una-trayectoria"
+]
+
+VerificationTest[
+  MatchQ[PhasePortrait[moRing[0.6], {th, t}, {{Pi + 0.15, 0}, {Pi + 0.5, 0}, {Pi, 0.6}}, 40],
+    _Graphics | _Legended],
+  True,
+  TestID -> "fase-anillo-tres-trayectorias"
+]
+
+VerificationTest[
+  Lookup[Options[moPhase], AspectRatio],
+  1,
+  TestID -> "fase-AspectRatio-1-por-defecto"
+]
+
+(* Todas las trayectorias son exactas: ninguna punteada *)
+VerificationTest[
+  FreeQ[PhasePortrait[moRing[0.6], {th, t}, {{Pi + 0.15, 0}, {Pi + 0.5, 0}}, 40], _Dashing],
+  True,
+  TestID -> "fase-trayectorias-continuas"
+]
+
+VerificationTest[
+  moImageSize[PhasePortrait[moRing[0.6], {th, t}, {Pi + 0.15, 0}, 40, ImageSize -> 200]],
+  200,
+  TestID -> "fase-opcion-del-usuario-gana"
+]
+
+(* Una trayectoria que falla: su mensaje y el gráfico con las demás *)
+VerificationTest[
+  MatchQ[PhasePortrait[moRing[0.6], {th, t}, {{Pi + 0.15, 0}, {a, 0}}, 40], _Graphics | _Legended],
+  True,
+  {PhasePortrait::ic},
+  TestID -> "fase-una-trayectoria-falla"
+]
+
+(* U = y²/2 − y⁴/4: desde 0.5 queda en el pozo; desde 2, fuera de la barrera, diverge *)
+VerificationTest[
+  MatchQ[PhasePortrait[y'[t]^2/2 - y[t]^2/2 + y[t]^4/4, {y, t}, {{0.5, 0}, {2, 0}}, 10],
+    _Graphics | _Legended],
+  True,
+  {PhasePortrait::ndsolve},
+  TestID -> "fase-una-trayectoria-diverge"
+]
+
+VerificationTest[
+  PhasePortrait[moRing[0.6], {th, t}, {a, 0}, 40],
+  $Failed,
+  {PhasePortrait::ic},
+  TestID -> "fase-error-todas-fallan"
+]
+
+VerificationTest[
+  PhasePortrait[moRingL, {th, t}, {Pi + 0.15, 0}, 40],
+  $Failed,
+  {PhasePortrait::numeric},
+  TestID -> "fase-error-anillo-simbolico"
+]
+
+VerificationTest[
+  PhasePortrait[moRing[0.6] + t th[t], {th, t}, {Pi + 0.15, 0}, 40],
+  $Failed,
+  {PhasePortrait::time},
+  TestID -> "fase-error-L-depende-de-t"
+]
+
+VerificationTest[
+  PhasePortrait[moRing[0.6], {th, t}, {{Pi + 0.15}}, 40],
+  $Failed,
+  {PhasePortrait::args},
+  TestID -> "fase-error-condiciones-mal-formadas"
+]
+
+VerificationTest[
+  Module[{en},
+    en = Block[{$CMLanguage = "English"},
+      Quiet[PhasePortrait[moRingL, {th, t}, {Pi + 0.15, 0}, 40]];
+      PhasePortrait::numeric];
+    StringQ[en] && en === CMToolkit`Private`$texts["PhasePortrait::numeric"]["English"]],
+  True,
+  TestID -> "fase-mensaje-en-ingles"
+]
+
+VerificationTest[
+  Head[RetratoDeFase[moRing[0.6], {th, t}, {Pi + 0.15, 0}, 40]] === Head[moPhase],
+  True,
+  TestID -> "alias-RetratoDeFase"
+]

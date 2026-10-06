@@ -44,6 +44,13 @@ CompararArmonica::usage =
   "CompararArmonica[L, {q, t}, qeq, x0, tmax] es el alias en español de CompareHarmonic. Los mensajes de error aparecen con el nombre CompareHarmonic.\n\
 CompararArmonica[L, {q, t}, qeq, x0, tmax] is the Spanish alias of CompareHarmonic. Error messages appear under the name CompareHarmonic.";
 
+PhasePortrait::usage =
+  "PhasePortrait[L, {q, t}, {{q01, v01}, {q02, v02}, \[Ellipsis]}, tmax] dibuja en el plano (q, q\:0307) las trayectorias del lagrangiano L de un grado de libertad, una por condición inicial, entre t = 0 y tmax, y marca el punto inicial de cada una. PhasePortrait[L, {q, t}, {q0, v0}, tmax] dibuja una sola trayectoria. Todos los parámetros de L deben tener valor numérico. Acepta las opciones de ParametricPlot. Alias: RetratoDeFase.\n\
+PhasePortrait[L, {q, t}, {{q01, v01}, {q02, v02}, \[Ellipsis]}, tmax] draws in the (q, q\:0307) plane the trajectories of the one-degree-of-freedom Lagrangian L, one per initial condition, between t = 0 and tmax, and marks the initial point of each one. PhasePortrait[L, {q, t}, {q0, v0}, tmax] draws a single trajectory. All parameters of L must have numeric values. It accepts the options of ParametricPlot.";
+RetratoDeFase::usage =
+  "RetratoDeFase[L, {q, t}, {{q01, v01}, \[Ellipsis]}, tmax] es el alias en español de PhasePortrait. Los mensajes de error aparecen con el nombre PhasePortrait.\n\
+RetratoDeFase[L, {q, t}, {{q01, v01}, \[Ellipsis]}, tmax] is the Spanish alias of PhasePortrait. Error messages appear under the name PhasePortrait.";
+
 Begin["`Private`"];
 
 (* Textos de este módulo: se agregan a la tabla $texts de Core.wl *)
@@ -282,7 +289,28 @@ AssociateTo[$texts, <|
   "CompareHarmonic:exact" -> <|"Spanish" -> "exacta", "English" -> "exact"|>,
   "CompareHarmonic:harmonic" -> <|"Spanish" -> "armónica", "English" -> "harmonic"|>,
   "CompareHarmonic:time" -> <|"Spanish" -> "t", "English" -> "t"|>,
-  "CompareHarmonic:deviation" -> <|"Spanish" -> "x", "English" -> "x"|>
+  "CompareHarmonic:deviation" -> <|"Spanish" -> "x", "English" -> "x"|>,
+
+  (* PhasePortrait: mensajes. ic, mass y ndsolve son de una trayectoria: se omite y se
+     dibujan las demás *)
+  "PhasePortrait::args" -> <|
+    "Spanish" -> "PhasePortrait se llama con cuatro argumentos y, si hace falta, opciones: PhasePortrait[L, {q, t}, {{q01, v01}, {q02, v02}, \[Ellipsis]}, tmax], o PhasePortrait[L, {q, t}, {q0, v0}, tmax] para una sola trayectoria. Por ejemplo, para un péndulo con m = g = b = 1: PhasePortrait[th'[t]^2/2 + Cos[th[t]], {th, t}, {{Pi + 0.5, 0}, {Pi + 2, 0}}, 20].",
+    "English" -> "PhasePortrait takes four arguments and, if needed, options: PhasePortrait[L, {q, t}, {{q01, v01}, {q02, v02}, \[Ellipsis]}, tmax], or PhasePortrait[L, {q, t}, {q0, v0}, tmax] for a single trajectory. For example, for a pendulum with m = g = b = 1: PhasePortrait[th'[t]^2/2 + Cos[th[t]], {th, t}, {{Pi + 0.5, 0}, {Pi + 2, 0}}, 20]."|>,
+  "PhasePortrait::time" -> <|
+    "Spanish" -> "PhasePortrait requiere un lagrangiano autónomo: solo puede depender de `1`[`2`] y `1`'[`2`], sin `2` explícito ni derivadas de orden superior.",
+    "English" -> "PhasePortrait requires an autonomous Lagrangian: it may depend only on `1`[`2`] and `1`'[`2`], with no explicit `2` and no higher derivatives."|>,
+  "PhasePortrait::numeric" -> <|
+    "Spanish" -> "PhasePortrait integra numéricamente y el lagrangiano tiene símbolos sin valor: `1`. Dales valores numéricos, por ejemplo L /. `2`.",
+    "English" -> "PhasePortrait integrates numerically and the Lagrangian has symbols with no value: `1`. Give them numeric values, for example L /. `2`."|>,
+  "PhasePortrait::ic" -> <|
+    "Spanish" -> "Condición inicial no válida: q0 = `1`, v0 = `2` y tmax = `3` deben ser números reales, con tmax > 0. Esa trayectoria no se dibuja.",
+    "English" -> "Invalid initial condition: q0 = `1`, v0 = `2` and tmax = `3` must be real numbers, with tmax > 0. That trajectory is not drawn."|>,
+  "PhasePortrait::mass" -> <|
+    "Spanish" -> "La masa efectiva \[PartialD]\.b2L/\[PartialD]q\:0307\.b2 = `1` vale 0 en la condición inicial (q = `2`, q\:0307 = `3`): la ecuación de movimiento no se puede despejar para q''. Esa trayectoria no se dibuja.",
+    "English" -> "The effective mass \[PartialD]\.b2L/\[PartialD]q\:0307\.b2 = `1` is 0 at the initial condition (q = `2`, q\:0307 = `3`): the equation of motion cannot be solved for q''. That trajectory is not drawn."|>,
+  "PhasePortrait::ndsolve" -> <|
+    "Spanish" -> "Una trayectoria se detuvo en t = `2`, antes de tmax = `1`: NDSolve falló o se agotó el límite de 30 s. Suele pasar cuando la solución diverge. Esa trayectoria no se dibuja.",
+    "English" -> "A trajectory stopped at t = `2`, before tmax = `1`: NDSolve failed or the 30 s limit ran out. This usually happens when the solution diverges. That trajectory is not drawn."|>
 |>];
 
 (* --- Funciones privadas compartidas por las funciones de un grado de libertad
@@ -757,6 +785,48 @@ CompareHarmonic[L_, {q_Symbol, t_Symbol}, qeq_, x0_, tmax_ /; !OptionQ[tmax],
 
 CompareHarmonic[___] := (cmMessage[CompareHarmonic, "args"]; $Failed);
 
+(* --- PhasePortrait: especificación en docs/specs/Motion1D.md --- *)
+
+Options[PhasePortrait] = Options[ParametricPlot];
+
+(* Los colores de $CMPlotStyle sin Dashed, repetidos de forma cíclica: en este paquete
+   punteado significa «aproximación» y las trayectorias son todas exactas *)
+phaseStyle[i_] := With[{styles = DeleteCases[Lookup[$CMPlotStyle, PlotStyle], _Dashing, Infinity]},
+  styles[[Mod[i - 1, Length[styles]] + 1]]];
+
+PhasePortrait[L_, {q_Symbol, t_Symbol}, ics_, tmax_ /; !OptionQ[tmax], opts : OptionsPattern[]] :=
+  Module[{pairs, form, sols, ok, tau},
+
+    (* Una condición inicial {q0, v0} o una lista de ellas *)
+    pairs = Which[
+      MatchQ[ics, {Except[_List], Except[_List]}], {ics},
+      MatchQ[ics, {{Except[_List], Except[_List]} ..}], ics,
+      True, $Failed];
+    If[pairs === $Failed, cmMessage[PhasePortrait, "args"]; Return[$Failed]];
+
+    (* time y numeric una sola vez; ic, mass y ndsolve por trayectoria *)
+    form = motionSetup1D[PhasePortrait, L, q, t];
+    If[form === $Failed, Return[$Failed]];
+    sols = If[motionChecks1D[PhasePortrait, form, q, t, #, tmax],
+        motionIntegrate1D[PhasePortrait, form, q, t, #, tmax], $Failed] & /@ pairs;
+    ok = Flatten[Position[sols, _Association, {1}, Heads -> False]];
+    If[ok === {}, Return[$Failed]];
+
+    (* Cada trayectoria conserva el color de su posición en la lista, aunque falle otra *)
+    Show[
+      ParametricPlot[
+        Evaluate[With[{s = sols[[#, "Solution"]]}, {s[tau], s'[tau]}] & /@ ok], {tau, 0, tmax},
+        Evaluate[Sequence @@ FilterRules[{opts}, Options[ParametricPlot]]],
+        PlotStyle -> (phaseStyle /@ ok),
+        AspectRatio -> 1,
+        FrameLabel -> {ToString[q], Overscript[ToString[q], "."]},
+        Evaluate[Sequence @@ $CMPlotStyle]],
+      Graphics[{AbsolutePointSize[7],
+        {FirstCase[phaseStyle[#], _RGBColor, Black], Point[N[pairs[[#]]]]} & /@ ok}]]
+  ];
+
+PhasePortrait[___] := (cmMessage[PhasePortrait, "args"]; $Failed);
+
 (* --- Alias en español (al final, cuando las funciones ya tienen sus atributos) --- *)
 defineAlias[ExpansionArmonica, HarmonicExpansion];
 defineAlias[PuntosDeEquilibrio, EquilibriumPoints];
@@ -764,5 +834,6 @@ defineAlias[ClasificarEquilibrio, ClassifyEquilibrium];
 defineAlias[FuncionEnergia, EnergyFunction];
 defineAlias[ResolverMovimiento, SolveMotion];
 defineAlias[CompararArmonica, CompareHarmonic];
+defineAlias[RetratoDeFase, PhasePortrait];
 
 End[];
