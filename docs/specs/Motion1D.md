@@ -1,6 +1,8 @@
 # Especificación: movimiento y gráficos de un grado de libertad
 
-Estado: aprobada para implementar. Versión 1 (5 de octubre de 2026).
+Estado: aprobada para implementar. Versión 1.1 (6 de octubre de 2026).
+- v1.1: corrige la condición inicial del retrato de fase de la revisión visual; estilo de las
+  trayectorias; nombre de los mensajes de las funciones que usan el núcleo numérico; alcance de `mass`.
 Requiere: `docs/specs/Equilibria.md` ya mergeado. Módulo: `Oscillations1D.wl`.
 Referencia: Ayudantía 6, Problema 1, incisos (b) y (c) y sección final; Figuras 2, 3 y 4.
 
@@ -23,7 +25,10 @@ límite de tiempo y precisiones de `Equilibria.md` (v1.4).
   `numericLagrangianQ[f, Lr, permitidos]`.
 - **Gráficos.** Usan `$CMPlotStyle`; las opciones del usuario tienen prioridad (se aceptan las
   opciones de la función gráfica subyacente). Etiquetas de ejes y leyendas en el idioma de
-  `cmLanguage[]`, desde `$texts`. Primera curva continua, segunda punteada, como hoy.
+  `cmLanguage[]`, desde `$texts`. Primera curva continua, segunda punteada, como hoy. En este
+  paquete, punteado significa «aproximación»: donde todas las curvas son exactas (las
+  trayectorias de PhasePortrait) van todas continuas, con los colores de `$CMPlotStyle` repetidos
+  de forma cíclica.
 - **Tests de gráficos.** Se comprueba que el resultado es un gráfico
   (`MatchQ[g, _Graphics | _Legended]`), que no se emiten mensajes y que una opción del usuario
   (por ejemplo `ImageSize -> 200`) gana. El aspecto se revisa exportando a PNG y mirando la
@@ -73,8 +78,13 @@ Devuelve:
 | "EnergyFunction" | h como expresión en q[t], q'[t] |
 | "EnergyDrift" | máximo de \|h(t) − h(0)\| sobre una malla de 200 puntos: control de calidad de la integración |
 
+El cálculo vive en una función privada `solveMotion1D[f, …]`, que recibe el símbolo de la función
+que llama: si el estudiante llamó a PhasePortrait, el mensaje sale como `PhasePortrait::ndsolve`.
+Cada función tiene sus propios textos en `$texts`.
+
 Validación, en este orden: `args`; `time`; `numeric`; `ic` (q0, v0 y tmax deben ser números
-reales, tmax > 0); `mass` (∂²L/∂q̇² = 0); `ndsolve` (NDSolve falla, no llega a tmax o se agota el
+reales, tmax > 0); `mass` (∂²L/∂q̇² es idénticamente 0, o vale 0 en la condición inicial, donde
+q''(0) no queda definida; si se anula más adelante, lo informa `ndsolve`); `ndsolve` (NDSolve falla, no llega a tmax o se agota el
 tiempo: el mensaje dice hasta qué t llegó).
 
 ## CompareHarmonic / CompararArmonica
@@ -100,8 +110,8 @@ Devuelve el gráfico. Para obtener los datos, el estudiante usa `SolveMotion` y 
     PhasePortrait[L, {q, t}, {{q01, v01}, {q02, v02}, …}, tmax]
     PhasePortrait[L, {q, t}, {q0, v0}, tmax]        (una sola trayectoria)
 
-Trayectorias en el plano (q, q̇), una por condición inicial, con `SolveMotion`. Marca el punto
-inicial de cada una. Ejes q y q̇ (con el nombre de la coordenada). `AspectRatio -> 1` por defecto.
+Trayectorias en el plano (q, q̇), una por condición inicial, con el núcleo `solveMotion1D`.
+Todas en línea continua; marca el punto inicial de cada una con el color de su trayectoria. Ejes q y q̇ (con el nombre de la coordenada). `AspectRatio -> 1` por defecto.
 Si alguna trayectoria falla, se emite su mensaje y se dibujan las demás; si fallan todas, `$Failed`.
 
 ## Tests de la Parte A (Tests/Motion1D.wlt)
@@ -132,8 +142,9 @@ anillo numérico: `ring[r_] := L /. {m -> 1, g -> 1, b -> 1, w -> r}` (así ωc 
 | Mensaje en inglés | con $CMLanguage = "English" | |
 
 Revisión visual (PNG): los dos paneles de la Figura 3 (en el segundo, la exacta debe adelantarse
-a la armónica) y un retrato de fase con ring[1.3] desde {Pi + 0.05, 0}, tmax 60, donde la
-trayectoria recorre los dos pozos.
+a la armónica) y un retrato de fase con ring[1.3], tmax 60, con dos trayectorias en el mismo
+gráfico: desde {Pi + 0.05, 0}, que queda atrapada en un pozo (h = −1.00086 < U(π) = −1), y desde
+{Pi + 0.05, 0.3}, que recorre los dos (h = −0.956 > −1). Entre ambas se ve la separatriz.
 
 ---
 
