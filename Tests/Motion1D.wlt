@@ -201,3 +201,113 @@ VerificationTest[
   True,
   TestID -> "alias-ResolverMovimiento"
 ]
+
+(* === CompareHarmonic === *)
+
+(* ImageSize de un gráfico, con o sin leyenda *)
+moImageSize[g_] := Lookup[Options[If[Head[g] === Legended, First[g], g]], ImageSize];
+
+VerificationTest[
+  MatchQ[CompareHarmonic[moRing[0.6], {th, t}, Pi, 0.15, 40], _Graphics | _Legended],
+  True,
+  TestID -> "comparar-anillo-0.6-figura-3-i"
+]
+
+VerificationTest[
+  MatchQ[CompareHarmonic[moRing[0.95], {th, t}, Pi, 0.15, 60], _Graphics | _Legended],
+  True,
+  TestID -> "comparar-anillo-0.95-figura-3-ii"
+]
+
+VerificationTest[
+  MatchQ[CompareHarmonic[moRing[1.5], {th, t}, ArcCos[-1/1.5^2], 0.1, 30], _Graphics | _Legended],
+  True,
+  TestID -> "comparar-anillo-1.5-listado-5"
+]
+
+VerificationTest[
+  MatchQ[CompareHarmonic[moRing[0.6], {th, t}, Pi, 0.15, 40, "InitialVelocity" -> 0.05],
+    _Graphics | _Legended],
+  True,
+  TestID -> "comparar-velocidad-inicial"
+]
+
+VerificationTest[
+  moImageSize[CompareHarmonic[moRing[0.6], {th, t}, Pi, 0.15, 40, ImageSize -> 200]],
+  200,
+  TestID -> "comparar-opcion-del-usuario-gana"
+]
+
+VerificationTest[
+  CompareHarmonic[moRing[0.6], {th, t}, 0, 0.15, 40],
+  $Failed,
+  {CompareHarmonic::notmin},
+  TestID -> "comparar-error-maximo"
+]
+
+VerificationTest[
+  CompareHarmonic[moRing[0.6], {th, t}, Pi/2, 0.15, 40],
+  $Failed,
+  {CompareHarmonic::noteq},
+  TestID -> "comparar-error-no-es-equilibrio"
+]
+
+VerificationTest[
+  CompareHarmonic[moRingL, {th, t}, Pi, 0.15, 40],
+  $Failed,
+  {CompareHarmonic::numeric},
+  TestID -> "comparar-error-anillo-simbolico"
+]
+
+VerificationTest[
+  CompareHarmonic[moRing[0.6], {th, t}, Pi, a, 40],
+  $Failed,
+  {CompareHarmonic::ic},
+  TestID -> "comparar-error-x0-simbolico"
+]
+
+VerificationTest[
+  CompareHarmonic[moRing[0.6], {th, t}, Pi, 0.15, 40, "InitialVelocity" -> v],
+  $Failed,
+  {CompareHarmonic::ic},
+  TestID -> "comparar-error-velocidad-simbolica"
+]
+
+VerificationTest[
+  CompareHarmonic[y[t] y'[t] - y[t]^2/2, {y, t}, 0, 0.1, 10],
+  $Failed,
+  {CompareHarmonic::mass},
+  TestID -> "comparar-error-masa-nula"
+]
+
+VerificationTest[
+  CompareHarmonic[moRing[0.6] + t th[t], {th, t}, Pi, 0.15, 40],
+  $Failed,
+  {CompareHarmonic::time},
+  TestID -> "comparar-error-L-depende-de-t"
+]
+
+VerificationTest[
+  CompareHarmonic[moRing[0.6], {th, t}, Pi, 0.15],
+  $Failed,
+  {CompareHarmonic::args},
+  TestID -> "comparar-error-cuatro-argumentos"
+]
+
+VerificationTest[
+  Module[{en},
+    en = Block[{$CMLanguage = "English"},
+      Quiet[CompareHarmonic[moRing[0.6], {th, t}, 0, 0.15, 40]];
+      CompareHarmonic::notmin];
+    StringQ[en] && en === CMToolkit`Private`$texts["CompareHarmonic::notmin"]["English"]],
+  True,
+  TestID -> "comparar-mensaje-en-ingles"
+]
+
+(* Alias de una función gráfica: mismo Head y sin mensajes *)
+VerificationTest[
+  Head[CompararArmonica[moRing[0.6], {th, t}, Pi, 0.15, 40]] ===
+    Head[CompareHarmonic[moRing[0.6], {th, t}, Pi, 0.15, 40]],
+  True,
+  TestID -> "alias-CompararArmonica"
+]

@@ -37,6 +37,13 @@ ResolverMovimiento::usage =
   "ResolverMovimiento[L, {q, t}, {q0, v0}, tmax] es el alias en español de SolveMotion. Los mensajes de error aparecen con el nombre SolveMotion.\n\
 ResolverMovimiento[L, {q, t}, {q0, v0}, tmax] is the Spanish alias of SolveMotion. Error messages appear under the name SolveMotion.";
 
+CompareHarmonic::usage =
+  "CompareHarmonic[L, {q, t}, qeq, x0, tmax] grafica la desviación exacta q(t) \[Minus] qeq contra la solución armónica x0 Cos[\[CapitalOmega] t], soltando el sistema desde el reposo en qeq + x0, entre t = 0 y tmax. \[CapitalOmega]\.b2 sale de HarmonicExpansion y la solución exacta de SolveMotion. Todos los parámetros de L deben tener valor numérico. Opción: \"InitialVelocity\" -> v0 (0 por defecto), y las opciones de Plot. Alias: CompararArmonica.\n\
+CompareHarmonic[L, {q, t}, qeq, x0, tmax] plots the exact deviation q(t) \[Minus] qeq against the harmonic solution x0 Cos[\[CapitalOmega] t], releasing the system from rest at qeq + x0, between t = 0 and tmax. \[CapitalOmega]\.b2 comes from HarmonicExpansion and the exact solution from SolveMotion. All parameters of L must have numeric values. Option: \"InitialVelocity\" -> v0 (0 by default), and the options of Plot.";
+CompararArmonica::usage =
+  "CompararArmonica[L, {q, t}, qeq, x0, tmax] es el alias en español de CompareHarmonic. Los mensajes de error aparecen con el nombre CompareHarmonic.\n\
+CompararArmonica[L, {q, t}, qeq, x0, tmax] is the Spanish alias of CompareHarmonic. Error messages appear under the name CompareHarmonic.";
+
 Begin["`Private`"];
 
 (* Textos de este módulo: se agregan a la tabla $texts de Core.wl *)
@@ -243,7 +250,39 @@ AssociateTo[$texts, <|
     "English" -> "The effective mass \[PartialD]\.b2L/\[PartialD]q\:0307\.b2 = `1` is 0 at the initial condition (q = `2`, q\:0307 = `3`): the equation of motion cannot be solved for q''. If it is always 0, the Lagrangian has no kinetic term."|>,
   "SolveMotion::ndsolve" -> <|
     "Spanish" -> "La integración se detuvo en t = `2`, antes de tmax = `1`: NDSolve falló o se agotó el límite de 30 s. Suele pasar cuando la solución diverge o cuando \[PartialD]\.b2L/\[PartialD]q\:0307\.b2 se anula durante el movimiento.",
-    "English" -> "The integration stopped at t = `2`, before tmax = `1`: NDSolve failed or the 30 s limit ran out. This usually happens when the solution diverges or when \[PartialD]\.b2L/\[PartialD]q\:0307\.b2 vanishes during the motion."|>
+    "English" -> "The integration stopped at t = `2`, before tmax = `1`: NDSolve failed or the 30 s limit ran out. This usually happens when the solution diverges or when \[PartialD]\.b2L/\[PartialD]q\:0307\.b2 vanishes during the motion."|>,
+
+  (* CompareHarmonic: mensajes *)
+  "CompareHarmonic::args" -> <|
+    "Spanish" -> "CompareHarmonic se llama con cinco argumentos y, si hace falta, opciones: CompareHarmonic[L, {q, t}, qeq, x0, tmax]. Por ejemplo, para un péndulo con m = g = b = 1: CompareHarmonic[th'[t]^2/2 + Cos[th[t]], {th, t}, Pi, 0.2, 30].",
+    "English" -> "CompareHarmonic takes five arguments and, if needed, options: CompareHarmonic[L, {q, t}, qeq, x0, tmax]. For example, for a pendulum with m = g = b = 1: CompareHarmonic[th'[t]^2/2 + Cos[th[t]], {th, t}, Pi, 0.2, 30]."|>,
+  "CompareHarmonic::time" -> <|
+    "Spanish" -> "CompareHarmonic requiere un lagrangiano autónomo: solo puede depender de `1`[`2`] y `1`'[`2`], sin `2` explícito ni derivadas de orden superior.",
+    "English" -> "CompareHarmonic requires an autonomous Lagrangian: it may depend only on `1`[`2`] and `1`'[`2`], with no explicit `2` and no higher derivatives."|>,
+  "CompareHarmonic::numeric" -> <|
+    "Spanish" -> "CompareHarmonic integra numéricamente y el lagrangiano tiene símbolos sin valor: `1`. Dales valores numéricos, por ejemplo L /. `2`.",
+    "English" -> "CompareHarmonic integrates numerically and the Lagrangian has symbols with no value: `1`. Give them numeric values, for example L /. `2`."|>,
+  "CompareHarmonic::ic" -> <|
+    "Spanish" -> "Datos no válidos: qeq = `1`, x0 = `2`, \"InitialVelocity\" = `3` y tmax = `4` deben ser números reales, con tmax > 0.",
+    "English" -> "Invalid data: qeq = `1`, x0 = `2`, \"InitialVelocity\" = `3` and tmax = `4` must be real numbers, with tmax > 0."|>,
+  "CompareHarmonic::mass" -> <|
+    "Spanish" -> "La masa efectiva \[PartialD]\.b2L/\[PartialD]q\:0307\.b2 = `1` vale 0 en q = `2`, q\:0307 = `3`: no hay oscilaciones que comparar. Si vale 0 siempre, el lagrangiano no tiene término cinético.",
+    "English" -> "The effective mass \[PartialD]\.b2L/\[PartialD]q\:0307\.b2 = `1` is 0 at q = `2`, q\:0307 = `3`: there are no oscillations to compare. If it is always 0, the Lagrangian has no kinetic term."|>,
+  "CompareHarmonic::noteq" -> <|
+    "Spanish" -> "qeq = `1` no es un equilibrio: U'(qeq) vale `2`, no 0. Busca los equilibrios con EquilibriumPoints.",
+    "English" -> "qeq = `1` is not an equilibrium: U'(qeq) is `2`, not 0. Find the equilibria with EquilibriumPoints."|>,
+  "CompareHarmonic::notmin" -> <|
+    "Spanish" -> "\[CapitalOmega]\.b2 = `2` \[LessEqual] 0 en qeq = `1`: el equilibrio no es un mínimo con oscilaciones armónicas y no hay solución armónica que comparar. Usa ClassifyEquilibrium para ver de qué tipo es.",
+    "English" -> "\[CapitalOmega]\.b2 = `2` \[LessEqual] 0 at qeq = `1`: the equilibrium is not a minimum with harmonic oscillations and there is no harmonic solution to compare. Use ClassifyEquilibrium to see what type it is."|>,
+  "CompareHarmonic::ndsolve" -> <|
+    "Spanish" -> "La integración se detuvo en t = `2`, antes de tmax = `1`: NDSolve falló o se agotó el límite de 30 s. Suele pasar cuando la solución diverge o cuando \[PartialD]\.b2L/\[PartialD]q\:0307\.b2 se anula durante el movimiento.",
+    "English" -> "The integration stopped at t = `2`, before tmax = `1`: NDSolve failed or the 30 s limit ran out. This usually happens when the solution diverges or when \[PartialD]\.b2L/\[PartialD]q\:0307\.b2 vanishes during the motion."|>,
+
+  (* CompareHarmonic: etiquetas del gráfico *)
+  "CompareHarmonic:exact" -> <|"Spanish" -> "exacta", "English" -> "exact"|>,
+  "CompareHarmonic:harmonic" -> <|"Spanish" -> "armónica", "English" -> "harmonic"|>,
+  "CompareHarmonic:time" -> <|"Spanish" -> "t", "English" -> "t"|>,
+  "CompareHarmonic:deviation" -> <|"Spanish" -> "x", "English" -> "x"|>
 |>];
 
 (* --- Funciones privadas compartidas por las funciones de un grado de libertad
@@ -674,11 +713,56 @@ SolveMotion[L_, {q_Symbol, t_Symbol}, {q0_, v0_}, tmax_] :=
 
 SolveMotion[___] := (cmMessage[SolveMotion, "args"]; $Failed);
 
+(* --- CompareHarmonic: especificación en docs/specs/Motion1D.md --- *)
+
+Options[CompareHarmonic] = Join[{"InitialVelocity" -> 0}, Options[Plot]];
+
+CompareHarmonic[L_, {q_Symbol, t_Symbol}, qeq_, x0_, tmax_ /; !OptionQ[tmax],
+    opts : OptionsPattern[]] :=
+  Module[{v0, form, Lr, qs, qd, he, omega2, om, mot, sol, tau},
+
+    (* Validación, en el orden args, time, numeric, ic, mass, noteq, notmin, ndsolve *)
+    v0 = OptionValue["InitialVelocity"];
+    form = motionSetup1D[CompareHarmonic, L, q, t];
+    If[form === $Failed, Return[$Failed]];
+    {Lr, qs, qd} = form;
+    If[!(AllTrue[{qeq, x0, v0, tmax}, realNumberQ] && TrueQ[tmax > 0]),
+      cmMessage[CompareHarmonic, "ic", qeq, x0, v0, tmax]; Return[$Failed]];
+    If[!motionChecks1D[CompareHarmonic, form, q, t, {qeq + x0, v0}, tmax], Return[$Failed]];
+    If[!equilibriumQ1D[CompareHarmonic, -Lr /. qd -> 0, qs, qeq, True], Return[$Failed]];
+
+    (* Ω² de HarmonicExpansion, con sus mensajes silenciados. Las validaciones anteriores
+       cubren sus errores, salvo la masa nula en el equilibrio mismo *)
+    he = Quiet[Module[{dev}, HarmonicExpansion[L, {q, t}, qeq, dev]]];
+    If[he === $Failed,
+      cmMessage[CompareHarmonic, "mass", D[Lr, {qd, 2}] /. {qs -> q[t], qd -> q'[t]}, qeq, 0];
+      Return[$Failed]];
+    omega2 = he["Omega2"];
+    If[!TrueQ[omega2 > 0] || zeroQ[omega2, True],
+      cmMessage[CompareHarmonic, "notmin", qeq, omega2]; Return[$Failed]];
+
+    mot = motionIntegrate1D[CompareHarmonic, form, q, t, {qeq + x0, v0}, tmax];
+    If[mot === $Failed, Return[$Failed]];
+    sol = mot["Solution"];
+    om = Sqrt[omega2];
+
+    (* Las opciones del usuario van primero: Plot usa la primera que encuentra *)
+    Plot[Evaluate[{sol[tau] - qeq, x0 Cos[om tau] + v0/om Sin[om tau]}], {tau, 0, tmax},
+      Evaluate[Sequence @@ FilterRules[{opts}, Options[Plot]]],
+      PlotLegends -> {tr["CompareHarmonic:exact"], tr["CompareHarmonic:harmonic"]},
+      FrameLabel -> {tr["CompareHarmonic:time"], tr["CompareHarmonic:deviation"]},
+      PlotRange -> All,
+      Evaluate[Sequence @@ $CMPlotStyle]]
+  ];
+
+CompareHarmonic[___] := (cmMessage[CompareHarmonic, "args"]; $Failed);
+
 (* --- Alias en español (al final, cuando las funciones ya tienen sus atributos) --- *)
 defineAlias[ExpansionArmonica, HarmonicExpansion];
 defineAlias[PuntosDeEquilibrio, EquilibriumPoints];
 defineAlias[ClasificarEquilibrio, ClassifyEquilibrium];
 defineAlias[FuncionEnergia, EnergyFunction];
 defineAlias[ResolverMovimiento, SolveMotion];
+defineAlias[CompararArmonica, CompareHarmonic];
 
 End[];
