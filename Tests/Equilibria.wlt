@@ -333,6 +333,20 @@ VerificationTest[
   TestID -> "clasificar-indeterminado-hasta-orden-8"
 ]
 
+(* --- Presentación de la serie retenida (docs/specs/Ajustes1D.md, puntos 2 y 3) --- *)
+
+(* Riel en el caso crítico l0 = h: en x = 0, c0 = c2 = 0 y la serie tiene un solo término,
+   k u^4/(8 h^2) *)
+eqRailCritical = ClassifyEquilibrium[eqRailL /. l0 -> h, {x, t}, 0, u];
+
+(* Un solo término se muestra sin Plus: HoldForm[Plus[t]] se ve como «+ t». Verbatim evita
+   que el atributo Flat de Plus haga calzar también sumas de varios términos *)
+VerificationTest[
+  FreeQ[eqRailCritical["Steps"][[All, "Expression"]], Verbatim[Plus][_]],
+  True,
+  TestID -> "clasificar-serie-de-un-termino-sin-mas"
+]
+
 (* --- Errores, en el orden de validación --- *)
 
 VerificationTest[

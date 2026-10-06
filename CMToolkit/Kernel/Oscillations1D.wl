@@ -360,7 +360,14 @@ potentialCoefficients[U_, qs_, q0_, asm_, nmax_, nmin_ : 2] :=
 (* U(q0 + x) == c0 + c1 x + … retenida, para "Steps": q0 + x sin reordenar y grados crecientes *)
 heldSeries[cs_List, q0_, x_] :=
   With[{q0h = q0, terms = DeleteCases[cs x^Range[0, Length[cs] - 1], 0]},
-    HoldForm["U"[q0h + x]] == If[terms === {}, 0, HoldForm[Plus[##]] & @@ terms]];
+    HoldForm["U"[q0h + x]] == heldSum[terms]];
+
+(* Suma retenida en el orden dado; con un solo término, el término solo (HoldForm[Plus[t]] se
+   mostraría como «+ t») *)
+heldSum[terms_List] := Switch[Length[terms],
+  0, 0,
+  1, First[terms],
+  _, HoldForm[Plus[##]] & @@ terms];
 
 (* Momento p = ∂L/∂q̇ y función energía h = q̇ p − L, separada en la parte cinética (lo que
    depende de q̇) y la potencial (h con q̇ = 0), cada una simplificada por separado *)
@@ -677,7 +684,7 @@ ClassifyEquilibrium[L_, {q_Symbol, t_Symbol}, q0_, x_ /; !OptionQ[x], opts : Opt
           With[{q0h = q0}, HoldForm["U"[q0h + x]] \[TildeTilde] c[[1]]],
         True,
           With[{q0h = q0, terms = DeleteCases[{c[[1]], cn x^lead}, 0]},
-            HoldForm["U"[q0h + x]] \[TildeTilde] (HoldForm[Plus[##]] & @@ terms)]]};
+            HoldForm["U"[q0h + x]] \[TildeTilde] heldSum[terms]]]};
 
     steps = Join[
       {{"assumptions", asm},
