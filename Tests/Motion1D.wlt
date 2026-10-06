@@ -342,6 +342,14 @@ VerificationTest[
   TestID -> "fase-trayectorias-continuas"
 ]
 
+(* Una sola trayectoria: el primer estilo (azul, continuo), sin mezclar la lista de PlotStyle
+   de $CMPlotStyle (ver docs/specs/Ajustes1D.md, punto 7) *)
+VerificationTest[
+  !FreeQ[moPhase, RGBColor[0.12, 0.35, 0.65]] && FreeQ[moPhase, _Dashing],
+  True,
+  TestID -> "fase-una-trayectoria-primer-estilo"
+]
+
 VerificationTest[
   moImageSize[PhasePortrait[moRing[0.6], {th, t}, {Pi + 0.15, 0}, 40, ImageSize -> 200]],
   200,
