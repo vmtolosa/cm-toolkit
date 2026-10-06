@@ -44,7 +44,8 @@ del módulo dentro del paquete.
 | Bloque | Funciones | Estado |
 | --- | --- | --- |
 | Un grado de libertad | `HarmonicExpansion`, `ShowSteps` | Hecho |
-| | `ClassifyEquilibrium`, `EquilibriumPoints`, `EnergyFunction`, `CompareHarmonic` | Siguiente |
+| | `EquilibriumPoints`, `ClassifyEquilibrium` | Hecho |
+| | `EnergyFunction`, `CompareHarmonic` | Siguiente |
 | | `PotentialPlot`, `EquilibriumDiagram`, `PhasePortrait` | Pendiente |
 | Modos normales en N dimensiones | `SmallOscillations` (M y K desde un lagrangiano de N coordenadas) | Pendiente |
 | | `SpringNetwork` (redes de resortes en 2D y 3D) | Pendiente |
