@@ -1,10 +1,11 @@
 # Especificación: ajustes tras la prueba con un sistema nuevo
 
-Estado: aprobada para implementar. Versión 1 (6 de octubre de 2026).
+Estado: aprobada para implementar. Versión 1.1 (6 de octubre de 2026).
+- v1.1: agrega el punto 6 (parte potencial de la función energía).
 Rama: `fix/ajustes-1d`, después de mergear la parte A de `docs/specs/Motion1D.md`.
 Origen: prueba en notebook con `L = m/2 x'[t]^2 - k/2 (Sqrt[x[t]^2 + h^2] - l0)^2` (masa en un riel
 unida a un resorte anclado a una altura h). Todos los valores salieron correctos; estos son un
-error y cuatro mejoras de presentación.
+error y cinco mejoras de presentación.
 
 ## 1. Error: EquilibriumPoints trata los denominadores como factores
 
@@ -59,6 +60,13 @@ llamado x a su coordenada y u a la desviación: «con q = q0 + x» al lado de «
 - Tests: con el lagrangiano del riel y desviación u, ninguna descripción de "Steps" contiene «q»
   como símbolo suelto ni «q0»; la de la serie contiene «x = » y «u». Los tests existentes que
   comparen textos se actualizan; los que comparen valores no cambian.
+
+## 6. Parte potencial de la función energía, término a término
+
+En el paso 3 de EnergyFunction, `Simplify` deja la parte potencial factorizada
+(para el anillo, −½ b m (−2 g Cos[θ] + b w² Sin[θ]²)). Se lee mejor como en el material del curso:
+m g b Cos[θ] − ½ m b² w² Sin[θ]². En "Steps" la parte potencial se muestra expandida (`Expand`) y
+retenida término a término. La clave "EnergyFunction" no cambia.
 
 ## Criterio de aceptación
 
