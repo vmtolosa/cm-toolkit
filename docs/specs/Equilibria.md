@@ -1,12 +1,13 @@
 # Especificación: EquilibriumPoints y ClassifyEquilibrium
 
-Estado: aprobada para implementar. Versión 1.3 (5 de octubre de 2026).
+Estado: aprobada para implementar. Versión 1.4 (5 de octubre de 2026).
 - v1.1: resuelve las cinco dudas de la revisión de Claude Code (puntos repetidos, condición de
   existencia en la clasificación, suposiciones sin q0 ni x, textos por función, factorización).
 - v1.2: orden de recorrido en la regla de puntos repetidos, significado de "Stable" en el caso
   "Conditional", mensaje `domain` y "LeadingCoefficient" en el caso "Undetermined".
 - v1.3: signo de c_n dependiente de parámetros, q0 que nunca es real y caso en que solo queda la
   rama crítica.
+- v1.4: incorpora las interpretaciones de la implementación (PR #5), sección «Precisiones».
 Requiere: `docs/specs/Modulos.md` ya mergeado (usa sus funciones privadas compartidas).
 Rama: `feat/equilibria`. Módulo: `Oscillations1D.wl`.
 Referencia: Ayudantía 6, Problema 1, inciso (a), ecs. (7)–(13).
@@ -171,6 +172,24 @@ El mensaje `HarmonicExpansion::critical` ya sugiere usar `ClassifyEquilibrium`; 
   ejemplo de llamada en `args`. Se permite redactarlas igual que las de HarmonicExpansion.
   `validateDeviation1D` y `autonomousForm` ya reciben el símbolo de la función, así que emiten el
   mensaje con el nombre correcto.
+
+---
+
+## Precisiones (v1.4)
+
+1. `unsolved` cubre también el caso en que `Solve` devuelve el factor sin evaluar, además del
+   tiempo agotado (10 s).
+2. Si algún factor quedó sin resolver y no hay puntos, no se emite `none` (no se puede asegurar
+   que no haya equilibrios); solo `unsolved`.
+3. "Steps" de ClassifyEquilibrium muestra el paso de existencia siempre que la condición no sea
+   simplemente True, no solo cuando no se puede decidir.
+4. Si tras la intersección no queda ninguna rama (solo ocurre con suposiciones contradictorias),
+   se devuelve lo mismo que con la rama crítica sola: "Conditional" y
+   "Stable" -> Missing["Undetermined"].
+5. La forma de las condiciones es la que entregue `Simplify` (por ejemplo w > Sqrt[g/b] en vez de
+   b w² > g). Los tests comparan por equivalencia lógica bajo las suposiciones, no por forma.
+6. Las descripciones de "Steps" quedan en el idioma vigente al calcular el resultado; ShowSteps
+   solo traduce los encabezados. Vale para todas las funciones de análisis.
 
 ---
 
