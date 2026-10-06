@@ -1,11 +1,12 @@
 # Especificación: ajustes tras la prueba con un sistema nuevo
 
-Estado: aprobada para implementar. Versión 1.1 (6 de octubre de 2026).
+Estado: aprobada para implementar. Versión 1.2 (6 de octubre de 2026).
 - v1.1: agrega el punto 6 (parte potencial de la función energía).
+- v1.2: agrega los puntos 7 (CMPlot con una sola curva) y 8 (números en los mensajes).
 Rama: `fix/ajustes-1d`, después de mergear la parte A de `docs/specs/Motion1D.md`.
 Origen: prueba en notebook con `L = m/2 x'[t]^2 - k/2 (Sqrt[x[t]^2 + h^2] - l0)^2` (masa en un riel
-unida a un resorte anclado a una altura h). Todos los valores salieron correctos; estos son un
-error y cinco mejoras de presentación.
+unida a un resorte anclado a una altura h). Todos los valores salieron correctos; estos son dos
+errores y seis mejoras de presentación.
 
 ## 1. Error: EquilibriumPoints trata los denominadores como factores
 
@@ -67,6 +68,27 @@ En el paso 3 de EnergyFunction, `Simplify` deja la parte potencial factorizada
 (para el anillo, −½ b m (−2 g Cos[θ] + b w² Sin[θ]²)). Se lee mejor como en el material del curso:
 m g b Cos[θ] − ½ m b² w² Sin[θ]². En "Steps" la parte potencial se muestra expandida (`Expand`) y
 retenida término a término. La clave "EnergyFunction" no cambia.
+
+## 7. Error: CMPlot con una sola curva mezcla los estilos
+
+`CMPlot[f, {x, a, b}]` con una sola función sale en morado y punteado: cuando hay una única
+curva, `Plot` interpreta la lista de cuatro directivas de `PlotStyle` como una sola directiva
+combinada (último color, más el `Dashed` de la segunda). Con dos o más curvas funciona bien.
+
+- Una sola curva debe usar el primer estilo (azul, continuo); una lista de curvas, los estilos en
+  orden, como hoy. Debe seguir funcionando con `HoldAll` (variable con valor asignado), con una
+  expresión que no es una lista a simple vista (por ejemplo `sol["Solution"][tt]`) y con un
+  símbolo cuyo valor es una lista de funciones.
+- Si el usuario entrega `PlotStyle`, gana el suyo.
+- Tests: el gráfico de una sola curva contiene el color RGBColor[0.12, 0.35, 0.65] y ningún
+  `Dashing`; el de dos curvas contiene los dos primeros colores y un solo `Dashing`.
+- Revisar que las demás funciones gráficas del paquete no tengan el mismo problema.
+
+## 8. Números en los mensajes
+
+Los números de máquina se insertan en los mensajes con su marca de precisión
+(«t = 1.8540746734841649`»). Todos los números que van a un mensaje se formatean con 6 cifras
+significativas y sin marca (función privada en Core.wl, usada por `cmMessage`).
 
 ## Criterio de aceptación
 
