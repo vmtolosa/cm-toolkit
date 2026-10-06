@@ -30,6 +30,13 @@ FuncionEnergia::usage =
   "FuncionEnergia[L, {q, t}] es el alias en español de EnergyFunction. Los mensajes de error aparecen con el nombre EnergyFunction.\n\
 FuncionEnergia[L, {q, t}] is the Spanish alias of EnergyFunction. Error messages appear under the name EnergyFunction.";
 
+SolveMotion::usage =
+  "SolveMotion[L, {q, t}, {q0, v0}, tmax] integra numéricamente la ecuación de Euler-Lagrange exacta del lagrangiano L de un grado de libertad, desde t = 0 hasta tmax, con q(0) = q0 y q\:0307(0) = v0. Todos los parámetros de L deben tener valor numérico. Entrega una Association con la ecuación de movimiento, la solución (\"Solution\", una InterpolatingFunction: sol[\"Solution\"][1.5] da q(1.5)), el dominio, las condiciones iniciales, la función energía h y su deriva máxima (\"EnergyDrift\"), que controla la calidad de la integración. Alias: ResolverMovimiento.\n\
+SolveMotion[L, {q, t}, {q0, v0}, tmax] numerically integrates the exact Euler-Lagrange equation of the one-degree-of-freedom Lagrangian L, from t = 0 to tmax, with q(0) = q0 and q\:0307(0) = v0. All parameters of L must have numeric values. It returns an Association with the equation of motion, the solution (\"Solution\", an InterpolatingFunction: sol[\"Solution\"][1.5] gives q(1.5)), the domain, the initial conditions, the energy function h and its maximum drift (\"EnergyDrift\"), which checks the quality of the integration.";
+ResolverMovimiento::usage =
+  "ResolverMovimiento[L, {q, t}, {q0, v0}, tmax] es el alias en español de SolveMotion. Los mensajes de error aparecen con el nombre SolveMotion.\n\
+ResolverMovimiento[L, {q, t}, {q0, v0}, tmax] is the Spanish alias of SolveMotion. Error messages appear under the name SolveMotion.";
+
 Begin["`Private`"];
 
 (* Textos de este módulo: se agregan a la tabla $texts de Core.wl *)
@@ -216,7 +223,27 @@ AssociateTo[$texts, <|
     "English" -> "Simplified h: first the kinetic part (with q\:0307), then the potential part."|>,
   "EnergyFunction:conclusion" -> <|
     "Spanish" -> "Conclusión: h se conserva porque L no depende explícitamente de t.",
-    "English" -> "Conclusion: h is conserved because L does not depend explicitly on t."|>
+    "English" -> "Conclusion: h is conserved because L does not depend explicitly on t."|>,
+
+  (* SolveMotion: mensajes *)
+  "SolveMotion::args" -> <|
+    "Spanish" -> "SolveMotion se llama con cuatro argumentos: SolveMotion[L, {q, t}, {q0, v0}, tmax]. Por ejemplo, para un péndulo con m = g = b = 1: SolveMotion[th'[t]^2/2 + Cos[th[t]], {th, t}, {0.5, 0}, 20].",
+    "English" -> "SolveMotion takes four arguments: SolveMotion[L, {q, t}, {q0, v0}, tmax]. For example, for a pendulum with m = g = b = 1: SolveMotion[th'[t]^2/2 + Cos[th[t]], {th, t}, {0.5, 0}, 20]."|>,
+  "SolveMotion::time" -> <|
+    "Spanish" -> "SolveMotion requiere un lagrangiano autónomo: solo puede depender de `1`[`2`] y `1`'[`2`], sin `2` explícito ni derivadas de orden superior.",
+    "English" -> "SolveMotion requires an autonomous Lagrangian: it may depend only on `1`[`2`] and `1`'[`2`], with no explicit `2` and no higher derivatives."|>,
+  "SolveMotion::numeric" -> <|
+    "Spanish" -> "SolveMotion integra numéricamente y el lagrangiano tiene símbolos sin valor: `1`. Dales valores numéricos, por ejemplo L /. `2`.",
+    "English" -> "SolveMotion integrates numerically and the Lagrangian has symbols with no value: `1`. Give them numeric values, for example L /. `2`."|>,
+  "SolveMotion::ic" -> <|
+    "Spanish" -> "Condiciones iniciales no válidas: q0 = `1`, v0 = `2` y tmax = `3` deben ser números reales, con tmax > 0.",
+    "English" -> "Invalid initial conditions: q0 = `1`, v0 = `2` and tmax = `3` must be real numbers, with tmax > 0."|>,
+  "SolveMotion::mass" -> <|
+    "Spanish" -> "La masa efectiva \[PartialD]\.b2L/\[PartialD]q\:0307\.b2 = `1` vale 0 en la condición inicial (q = `2`, q\:0307 = `3`): la ecuación de movimiento no se puede despejar para q''. Si vale 0 siempre, el lagrangiano no tiene término cinético.",
+    "English" -> "The effective mass \[PartialD]\.b2L/\[PartialD]q\:0307\.b2 = `1` is 0 at the initial condition (q = `2`, q\:0307 = `3`): the equation of motion cannot be solved for q''. If it is always 0, the Lagrangian has no kinetic term."|>,
+  "SolveMotion::ndsolve" -> <|
+    "Spanish" -> "La integración se detuvo en t = `2`, antes de tmax = `1`: NDSolve falló o se agotó el límite de 30 s. Suele pasar cuando la solución diverge o cuando \[PartialD]\.b2L/\[PartialD]q\:0307\.b2 se anula durante el movimiento.",
+    "English" -> "The integration stopped at t = `2`, before tmax = `1`: NDSolve failed or the 30 s limit ran out. This usually happens when the solution diverges or when \[PartialD]\.b2L/\[PartialD]q\:0307\.b2 vanishes during the motion."|>
 |>];
 
 (* --- Funciones privadas compartidas por las funciones de un grado de libertad
@@ -272,6 +299,67 @@ energyFunction1D[Lr_, qs_, qd_] := Module[{p, h, pot},
   h = qd p - Lr;
   pot = h /. qd -> 0;
   <|"Momentum" -> Simplify[p], "Kinetic" -> Simplify[h - pot], "Potential" -> Simplify[pot]|>];
+
+(* --- Núcleo numérico (especificación en docs/specs/Motion1D.md). solveMotion1D lo usan
+   SolveMotion y PhasePortrait; CompareHarmonic usa sus tres etapas por separado para validar
+   el equilibrio antes de integrar. Los mensajes salen con el nombre de f --- *)
+
+(* Lr sin más símbolos libres que los permitidos; si no, f::numeric con la lista y una sugerencia *)
+numericLagrangianQ[f_Symbol, Lr_, allowed_List] := With[{syms = freeSymbols[{Lr}, allowed]},
+  If[syms === {}, True, cmMessage[f, "numeric", syms, Thread[syms -> 1]]; False]];
+
+(* Número real, exacto o no: Pi + 0.15 y ArcCos[-1/1.5^2] sirven *)
+realNumberQ[x_] := NumericQ[x] && TrueQ[Im[N[x]] == 0];
+
+(* Validaciones time y numeric: {Lr, qs, qd} o $Failed *)
+motionSetup1D[f_Symbol, L_, q_, t_] := Module[{form = autonomousForm[f, L, q, t]},
+  Which[
+    form === $Failed, $Failed,
+    !numericLagrangianQ[f, First[form], Rest[form]], $Failed,
+    True, form]];
+
+(* Validaciones ic y mass: ∂²L/∂q̇² no puede ser idénticamente 0 ni valer 0 en la condición
+   inicial, donde q''(0) no queda definida *)
+motionChecks1D[f_Symbol, {Lr_, qs_, qd_}, q_, t_, {q0_, v0_}, tmax_] := Module[{mass},
+  If[!(AllTrue[{q0, v0, tmax}, realNumberQ] && TrueQ[tmax > 0]),
+    cmMessage[f, "ic", q0, v0, tmax]; Return[False, Module]];
+  mass = D[Lr, {qd, 2}];
+  If[zeroQ[mass, True] || zeroQ[mass /. {qs -> q0, qd -> v0}, True],
+    cmMessage[f, "mass", mass /. {qs -> q[t], qd -> q'[t]}, q0, v0]; False,
+    True]];
+
+(* Integración y resultado de SolveMotion; f::ndsolve si NDSolve no llega a tmax. El
+   StepMonitor guarda el último t alcanzado, para informarlo también si se agota el tiempo *)
+motionIntegrate1D[f_Symbol, {Lr_, qs_, qd_}, q_, t_, {q0_, v0_}, tmax_] :=
+  Module[{acc, qf, tau, tlast = 0, sol, tend, h, hs},
+    acc = Simplify[(D[Lr, qs] - D[Lr, qd, qs] qd)/D[Lr, {qd, 2}]];
+    sol = TimeConstrained[
+      Quiet[NDSolveValue[
+        {qf''[tau] == (acc /. {qs -> qf[tau], qd -> qf'[tau]}), qf[0] == q0, qf'[0] == v0},
+        qf, {tau, 0, tmax},
+        AccuracyGoal -> 10, PrecisionGoal -> 10, MaxSteps -> 10^6,
+        StepMonitor :> (tlast = tau)]],
+      30, $TimedOut];
+    tend = If[Head[sol] === InterpolatingFunction, sol["Domain"][[1, 2]], tlast];
+    If[Head[sol] =!= InterpolatingFunction || tend < N[tmax] (1 - 10^-8),
+      cmMessage[f, "ndsolve", tmax, tend]; Return[$Failed, Module]];
+
+    (* Deriva de h sobre una malla de 200 puntos *)
+    h = Total[Lookup[energyFunction1D[Lr, qs, qd], {"Kinetic", "Potential"}]];
+    hs = (h /. {qs -> sol[#], qd -> sol'[#]}) & /@ Subdivide[0., N[tmax], 199];
+
+    <|"EquationOfMotion" -> (q''[t] == (acc /. {qs -> q[t], qd -> q'[t]})),
+      "Solution" -> sol, "Domain" -> {0, tmax}, "InitialConditions" -> {q0, v0},
+      "EnergyFunction" -> (h /. {qs -> q[t], qd -> q'[t]}),
+      "EnergyDrift" -> Max[Abs[hs - First[hs]]]|>
+  ];
+
+solveMotion1D[f_Symbol, L_, {q_, t_}, {q0_, v0_}, tmax_] := Module[{form},
+  form = motionSetup1D[f, L, q, t];
+  Which[
+    form === $Failed, $Failed,
+    !motionChecks1D[f, form, q, t, {q0, v0}, tmax], $Failed,
+    True, motionIntegrate1D[f, form, q, t, {q0, v0}, tmax]]];
 
 (* U'(q0) = 0 con zeroQ, o con FullSimplify si Simplify no basta; si no, emite f::noteq *)
 equilibriumQ1D[f_Symbol, U_, qs_, q0_, asm_] := With[{dU = D[U, qs] /. qs -> q0},
@@ -579,10 +667,18 @@ EnergyFunction[L_, {q_Symbol, t_Symbol}] :=
 
 EnergyFunction[___] := (cmMessage[EnergyFunction, "args"]; $Failed);
 
+(* --- SolveMotion: especificación en docs/specs/Motion1D.md --- *)
+
+SolveMotion[L_, {q_Symbol, t_Symbol}, {q0_, v0_}, tmax_] :=
+  solveMotion1D[SolveMotion, L, {q, t}, {q0, v0}, tmax];
+
+SolveMotion[___] := (cmMessage[SolveMotion, "args"]; $Failed);
+
 (* --- Alias en español (al final, cuando las funciones ya tienen sus atributos) --- *)
 defineAlias[ExpansionArmonica, HarmonicExpansion];
 defineAlias[PuntosDeEquilibrio, EquilibriumPoints];
 defineAlias[ClasificarEquilibrio, ClassifyEquilibrium];
 defineAlias[FuncionEnergia, EnergyFunction];
+defineAlias[ResolverMovimiento, SolveMotion];
 
 End[];
