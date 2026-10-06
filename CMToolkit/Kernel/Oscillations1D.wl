@@ -23,6 +23,13 @@ ClasificarEquilibrio::usage =
   "ClasificarEquilibrio[L, {q, t}, q0, x] es el alias en español de ClassifyEquilibrium. Los mensajes de error aparecen con el nombre ClassifyEquilibrium.\n\
 ClasificarEquilibrio[L, {q, t}, q0, x] is the Spanish alias of ClassifyEquilibrium. Error messages appear under the name ClassifyEquilibrium.";
 
+EnergyFunction::usage =
+  "EnergyFunction[L, {q, t}] calcula la función energía h = q\:0307 \[PartialD]L/\[PartialD]q\:0307 \[Minus] L del lagrangiano L de un grado de libertad, que se conserva porque L no depende explícitamente de t. Entrega una Association con el momento conjugado, h y los pasos intermedios (\"Steps\"). Alias: FuncionEnergia.\n\
+EnergyFunction[L, {q, t}] computes the energy function h = q\:0307 \[PartialD]L/\[PartialD]q\:0307 \[Minus] L of the one-degree-of-freedom Lagrangian L, which is conserved because L does not depend explicitly on t. It returns an Association with the conjugate momentum, h and the intermediate steps (\"Steps\").";
+FuncionEnergia::usage =
+  "FuncionEnergia[L, {q, t}] es el alias en español de EnergyFunction. Los mensajes de error aparecen con el nombre EnergyFunction.\n\
+FuncionEnergia[L, {q, t}] is the Spanish alias of EnergyFunction. Error messages appear under the name EnergyFunction.";
+
 Begin["`Private`"];
 
 (* Textos de este módulo: se agregan a la tabla $texts de Core.wl *)
@@ -187,7 +194,29 @@ AssociateTo[$texts, <|
     "English" -> " In the critical case (U''(q0) = 0) stability depends on higher orders: call ClassifyEquilibrium again with that parameter value substituted."|>,
   "ClassifyEquilibrium:label:Minimum" -> <|"Spanish" -> "mínimo", "English" -> "minimum"|>,
   "ClassifyEquilibrium:label:Maximum" -> <|"Spanish" -> "máximo", "English" -> "maximum"|>,
-  "ClassifyEquilibrium:label:Critical" -> <|"Spanish" -> "crítico", "English" -> "critical"|>
+  "ClassifyEquilibrium:label:Critical" -> <|"Spanish" -> "crítico", "English" -> "critical"|>,
+
+  (* EnergyFunction: mensajes *)
+  "EnergyFunction::args" -> <|
+    "Spanish" -> "EnergyFunction se llama con dos argumentos: EnergyFunction[L, {q, t}]. Por ejemplo, para un péndulo: EnergyFunction[m b^2/2 th'[t]^2 + m g b Cos[th[t]], {th, t}].",
+    "English" -> "EnergyFunction takes two arguments: EnergyFunction[L, {q, t}]. For example, for a pendulum: EnergyFunction[m b^2/2 th'[t]^2 + m g b Cos[th[t]], {th, t}]."|>,
+  "EnergyFunction::time" -> <|
+    "Spanish" -> "EnergyFunction requiere un lagrangiano autónomo: solo puede depender de `1`[`2`] y `1`'[`2`], sin `2` explícito ni derivadas de orden superior. Si L depende explícitamente de `2`, h no se conserva.",
+    "English" -> "EnergyFunction requires an autonomous Lagrangian: it may depend only on `1`[`2`] and `1`'[`2`], with no explicit `2` and no higher derivatives. If L depends explicitly on `2`, h is not conserved."|>,
+
+  (* EnergyFunction: textos de "Steps" *)
+  "EnergyFunction:momentum" -> <|
+    "Spanish" -> "Momento conjugado: p = \[PartialD]L/\[PartialD]q\:0307.",
+    "English" -> "Conjugate momentum: p = \[PartialD]L/\[PartialD]q\:0307."|>,
+  "EnergyFunction:definition" -> <|
+    "Spanish" -> "Función energía: h = q\:0307 p \[Minus] L.",
+    "English" -> "Energy function: h = q\:0307 p \[Minus] L."|>,
+  "EnergyFunction:simplified" -> <|
+    "Spanish" -> "h simplificada: primero la parte cinética (con q\:0307), luego la potencial.",
+    "English" -> "Simplified h: first the kinetic part (with q\:0307), then the potential part."|>,
+  "EnergyFunction:conclusion" -> <|
+    "Spanish" -> "Conclusión: h se conserva porque L no depende explícitamente de t.",
+    "English" -> "Conclusion: h is conserved because L does not depend explicitly on t."|>
 |>];
 
 (* --- Funciones privadas compartidas por las funciones de un grado de libertad
@@ -235,6 +264,14 @@ potentialCoefficients[U_, qs_, q0_, asm_, nmax_, nmin_ : 2] :=
 heldSeries[cs_List, q0_, x_] :=
   With[{q0h = q0, terms = DeleteCases[cs x^Range[0, Length[cs] - 1], 0]},
     HoldForm["U"[q0h + x]] == If[terms === {}, 0, HoldForm[Plus[##]] & @@ terms]];
+
+(* Momento p = ∂L/∂q̇ y función energía h = q̇ p − L, separada en la parte cinética (lo que
+   depende de q̇) y la potencial (h con q̇ = 0), cada una simplificada por separado *)
+energyFunction1D[Lr_, qs_, qd_] := Module[{p, h, pot},
+  p = D[Lr, qd];
+  h = qd p - Lr;
+  pot = h /. qd -> 0;
+  <|"Momentum" -> Simplify[p], "Kinetic" -> Simplify[h - pot], "Potential" -> Simplify[pot]|>];
 
 (* U'(q0) = 0 con zeroQ, o con FullSimplify si Simplify no basta; si no, emite f::noteq *)
 equilibriumQ1D[f_Symbol, U_, qs_, q0_, asm_] := With[{dU = D[U, qs] /. qs -> q0},
@@ -512,9 +549,40 @@ ClassifyEquilibrium[L_, {q_Symbol, t_Symbol}, q0_, x_ /; !OptionQ[x], opts : Opt
 
 ClassifyEquilibrium[___] := (cmMessage[ClassifyEquilibrium, "args"]; $Failed);
 
+(* --- EnergyFunction: especificación en docs/specs/Motion1D.md --- *)
+
+EnergyFunction[L_, {q_Symbol, t_Symbol}] :=
+  Module[{form, Lr, qs, qd, en, back, p, kin, pot, steps},
+
+    form = autonomousForm[EnergyFunction, L, q, t];
+    If[form === $Failed, Return[$Failed]];
+    {Lr, qs, qd} = form;
+
+    en = energyFunction1D[Lr, qs, qd];
+    back = {qs -> q[t], qd -> q'[t]};
+    {p, kin, pot} = Lookup[en, {"Momentum", "Kinetic", "Potential"}] /. back;
+
+    steps = {
+      {"momentum", "p" == p},
+      {"definition", With[{v = q'[t], pp = p, LL = L}, "h" == HoldForm[v pp - LL]]},
+      (* Retenida para mostrar la parte cinética antes que la potencial *)
+      {"simplified", "h" == Which[
+        pot === 0, kin,
+        kin === 0, pot,
+        True, With[{k = kin, u = pot}, HoldForm[k + u]]]},
+      {"conclusion", With[{tt = t}, HoldForm[Implies[D["L", tt] == 0, Dt["h", tt] == 0]]]}};
+    steps = <|"Description" -> tr["EnergyFunction:" <> #[[1]]], "Expression" -> #[[2]]|> & /@
+      steps;
+
+    <|"Momentum" -> p, "EnergyFunction" -> kin + pot, "Steps" -> steps|>
+  ];
+
+EnergyFunction[___] := (cmMessage[EnergyFunction, "args"]; $Failed);
+
 (* --- Alias en español (al final, cuando las funciones ya tienen sus atributos) --- *)
 defineAlias[ExpansionArmonica, HarmonicExpansion];
 defineAlias[PuntosDeEquilibrio, EquilibriumPoints];
 defineAlias[ClasificarEquilibrio, ClassifyEquilibrium];
+defineAlias[FuncionEnergia, EnergyFunction];
 
 End[];
