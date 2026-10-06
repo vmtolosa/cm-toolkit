@@ -140,6 +140,9 @@ AssociateTo[$texts, <|
   "EquilibriumPoints:derivative" -> <|
     "Spanish" -> "Derivada del potencial, factorizada: los equilibrios son los ceros de U'(q).",
     "English" -> "Derivative of the potential, factored: the equilibria are the zeros of U'(q)."|>,
+  "EquilibriumPoints:denominator" -> <|
+    "Spanish" -> "Denominador de U'(q): no da equilibrios (en sus ceros U' no está definida).",
+    "English" -> "Denominator of U'(q): it gives no equilibria (U' is not defined at its zeros)."|>,
   "EquilibriumPoints:factor" -> <|
     "Spanish" -> "Un factor de U'(q) igualado a cero y sus soluciones en el dominio.",
     "English" -> "A factor of U'(q) set to zero and its solutions in the domain."|>,
@@ -524,7 +527,8 @@ solutionPoint[qs_ -> ConditionalExpression[v_, cond_], asm_] := {v, Simplify[con
 solutionPoint[qs_ -> v_, asm_] := {v, True};
 
 EquilibriumPoints[L_, {q_Symbol, t_Symbol}, opts : OptionsPattern[]] :=
-  Module[{form, dom, asm, Lr, qs, qd, U, fac, factors, sols, bad, pts, params, coinc, steps},
+  Module[{form, dom, asm, Lr, qs, qd, U, fac, fl, factors, denom, sols, bad, pts, params, coinc,
+      steps},
 
     (* Validación *)
     form = autonomousForm[EquilibriumPoints, L, q, t];
@@ -537,7 +541,11 @@ EquilibriumPoints[L_, {q_Symbol, t_Symbol}, opts : OptionsPattern[]] :=
 
     U = -Lr /. qd -> 0;
     fac = Factor[Simplify[D[U, qs], asm]];
-    factors = Select[FactorList[fac][[All, 1]], !FreeQ[#, qs] &];
+    (* Solo los factores del numerador dan equilibrios; los del denominador (exponente
+       negativo) son puntos donde U' no está definida y no pasan por Solve *)
+    fl = Select[FactorList[fac], !FreeQ[First[#], qs] &];
+    factors = Select[fl, Last[#] > 0 &][[All, 1]];
+    denom = Times @@ (First[#]^-Last[#] & /@ Select[fl, Last[#] < 0 &]);
     sols = solveFactor[#, qs, dom] & /@ factors;
 
     (* Soluciones periódicas (constantes C[k] o enteros): hay que declarar el dominio *)
@@ -566,6 +574,7 @@ EquilibriumPoints[L_, {q_Symbol, t_Symbol}, opts : OptionsPattern[]] :=
       {{"assumptions", asm},
        {"potential", "U"[q] == (U /. qs -> q)},
        {"derivative", Derivative[1]["U"][q] == (fac /. qs -> q)}},
+      If[denom === 1, {}, {{"denominator", denom /. qs -> q}}],
       MapThread[
         If[ListQ[#2],
           {"factor", ((#1 /. qs -> q) == 0) -> (q == First[solutionPoint[First[#], asm]] & /@ #2)},

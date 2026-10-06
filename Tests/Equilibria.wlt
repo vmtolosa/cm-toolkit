@@ -106,6 +106,43 @@ VerificationTest[
   TestID -> "puntos-factor-no-resuelto"
 ]
 
+(* --- Denominadores de U' (docs/specs/Ajustes1D.md, punto 1) --- *)
+
+(* Masa en un riel unida a un resorte anclado a una altura h: U' tiene Sqrt[h^2 + x^2] en el
+   denominador, que no da equilibrios *)
+eqAsmRail = m > 0 && k > 0 && h > 0 && l0 > 0;
+eqRailL = m/2 x'[t]^2 - k/2 (Sqrt[x[t]^2 + h^2] - l0)^2;
+eqRailPts = EquilibriumPoints[eqRailL, {x, t}];
+
+VerificationTest[
+  Sort[eqRailPts["Factors"]],
+  Sort[{x, Sqrt[h^2 + x^2] - l0}],
+  TestID -> "puntos-riel-factores-sin-denominador"
+]
+
+VerificationTest[
+  Module[{pts = eqRailPts["Points"]},
+    pts[[All, "Point"]] === {0, -Sqrt[l0^2 - h^2], Sqrt[l0^2 - h^2]} &&
+      pts[[1, "Condition"]] === True &&
+      AllTrue[pts[[2 ;;, "Condition"]], eqEquivalentQ[#, h < l0, eqAsmRail, {h, l0}] &]],
+  True,
+  TestID -> "puntos-riel-puntos"
+]
+
+VerificationTest[
+  MemberQ[eqRailPts["Steps"][[All, "Expression"]], Sqrt[h^2 + x^2]],
+  True,
+  TestID -> "puntos-riel-paso-del-denominador"
+]
+
+(* U'(y) = (y - 1)^2/y^2: el denominador se anula en y = 0, que no es un equilibrio *)
+VerificationTest[
+  Module[{res = EquilibriumPoints[m/2 y'[t]^2 - (y[t] - 2 Log[y[t]] - 1/y[t]), {y, t}]},
+    {res["Factors"], res["Points"]}],
+  {{-1 + y}, {<|"Point" -> 1, "Condition" -> True|>}},
+  TestID -> "puntos-denominador-con-cero-real"
+]
+
 (* --- Errores --- *)
 
 VerificationTest[
