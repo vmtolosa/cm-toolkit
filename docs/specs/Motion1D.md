@@ -1,8 +1,9 @@
 # Especificación: movimiento y gráficos de un grado de libertad
 
-Estado: aprobada para implementar. Versión 1.1 (6 de octubre de 2026).
+Estado: aprobada para implementar. Versión 1.2 (6 de octubre de 2026).
 - v1.1: corrige la condición inicial del retrato de fase de la revisión visual; estilo de las
   trayectorias; nombre de los mensajes de las funciones que usan el núcleo numérico; alcance de `mass`.
+- v1.2: incorpora las precisiones de la implementación de la parte A (PR #6).
 Requiere: `docs/specs/Equilibria.md` ya mergeado. Módulo: `Oscillations1D.wl`.
 Referencia: Ayudantía 6, Problema 1, incisos (b) y (c) y sección final; Figuras 2, 3 y 4.
 
@@ -145,6 +146,23 @@ Revisión visual (PNG): los dos paneles de la Figura 3 (en el segundo, la exacta
 a la armónica) y un retrato de fase con ring[1.3], tmax 60, con dos trayectorias en el mismo
 gráfico: desde {Pi + 0.05, 0}, que queda atrapada en un pozo (h = −1.00086 < U(π) = −1), y desde
 {Pi + 0.05, 0.3}, que recorre los dos (h = −0.956 > −1). Entre ambas se ve la separatriz.
+
+## Precisiones de la parte A (v1.2)
+
+1. `ic` acepta cantidades reales exactas (`NumericQ` con parte imaginaria nula), como Pi + 0.15,
+   no solo números de máquina. En CompareHarmonic revisa qeq, x0, tmax e "InitialVelocity".
+2. Orden de validación. CompareHarmonic: `args`, `time`, `numeric`, `ic`, `mass`, `noteq`,
+   `notmin`, `ndsolve`. PhasePortrait: `args`, `time` y `numeric` una vez; `ic`, `mass` y
+   `ndsolve` por trayectoria.
+3. La clave "EnergyFunction" es la parte cinética simplificada más la potencial simplificada.
+4. El paso 4 de EnergyFunction muestra ∂L/∂t = 0 ⇒ dh/dt = 0, retenido.
+5. `ndsolve` informa hasta qué t llegó la integración. Tests: L sin término cinético (`mass`),
+   ∂²L/∂q̇² que se anula en la condición inicial (`mass`) y U = −y⁴/4 desde {1, 0}, que diverge en
+   t = K(1/√2) ≈ 1.85407 (`ndsolve`).
+6. CompareHarmonic agrega `PlotRange -> All` después de las opciones del usuario. La masa nula en
+   el equilibrio mismo se informa como `CompareHarmonic::mass`.
+7. PhasePortrait acepta {q0, v0} o una lista de pares; cada trayectoria conserva el color de su
+   posición en la lista aunque otra falle.
 
 ---
 
