@@ -23,6 +23,34 @@ ClasificarEquilibrio::usage =
   "ClasificarEquilibrio[L, {q, t}, q0, x] es el alias en español de ClassifyEquilibrium. Los mensajes de error aparecen con el nombre ClassifyEquilibrium.\n\
 ClasificarEquilibrio[L, {q, t}, q0, x] is the Spanish alias of ClassifyEquilibrium. Error messages appear under the name ClassifyEquilibrium.";
 
+EnergyFunction::usage =
+  "EnergyFunction[L, {q, t}] calcula la función energía h = q\:0307 \[PartialD]L/\[PartialD]q\:0307 \[Minus] L del lagrangiano L de un grado de libertad, que se conserva porque L no depende explícitamente de t. Entrega una Association con el momento conjugado, h y los pasos intermedios (\"Steps\"). Alias: FuncionEnergia.\n\
+EnergyFunction[L, {q, t}] computes the energy function h = q\:0307 \[PartialD]L/\[PartialD]q\:0307 \[Minus] L of the one-degree-of-freedom Lagrangian L, which is conserved because L does not depend explicitly on t. It returns an Association with the conjugate momentum, h and the intermediate steps (\"Steps\").";
+FuncionEnergia::usage =
+  "FuncionEnergia[L, {q, t}] es el alias en español de EnergyFunction. Los mensajes de error aparecen con el nombre EnergyFunction.\n\
+FuncionEnergia[L, {q, t}] is the Spanish alias of EnergyFunction. Error messages appear under the name EnergyFunction.";
+
+SolveMotion::usage =
+  "SolveMotion[L, {q, t}, {q0, v0}, tmax] integra numéricamente la ecuación de Euler-Lagrange exacta del lagrangiano L de un grado de libertad, desde t = 0 hasta tmax, con q(0) = q0 y q\:0307(0) = v0. Todos los parámetros de L deben tener valor numérico. Entrega una Association con la ecuación de movimiento, la solución (\"Solution\", una InterpolatingFunction: sol[\"Solution\"][1.5] da q(1.5)), el dominio, las condiciones iniciales, la función energía h y su deriva máxima (\"EnergyDrift\"), que controla la calidad de la integración. Alias: ResolverMovimiento.\n\
+SolveMotion[L, {q, t}, {q0, v0}, tmax] numerically integrates the exact Euler-Lagrange equation of the one-degree-of-freedom Lagrangian L, from t = 0 to tmax, with q(0) = q0 and q\:0307(0) = v0. All parameters of L must have numeric values. It returns an Association with the equation of motion, the solution (\"Solution\", an InterpolatingFunction: sol[\"Solution\"][1.5] gives q(1.5)), the domain, the initial conditions, the energy function h and its maximum drift (\"EnergyDrift\"), which checks the quality of the integration.";
+ResolverMovimiento::usage =
+  "ResolverMovimiento[L, {q, t}, {q0, v0}, tmax] es el alias en español de SolveMotion. Los mensajes de error aparecen con el nombre SolveMotion.\n\
+ResolverMovimiento[L, {q, t}, {q0, v0}, tmax] is the Spanish alias of SolveMotion. Error messages appear under the name SolveMotion.";
+
+CompareHarmonic::usage =
+  "CompareHarmonic[L, {q, t}, qeq, x0, tmax] grafica la desviación exacta q(t) \[Minus] qeq contra la solución armónica x0 Cos[\[CapitalOmega] t], soltando el sistema desde el reposo en qeq + x0, entre t = 0 y tmax. \[CapitalOmega]\.b2 sale de HarmonicExpansion y la solución exacta de SolveMotion. Todos los parámetros de L deben tener valor numérico. Opción: \"InitialVelocity\" -> v0 (0 por defecto), y las opciones de Plot. Alias: CompararArmonica.\n\
+CompareHarmonic[L, {q, t}, qeq, x0, tmax] plots the exact deviation q(t) \[Minus] qeq against the harmonic solution x0 Cos[\[CapitalOmega] t], releasing the system from rest at qeq + x0, between t = 0 and tmax. \[CapitalOmega]\.b2 comes from HarmonicExpansion and the exact solution from SolveMotion. All parameters of L must have numeric values. Option: \"InitialVelocity\" -> v0 (0 by default), and the options of Plot.";
+CompararArmonica::usage =
+  "CompararArmonica[L, {q, t}, qeq, x0, tmax] es el alias en español de CompareHarmonic. Los mensajes de error aparecen con el nombre CompareHarmonic.\n\
+CompararArmonica[L, {q, t}, qeq, x0, tmax] is the Spanish alias of CompareHarmonic. Error messages appear under the name CompareHarmonic.";
+
+PhasePortrait::usage =
+  "PhasePortrait[L, {q, t}, {{q01, v01}, {q02, v02}, \[Ellipsis]}, tmax] dibuja en el plano (q, q\:0307) las trayectorias del lagrangiano L de un grado de libertad, una por condición inicial, entre t = 0 y tmax, y marca el punto inicial de cada una. PhasePortrait[L, {q, t}, {q0, v0}, tmax] dibuja una sola trayectoria. Todos los parámetros de L deben tener valor numérico. Acepta las opciones de ParametricPlot. Alias: RetratoDeFase.\n\
+PhasePortrait[L, {q, t}, {{q01, v01}, {q02, v02}, \[Ellipsis]}, tmax] draws in the (q, q\:0307) plane the trajectories of the one-degree-of-freedom Lagrangian L, one per initial condition, between t = 0 and tmax, and marks the initial point of each one. PhasePortrait[L, {q, t}, {q0, v0}, tmax] draws a single trajectory. All parameters of L must have numeric values. It accepts the options of ParametricPlot.";
+RetratoDeFase::usage =
+  "RetratoDeFase[L, {q, t}, {{q01, v01}, \[Ellipsis]}, tmax] es el alias en español de PhasePortrait. Los mensajes de error aparecen con el nombre PhasePortrait.\n\
+RetratoDeFase[L, {q, t}, {{q01, v01}, \[Ellipsis]}, tmax] is the Spanish alias of PhasePortrait. Error messages appear under the name PhasePortrait.";
+
 Begin["`Private`"];
 
 (* Textos de este módulo: se agregan a la tabla $texts de Core.wl *)
@@ -187,7 +215,102 @@ AssociateTo[$texts, <|
     "English" -> " In the critical case (U''(q0) = 0) stability depends on higher orders: call ClassifyEquilibrium again with that parameter value substituted."|>,
   "ClassifyEquilibrium:label:Minimum" -> <|"Spanish" -> "mínimo", "English" -> "minimum"|>,
   "ClassifyEquilibrium:label:Maximum" -> <|"Spanish" -> "máximo", "English" -> "maximum"|>,
-  "ClassifyEquilibrium:label:Critical" -> <|"Spanish" -> "crítico", "English" -> "critical"|>
+  "ClassifyEquilibrium:label:Critical" -> <|"Spanish" -> "crítico", "English" -> "critical"|>,
+
+  (* EnergyFunction: mensajes *)
+  "EnergyFunction::args" -> <|
+    "Spanish" -> "EnergyFunction se llama con dos argumentos: EnergyFunction[L, {q, t}]. Por ejemplo, para un péndulo: EnergyFunction[m b^2/2 th'[t]^2 + m g b Cos[th[t]], {th, t}].",
+    "English" -> "EnergyFunction takes two arguments: EnergyFunction[L, {q, t}]. For example, for a pendulum: EnergyFunction[m b^2/2 th'[t]^2 + m g b Cos[th[t]], {th, t}]."|>,
+  "EnergyFunction::time" -> <|
+    "Spanish" -> "EnergyFunction requiere un lagrangiano autónomo: solo puede depender de `1`[`2`] y `1`'[`2`], sin `2` explícito ni derivadas de orden superior. Si L depende explícitamente de `2`, h no se conserva.",
+    "English" -> "EnergyFunction requires an autonomous Lagrangian: it may depend only on `1`[`2`] and `1`'[`2`], with no explicit `2` and no higher derivatives. If L depends explicitly on `2`, h is not conserved."|>,
+
+  (* EnergyFunction: textos de "Steps" *)
+  "EnergyFunction:momentum" -> <|
+    "Spanish" -> "Momento conjugado: p = \[PartialD]L/\[PartialD]q\:0307.",
+    "English" -> "Conjugate momentum: p = \[PartialD]L/\[PartialD]q\:0307."|>,
+  "EnergyFunction:definition" -> <|
+    "Spanish" -> "Función energía: h = q\:0307 p \[Minus] L.",
+    "English" -> "Energy function: h = q\:0307 p \[Minus] L."|>,
+  "EnergyFunction:simplified" -> <|
+    "Spanish" -> "h simplificada: primero la parte cinética (con q\:0307), luego la potencial.",
+    "English" -> "Simplified h: first the kinetic part (with q\:0307), then the potential part."|>,
+  "EnergyFunction:conclusion" -> <|
+    "Spanish" -> "Conclusión: h se conserva porque L no depende explícitamente de t.",
+    "English" -> "Conclusion: h is conserved because L does not depend explicitly on t."|>,
+
+  (* SolveMotion: mensajes *)
+  "SolveMotion::args" -> <|
+    "Spanish" -> "SolveMotion se llama con cuatro argumentos: SolveMotion[L, {q, t}, {q0, v0}, tmax]. Por ejemplo, para un péndulo con m = g = b = 1: SolveMotion[th'[t]^2/2 + Cos[th[t]], {th, t}, {0.5, 0}, 20].",
+    "English" -> "SolveMotion takes four arguments: SolveMotion[L, {q, t}, {q0, v0}, tmax]. For example, for a pendulum with m = g = b = 1: SolveMotion[th'[t]^2/2 + Cos[th[t]], {th, t}, {0.5, 0}, 20]."|>,
+  "SolveMotion::time" -> <|
+    "Spanish" -> "SolveMotion requiere un lagrangiano autónomo: solo puede depender de `1`[`2`] y `1`'[`2`], sin `2` explícito ni derivadas de orden superior.",
+    "English" -> "SolveMotion requires an autonomous Lagrangian: it may depend only on `1`[`2`] and `1`'[`2`], with no explicit `2` and no higher derivatives."|>,
+  "SolveMotion::numeric" -> <|
+    "Spanish" -> "SolveMotion integra numéricamente y el lagrangiano tiene símbolos sin valor: `1`. Dales valores numéricos, por ejemplo L /. `2`.",
+    "English" -> "SolveMotion integrates numerically and the Lagrangian has symbols with no value: `1`. Give them numeric values, for example L /. `2`."|>,
+  "SolveMotion::ic" -> <|
+    "Spanish" -> "Condiciones iniciales no válidas: q0 = `1`, v0 = `2` y tmax = `3` deben ser números reales, con tmax > 0.",
+    "English" -> "Invalid initial conditions: q0 = `1`, v0 = `2` and tmax = `3` must be real numbers, with tmax > 0."|>,
+  "SolveMotion::mass" -> <|
+    "Spanish" -> "La masa efectiva \[PartialD]\.b2L/\[PartialD]q\:0307\.b2 = `1` vale 0 en la condición inicial (q = `2`, q\:0307 = `3`): la ecuación de movimiento no se puede despejar para q''. Si vale 0 siempre, el lagrangiano no tiene término cinético.",
+    "English" -> "The effective mass \[PartialD]\.b2L/\[PartialD]q\:0307\.b2 = `1` is 0 at the initial condition (q = `2`, q\:0307 = `3`): the equation of motion cannot be solved for q''. If it is always 0, the Lagrangian has no kinetic term."|>,
+  "SolveMotion::ndsolve" -> <|
+    "Spanish" -> "La integración se detuvo en t = `2`, antes de tmax = `1`: NDSolve falló o se agotó el límite de 30 s. Suele pasar cuando la solución diverge o cuando \[PartialD]\.b2L/\[PartialD]q\:0307\.b2 se anula durante el movimiento.",
+    "English" -> "The integration stopped at t = `2`, before tmax = `1`: NDSolve failed or the 30 s limit ran out. This usually happens when the solution diverges or when \[PartialD]\.b2L/\[PartialD]q\:0307\.b2 vanishes during the motion."|>,
+
+  (* CompareHarmonic: mensajes *)
+  "CompareHarmonic::args" -> <|
+    "Spanish" -> "CompareHarmonic se llama con cinco argumentos y, si hace falta, opciones: CompareHarmonic[L, {q, t}, qeq, x0, tmax]. Por ejemplo, para un péndulo con m = g = b = 1: CompareHarmonic[th'[t]^2/2 + Cos[th[t]], {th, t}, Pi, 0.2, 30].",
+    "English" -> "CompareHarmonic takes five arguments and, if needed, options: CompareHarmonic[L, {q, t}, qeq, x0, tmax]. For example, for a pendulum with m = g = b = 1: CompareHarmonic[th'[t]^2/2 + Cos[th[t]], {th, t}, Pi, 0.2, 30]."|>,
+  "CompareHarmonic::time" -> <|
+    "Spanish" -> "CompareHarmonic requiere un lagrangiano autónomo: solo puede depender de `1`[`2`] y `1`'[`2`], sin `2` explícito ni derivadas de orden superior.",
+    "English" -> "CompareHarmonic requires an autonomous Lagrangian: it may depend only on `1`[`2`] and `1`'[`2`], with no explicit `2` and no higher derivatives."|>,
+  "CompareHarmonic::numeric" -> <|
+    "Spanish" -> "CompareHarmonic integra numéricamente y el lagrangiano tiene símbolos sin valor: `1`. Dales valores numéricos, por ejemplo L /. `2`.",
+    "English" -> "CompareHarmonic integrates numerically and the Lagrangian has symbols with no value: `1`. Give them numeric values, for example L /. `2`."|>,
+  "CompareHarmonic::ic" -> <|
+    "Spanish" -> "Datos no válidos: qeq = `1`, x0 = `2`, \"InitialVelocity\" = `3` y tmax = `4` deben ser números reales, con tmax > 0.",
+    "English" -> "Invalid data: qeq = `1`, x0 = `2`, \"InitialVelocity\" = `3` and tmax = `4` must be real numbers, with tmax > 0."|>,
+  "CompareHarmonic::mass" -> <|
+    "Spanish" -> "La masa efectiva \[PartialD]\.b2L/\[PartialD]q\:0307\.b2 = `1` vale 0 en q = `2`, q\:0307 = `3`: no hay oscilaciones que comparar. Si vale 0 siempre, el lagrangiano no tiene término cinético.",
+    "English" -> "The effective mass \[PartialD]\.b2L/\[PartialD]q\:0307\.b2 = `1` is 0 at q = `2`, q\:0307 = `3`: there are no oscillations to compare. If it is always 0, the Lagrangian has no kinetic term."|>,
+  "CompareHarmonic::noteq" -> <|
+    "Spanish" -> "qeq = `1` no es un equilibrio: U'(qeq) vale `2`, no 0. Busca los equilibrios con EquilibriumPoints.",
+    "English" -> "qeq = `1` is not an equilibrium: U'(qeq) is `2`, not 0. Find the equilibria with EquilibriumPoints."|>,
+  "CompareHarmonic::notmin" -> <|
+    "Spanish" -> "\[CapitalOmega]\.b2 = `2` \[LessEqual] 0 en qeq = `1`: el equilibrio no es un mínimo con oscilaciones armónicas y no hay solución armónica que comparar. Usa ClassifyEquilibrium para ver de qué tipo es.",
+    "English" -> "\[CapitalOmega]\.b2 = `2` \[LessEqual] 0 at qeq = `1`: the equilibrium is not a minimum with harmonic oscillations and there is no harmonic solution to compare. Use ClassifyEquilibrium to see what type it is."|>,
+  "CompareHarmonic::ndsolve" -> <|
+    "Spanish" -> "La integración se detuvo en t = `2`, antes de tmax = `1`: NDSolve falló o se agotó el límite de 30 s. Suele pasar cuando la solución diverge o cuando \[PartialD]\.b2L/\[PartialD]q\:0307\.b2 se anula durante el movimiento.",
+    "English" -> "The integration stopped at t = `2`, before tmax = `1`: NDSolve failed or the 30 s limit ran out. This usually happens when the solution diverges or when \[PartialD]\.b2L/\[PartialD]q\:0307\.b2 vanishes during the motion."|>,
+
+  (* CompareHarmonic: etiquetas del gráfico *)
+  "CompareHarmonic:exact" -> <|"Spanish" -> "exacta", "English" -> "exact"|>,
+  "CompareHarmonic:harmonic" -> <|"Spanish" -> "armónica", "English" -> "harmonic"|>,
+  "CompareHarmonic:time" -> <|"Spanish" -> "t", "English" -> "t"|>,
+  "CompareHarmonic:deviation" -> <|"Spanish" -> "x", "English" -> "x"|>,
+
+  (* PhasePortrait: mensajes. ic, mass y ndsolve son de una trayectoria: se omite y se
+     dibujan las demás *)
+  "PhasePortrait::args" -> <|
+    "Spanish" -> "PhasePortrait se llama con cuatro argumentos y, si hace falta, opciones: PhasePortrait[L, {q, t}, {{q01, v01}, {q02, v02}, \[Ellipsis]}, tmax], o PhasePortrait[L, {q, t}, {q0, v0}, tmax] para una sola trayectoria. Por ejemplo, para un péndulo con m = g = b = 1: PhasePortrait[th'[t]^2/2 + Cos[th[t]], {th, t}, {{Pi + 0.5, 0}, {Pi + 2, 0}}, 20].",
+    "English" -> "PhasePortrait takes four arguments and, if needed, options: PhasePortrait[L, {q, t}, {{q01, v01}, {q02, v02}, \[Ellipsis]}, tmax], or PhasePortrait[L, {q, t}, {q0, v0}, tmax] for a single trajectory. For example, for a pendulum with m = g = b = 1: PhasePortrait[th'[t]^2/2 + Cos[th[t]], {th, t}, {{Pi + 0.5, 0}, {Pi + 2, 0}}, 20]."|>,
+  "PhasePortrait::time" -> <|
+    "Spanish" -> "PhasePortrait requiere un lagrangiano autónomo: solo puede depender de `1`[`2`] y `1`'[`2`], sin `2` explícito ni derivadas de orden superior.",
+    "English" -> "PhasePortrait requires an autonomous Lagrangian: it may depend only on `1`[`2`] and `1`'[`2`], with no explicit `2` and no higher derivatives."|>,
+  "PhasePortrait::numeric" -> <|
+    "Spanish" -> "PhasePortrait integra numéricamente y el lagrangiano tiene símbolos sin valor: `1`. Dales valores numéricos, por ejemplo L /. `2`.",
+    "English" -> "PhasePortrait integrates numerically and the Lagrangian has symbols with no value: `1`. Give them numeric values, for example L /. `2`."|>,
+  "PhasePortrait::ic" -> <|
+    "Spanish" -> "Condición inicial no válida: q0 = `1`, v0 = `2` y tmax = `3` deben ser números reales, con tmax > 0. Esa trayectoria no se dibuja.",
+    "English" -> "Invalid initial condition: q0 = `1`, v0 = `2` and tmax = `3` must be real numbers, with tmax > 0. That trajectory is not drawn."|>,
+  "PhasePortrait::mass" -> <|
+    "Spanish" -> "La masa efectiva \[PartialD]\.b2L/\[PartialD]q\:0307\.b2 = `1` vale 0 en la condición inicial (q = `2`, q\:0307 = `3`): la ecuación de movimiento no se puede despejar para q''. Esa trayectoria no se dibuja.",
+    "English" -> "The effective mass \[PartialD]\.b2L/\[PartialD]q\:0307\.b2 = `1` is 0 at the initial condition (q = `2`, q\:0307 = `3`): the equation of motion cannot be solved for q''. That trajectory is not drawn."|>,
+  "PhasePortrait::ndsolve" -> <|
+    "Spanish" -> "Una trayectoria se detuvo en t = `2`, antes de tmax = `1`: NDSolve falló o se agotó el límite de 30 s. Suele pasar cuando la solución diverge. Esa trayectoria no se dibuja.",
+    "English" -> "A trajectory stopped at t = `2`, before tmax = `1`: NDSolve failed or the 30 s limit ran out. This usually happens when the solution diverges. That trajectory is not drawn."|>
 |>];
 
 (* --- Funciones privadas compartidas por las funciones de un grado de libertad
@@ -235,6 +358,75 @@ potentialCoefficients[U_, qs_, q0_, asm_, nmax_, nmin_ : 2] :=
 heldSeries[cs_List, q0_, x_] :=
   With[{q0h = q0, terms = DeleteCases[cs x^Range[0, Length[cs] - 1], 0]},
     HoldForm["U"[q0h + x]] == If[terms === {}, 0, HoldForm[Plus[##]] & @@ terms]];
+
+(* Momento p = ∂L/∂q̇ y función energía h = q̇ p − L, separada en la parte cinética (lo que
+   depende de q̇) y la potencial (h con q̇ = 0), cada una simplificada por separado *)
+energyFunction1D[Lr_, qs_, qd_] := Module[{p, h, pot},
+  p = D[Lr, qd];
+  h = qd p - Lr;
+  pot = h /. qd -> 0;
+  <|"Momentum" -> Simplify[p], "Kinetic" -> Simplify[h - pot], "Potential" -> Simplify[pot]|>];
+
+(* --- Núcleo numérico (especificación en docs/specs/Motion1D.md). solveMotion1D lo usan
+   SolveMotion y PhasePortrait; CompareHarmonic usa sus tres etapas por separado para validar
+   el equilibrio antes de integrar. Los mensajes salen con el nombre de f --- *)
+
+(* Lr sin más símbolos libres que los permitidos; si no, f::numeric con la lista y una sugerencia *)
+numericLagrangianQ[f_Symbol, Lr_, allowed_List] := With[{syms = freeSymbols[{Lr}, allowed]},
+  If[syms === {}, True, cmMessage[f, "numeric", syms, Thread[syms -> 1]]; False]];
+
+(* Número real, exacto o no: Pi + 0.15 y ArcCos[-1/1.5^2] sirven *)
+realNumberQ[x_] := NumericQ[x] && TrueQ[Im[N[x]] == 0];
+
+(* Validaciones time y numeric: {Lr, qs, qd} o $Failed *)
+motionSetup1D[f_Symbol, L_, q_, t_] := Module[{form = autonomousForm[f, L, q, t]},
+  Which[
+    form === $Failed, $Failed,
+    !numericLagrangianQ[f, First[form], Rest[form]], $Failed,
+    True, form]];
+
+(* Validaciones ic y mass: ∂²L/∂q̇² no puede ser idénticamente 0 ni valer 0 en la condición
+   inicial, donde q''(0) no queda definida *)
+motionChecks1D[f_Symbol, {Lr_, qs_, qd_}, q_, t_, {q0_, v0_}, tmax_] := Module[{mass},
+  If[!(AllTrue[{q0, v0, tmax}, realNumberQ] && TrueQ[tmax > 0]),
+    cmMessage[f, "ic", q0, v0, tmax]; Return[False, Module]];
+  mass = D[Lr, {qd, 2}];
+  If[zeroQ[mass, True] || zeroQ[mass /. {qs -> q0, qd -> v0}, True],
+    cmMessage[f, "mass", mass /. {qs -> q[t], qd -> q'[t]}, q0, v0]; False,
+    True]];
+
+(* Integración y resultado de SolveMotion; f::ndsolve si NDSolve no llega a tmax. El
+   StepMonitor guarda el último t alcanzado, para informarlo también si se agota el tiempo *)
+motionIntegrate1D[f_Symbol, {Lr_, qs_, qd_}, q_, t_, {q0_, v0_}, tmax_] :=
+  Module[{acc, qf, tau, tlast = 0, sol, tend, h, hs},
+    acc = Simplify[(D[Lr, qs] - D[Lr, qd, qs] qd)/D[Lr, {qd, 2}]];
+    sol = TimeConstrained[
+      Quiet[NDSolveValue[
+        {qf''[tau] == (acc /. {qs -> qf[tau], qd -> qf'[tau]}), qf[0] == q0, qf'[0] == v0},
+        qf, {tau, 0, tmax},
+        AccuracyGoal -> 10, PrecisionGoal -> 10, MaxSteps -> 10^6,
+        StepMonitor :> (tlast = tau)]],
+      30, $TimedOut];
+    tend = If[Head[sol] === InterpolatingFunction, sol["Domain"][[1, 2]], tlast];
+    If[Head[sol] =!= InterpolatingFunction || tend < N[tmax] (1 - 10^-8),
+      cmMessage[f, "ndsolve", tmax, tend]; Return[$Failed, Module]];
+
+    (* Deriva de h sobre una malla de 200 puntos *)
+    h = Total[Lookup[energyFunction1D[Lr, qs, qd], {"Kinetic", "Potential"}]];
+    hs = (h /. {qs -> sol[#], qd -> sol'[#]}) & /@ Subdivide[0., N[tmax], 199];
+
+    <|"EquationOfMotion" -> (q''[t] == (acc /. {qs -> q[t], qd -> q'[t]})),
+      "Solution" -> sol, "Domain" -> {0, tmax}, "InitialConditions" -> {q0, v0},
+      "EnergyFunction" -> (h /. {qs -> q[t], qd -> q'[t]}),
+      "EnergyDrift" -> Max[Abs[hs - First[hs]]]|>
+  ];
+
+solveMotion1D[f_Symbol, L_, {q_, t_}, {q0_, v0_}, tmax_] := Module[{form},
+  form = motionSetup1D[f, L, q, t];
+  Which[
+    form === $Failed, $Failed,
+    !motionChecks1D[f, form, q, t, {q0, v0}, tmax], $Failed,
+    True, motionIntegrate1D[f, form, q, t, {q0, v0}, tmax]]];
 
 (* U'(q0) = 0 con zeroQ, o con FullSimplify si Simplify no basta; si no, emite f::noteq *)
 equilibriumQ1D[f_Symbol, U_, qs_, q0_, asm_] := With[{dU = D[U, qs] /. qs -> q0},
@@ -512,9 +704,136 @@ ClassifyEquilibrium[L_, {q_Symbol, t_Symbol}, q0_, x_ /; !OptionQ[x], opts : Opt
 
 ClassifyEquilibrium[___] := (cmMessage[ClassifyEquilibrium, "args"]; $Failed);
 
+(* --- EnergyFunction: especificación en docs/specs/Motion1D.md --- *)
+
+EnergyFunction[L_, {q_Symbol, t_Symbol}] :=
+  Module[{form, Lr, qs, qd, en, back, p, kin, pot, steps},
+
+    form = autonomousForm[EnergyFunction, L, q, t];
+    If[form === $Failed, Return[$Failed]];
+    {Lr, qs, qd} = form;
+
+    en = energyFunction1D[Lr, qs, qd];
+    back = {qs -> q[t], qd -> q'[t]};
+    {p, kin, pot} = Lookup[en, {"Momentum", "Kinetic", "Potential"}] /. back;
+
+    steps = {
+      {"momentum", "p" == p},
+      {"definition", With[{v = q'[t], pp = p, LL = L}, "h" == HoldForm[v pp - LL]]},
+      (* Retenida para mostrar la parte cinética antes que la potencial *)
+      {"simplified", "h" == Which[
+        pot === 0, kin,
+        kin === 0, pot,
+        True, With[{k = kin, u = pot}, HoldForm[k + u]]]},
+      {"conclusion", With[{tt = t}, HoldForm[Implies[D["L", tt] == 0, Dt["h", tt] == 0]]]}};
+    steps = <|"Description" -> tr["EnergyFunction:" <> #[[1]]], "Expression" -> #[[2]]|> & /@
+      steps;
+
+    <|"Momentum" -> p, "EnergyFunction" -> kin + pot, "Steps" -> steps|>
+  ];
+
+EnergyFunction[___] := (cmMessage[EnergyFunction, "args"]; $Failed);
+
+(* --- SolveMotion: especificación en docs/specs/Motion1D.md --- *)
+
+SolveMotion[L_, {q_Symbol, t_Symbol}, {q0_, v0_}, tmax_] :=
+  solveMotion1D[SolveMotion, L, {q, t}, {q0, v0}, tmax];
+
+SolveMotion[___] := (cmMessage[SolveMotion, "args"]; $Failed);
+
+(* --- CompareHarmonic: especificación en docs/specs/Motion1D.md --- *)
+
+Options[CompareHarmonic] = Join[{"InitialVelocity" -> 0}, Options[Plot]];
+
+CompareHarmonic[L_, {q_Symbol, t_Symbol}, qeq_, x0_, tmax_ /; !OptionQ[tmax],
+    opts : OptionsPattern[]] :=
+  Module[{v0, form, Lr, qs, qd, he, omega2, om, mot, sol, tau},
+
+    (* Validación, en el orden args, time, numeric, ic, mass, noteq, notmin, ndsolve *)
+    v0 = OptionValue["InitialVelocity"];
+    form = motionSetup1D[CompareHarmonic, L, q, t];
+    If[form === $Failed, Return[$Failed]];
+    {Lr, qs, qd} = form;
+    If[!(AllTrue[{qeq, x0, v0, tmax}, realNumberQ] && TrueQ[tmax > 0]),
+      cmMessage[CompareHarmonic, "ic", qeq, x0, v0, tmax]; Return[$Failed]];
+    If[!motionChecks1D[CompareHarmonic, form, q, t, {qeq + x0, v0}, tmax], Return[$Failed]];
+    If[!equilibriumQ1D[CompareHarmonic, -Lr /. qd -> 0, qs, qeq, True], Return[$Failed]];
+
+    (* Ω² de HarmonicExpansion, con sus mensajes silenciados. Las validaciones anteriores
+       cubren sus errores, salvo la masa nula en el equilibrio mismo *)
+    he = Quiet[Module[{dev}, HarmonicExpansion[L, {q, t}, qeq, dev]]];
+    If[he === $Failed,
+      cmMessage[CompareHarmonic, "mass", D[Lr, {qd, 2}] /. {qs -> q[t], qd -> q'[t]}, qeq, 0];
+      Return[$Failed]];
+    omega2 = he["Omega2"];
+    If[!TrueQ[omega2 > 0] || zeroQ[omega2, True],
+      cmMessage[CompareHarmonic, "notmin", qeq, omega2]; Return[$Failed]];
+
+    mot = motionIntegrate1D[CompareHarmonic, form, q, t, {qeq + x0, v0}, tmax];
+    If[mot === $Failed, Return[$Failed]];
+    sol = mot["Solution"];
+    om = Sqrt[omega2];
+
+    (* Las opciones del usuario van primero: Plot usa la primera que encuentra *)
+    Plot[Evaluate[{sol[tau] - qeq, x0 Cos[om tau] + v0/om Sin[om tau]}], {tau, 0, tmax},
+      Evaluate[Sequence @@ FilterRules[{opts}, Options[Plot]]],
+      PlotLegends -> {tr["CompareHarmonic:exact"], tr["CompareHarmonic:harmonic"]},
+      FrameLabel -> {tr["CompareHarmonic:time"], tr["CompareHarmonic:deviation"]},
+      PlotRange -> All,
+      Evaluate[Sequence @@ $CMPlotStyle]]
+  ];
+
+CompareHarmonic[___] := (cmMessage[CompareHarmonic, "args"]; $Failed);
+
+(* --- PhasePortrait: especificación en docs/specs/Motion1D.md --- *)
+
+Options[PhasePortrait] = Options[ParametricPlot];
+
+(* Los colores de $CMPlotStyle sin Dashed, repetidos de forma cíclica: en este paquete
+   punteado significa «aproximación» y las trayectorias son todas exactas *)
+phaseStyle[i_] := With[{styles = DeleteCases[Lookup[$CMPlotStyle, PlotStyle], _Dashing, Infinity]},
+  styles[[Mod[i - 1, Length[styles]] + 1]]];
+
+PhasePortrait[L_, {q_Symbol, t_Symbol}, ics_, tmax_ /; !OptionQ[tmax], opts : OptionsPattern[]] :=
+  Module[{pairs, form, sols, ok, tau},
+
+    (* Una condición inicial {q0, v0} o una lista de ellas *)
+    pairs = Which[
+      MatchQ[ics, {Except[_List], Except[_List]}], {ics},
+      MatchQ[ics, {{Except[_List], Except[_List]} ..}], ics,
+      True, $Failed];
+    If[pairs === $Failed, cmMessage[PhasePortrait, "args"]; Return[$Failed]];
+
+    (* time y numeric una sola vez; ic, mass y ndsolve por trayectoria *)
+    form = motionSetup1D[PhasePortrait, L, q, t];
+    If[form === $Failed, Return[$Failed]];
+    sols = If[motionChecks1D[PhasePortrait, form, q, t, #, tmax],
+        motionIntegrate1D[PhasePortrait, form, q, t, #, tmax], $Failed] & /@ pairs;
+    ok = Flatten[Position[sols, _Association, {1}, Heads -> False]];
+    If[ok === {}, Return[$Failed]];
+
+    (* Cada trayectoria conserva el color de su posición en la lista, aunque falle otra *)
+    Show[
+      ParametricPlot[
+        Evaluate[With[{s = sols[[#, "Solution"]]}, {s[tau], s'[tau]}] & /@ ok], {tau, 0, tmax},
+        Evaluate[Sequence @@ FilterRules[{opts}, Options[ParametricPlot]]],
+        PlotStyle -> (phaseStyle /@ ok),
+        AspectRatio -> 1,
+        FrameLabel -> {ToString[q], Overscript[ToString[q], "."]},
+        Evaluate[Sequence @@ $CMPlotStyle]],
+      Graphics[{AbsolutePointSize[7],
+        {FirstCase[phaseStyle[#], _RGBColor, Black], Point[N[pairs[[#]]]]} & /@ ok}]]
+  ];
+
+PhasePortrait[___] := (cmMessage[PhasePortrait, "args"]; $Failed);
+
 (* --- Alias en español (al final, cuando las funciones ya tienen sus atributos) --- *)
 defineAlias[ExpansionArmonica, HarmonicExpansion];
 defineAlias[PuntosDeEquilibrio, EquilibriumPoints];
 defineAlias[ClasificarEquilibrio, ClassifyEquilibrium];
+defineAlias[FuncionEnergia, EnergyFunction];
+defineAlias[ResolverMovimiento, SolveMotion];
+defineAlias[CompararArmonica, CompareHarmonic];
+defineAlias[RetratoDeFase, PhasePortrait];
 
 End[];
