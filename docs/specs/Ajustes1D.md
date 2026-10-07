@@ -1,10 +1,12 @@
 # Especificación: ajustes tras la prueba con un sistema nuevo
 
-Estado: aprobada para implementar. Versión 1.3 (7 de octubre de 2026).
+Estado: aprobada para implementar. Versión 1.4 (7 de octubre de 2026).
 - v1.1: agrega el punto 6 (parte potencial de la función energía).
 - v1.2: agrega los puntos 7 (CMPlot con una sola curva) y 8 (números en los mensajes).
 - v1.3: precisiones aprobadas durante la implementación y puntos 9 a 12, que salen de la revisión
   en notebook del PR de esta rama. El punto 9 reemplaza la regla del punto de equilibrio del punto 5.
+- v1.4: se retira el punto 12. Su premisa era incorrecta: `FactorList` no entrega exponentes
+  simbólicos (y^(p − 1) sale como {y^p, 1} y {y, −1}), así que el caso que describía no ocurre.
 Rama: `fix/ajustes-1d`, después de mergear la parte A de `docs/specs/Motion1D.md`.
 Origen: prueba en notebook con `L = m/2 x'[t]^2 - k/2 (Sqrt[x[t]^2 + h^2] - l0)^2` (masa en un riel
 unida a un resorte anclado a una altura h). Todos los valores salieron correctos; estos son dos
@@ -135,16 +137,6 @@ de un «=» y con sangría en la línea siguiente («…con x = 0 +» / «u, has
 - Los números de la columna «Paso» van también con el estilo "Text".
 - Revisión visual en PNG con la clasificación del riel en el centro (su conclusión ocupa cuatro
   líneas) y, por parte del usuario, en un notebook.
-
-## 12. Factores con exponente que no se puede decidir
-
-En el punto 1, un factor cuyo exponente no es un número (por ejemplo y^(p − 1) con p simbólico)
-no cumple «> 0» ni «< 0» y hoy desaparece sin aviso.
-
-- Va al denominador solo el factor cuyo exponente es negativo con las suposiciones
-  (`TrueQ[Simplify[e < 0, asm]]`). Todos los demás se tratan como factores del numerador, como
-  antes de esta rama.
-- Test: `L = m/2 y'[t]^2 - k y[t]^p` con p simbólico: el factor y sigue en "Factors".
 
 ## Criterio de aceptación
 
