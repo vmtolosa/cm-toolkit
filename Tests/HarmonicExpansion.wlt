@@ -259,6 +259,17 @@ VerificationTest[
   TestID -> "expansion-riel-descripciones-con-x-y-u"
 ]
 
+(* Con q0 = 0, la descripción de la serie dice «x = u», no «x = 0 + u» (Ajustes1D, punto 10) *)
+VerificationTest[
+  Table[Block[{$CMLanguage = lang},
+      With[{d = SelectFirst[HarmonicExpansion[m/2 x'[t]^2 - k/2 (Sqrt[x[t]^2 + h^2] - l0)^2,
+            {x, t}, 0, u]["Steps"][[All, "Description"]], StringContainsQ[#, "Taylor"] &]},
+        {StringContainsQ[d, "x = u"], StringContainsQ[d, "0 + u"]}]],
+    {lang, {"Spanish", "English"}}],
+  {{True, False}, {True, False}},
+  TestID -> "expansion-q0-cero-texto-x-igual-u"
+]
+
 (* --- ShowSteps / MostrarPasos --- *)
 
 VerificationTest[

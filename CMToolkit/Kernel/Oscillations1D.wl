@@ -92,8 +92,8 @@ AssociateTo[$texts, <|
     "Spanish" -> "Comprobación de equilibrio: U'(`q0`) = 0.",
     "English" -> "Equilibrium check: U'(`q0`) = 0."|>,
   "HarmonicExpansion:series" -> <|
-    "Spanish" -> "Serie de Taylor del potencial en torno a `q0`, con `q` = `q0` + `x`.",
-    "English" -> "Taylor series of the potential about `q0`, with `q` = `q0` + `x`."|>,
+    "Spanish" -> "Serie de Taylor del potencial en torno a `q0`, con `q` = `qdev`.",
+    "English" -> "Taylor series of the potential about `q0`, with `q` = `qdev`."|>,
   "HarmonicExpansion:stiffness" -> <|
     "Spanish" -> "Constante elástica efectiva: k_ef = U''(`q0`) = 2 c\:2082.",
     "English" -> "Effective stiffness: k_eff = U''(`q0`) = 2 c\:2082."|>,
@@ -187,8 +187,8 @@ AssociateTo[$texts, <|
     "Spanish" -> "Condición de existencia: no se pudo decidir si `q0` es real; se supone que existe siempre.",
     "English" -> "Existence condition: it could not be decided whether `q0` is real; it is assumed to always exist."|>,
   "ClassifyEquilibrium:series" -> <|
-    "Spanish" -> "Serie de Taylor del potencial en torno a `q0`, con `q` = `q0` + `x`, hasta el primer término no nulo después de la constante.",
-    "English" -> "Taylor series of the potential about `q0`, with `q` = `q0` + `x`, up to the first nonzero term after the constant."|>,
+    "Spanish" -> "Serie de Taylor del potencial en torno a `q0`, con `q` = `qdev`, hasta el primer término no nulo después de la constante.",
+    "English" -> "Taylor series of the potential about `q0`, with `q` = `qdev`, up to the first nonzero term after the constant."|>,
   "ClassifyEquilibrium:second" -> <|
     "Spanish" -> "Segunda derivada: su signo decide si U''(`q0`) \[NotEqual] 0.",
     "English" -> "Second derivative: its sign decides when U''(`q0`) \[NotEqual] 0."|>,
@@ -376,7 +376,12 @@ stepVars[q_Symbol, t_Symbol, x_ : None, q0_ : None] := Module[{name = SymbolName
       ToString[q0, InputForm],
     True, name <> "0"];
   <|"q" -> name, "qdot" -> If[StringLength[name] == 1, name <> "\:0307", name <> "'"],
-    "t" -> SymbolName[t], "x" -> If[x === None, "", SymbolName[x]], "q0" -> q0s|>];
+    "t" -> SymbolName[t], "x" -> If[x === None, "", SymbolName[x]], "q0" -> q0s,
+    (* q0 + x, o solo x si q0 = 0 (como U(x) en la serie retenida) *)
+    "qdev" -> Which[
+      x === None, "",
+      zeroQ[q0, True], SymbolName[x],
+      True, q0s <> " + " <> SymbolName[x]]|>];
 
 (* Suma retenida en el orden dado; con un solo término, el término solo (HoldForm[Plus[t]] se
    mostraría como «+ t») *)

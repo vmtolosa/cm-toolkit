@@ -416,6 +416,25 @@ VerificationTest[
   TestID -> "clasificar-riel-lateral-como-x0"
 ]
 
+(* Punto 10 (v1.3): con q0 = 0, la descripción de la serie dice «x = u», no «x = 0 + u» *)
+eqSeriesText[res_] := SelectFirst[res["Steps"][[All, "Description"]],
+  StringContainsQ[#, "Taylor"] &];
+
+VerificationTest[
+  Table[Block[{$CMLanguage = lang},
+      With[{d = eqSeriesText[ClassifyEquilibrium[eqRailL, {x, t}, 0, u]]},
+        {StringContainsQ[d, "x = u"], StringContainsQ[d, "0 + u"]}]],
+    {lang, {"Spanish", "English"}}],
+  {{True, False}, {True, False}},
+  TestID -> "clasificar-q0-cero-texto-x-igual-u"
+]
+
+VerificationTest[
+  StringContainsQ[eqSeriesText[eqClassify[Pi]], "th = Pi + x"],
+  True,
+  TestID -> "clasificar-q0-no-nulo-texto-q0-mas-x"
+]
+
 VerificationTest[
   Block[{$CMLanguage = "English"},
     StringContainsQ[Last[eqClassify[Pi]["Steps"]]["Description"], "call ClassifyEquilibrium"]],
