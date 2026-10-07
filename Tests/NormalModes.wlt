@@ -69,6 +69,13 @@ VerificationTest[
   TestID -> "red-cuadrado-tabla-de-resortes-orden"
 ]
 
+VerificationTest[
+  SpringNetwork[nmPos, nmSprings, m,
+    "Coordinates" -> {x1, y1, x2, y2, x3, y3, x4, y4}]["Coordinates"],
+  {x1, y1, x2, y2, x3, y3, x4, y4},
+  TestID -> "red-cuadrado-opcion-coordenadas"
+]
+
 (* === NormalModes === *)
 
 VerificationTest[
@@ -102,6 +109,20 @@ VerificationTest[
   TestID -> "modos-cuadrado-ortonormales-ecs-72-73"
 ]
 
+(* El orden de 2kp/m y 2k/m no se decide con las suposiciones: cada valor esperado se busca
+   entre las entradas, y "Indices" debe apuntar a ese valor en "Omega2" *)
+VerificationTest[
+  Module[{deg = nmModes["Degeneracies"], w2 = nmModes["Omega2"]},
+    {Length[deg],
+     Map[Function[pair,
+       Select[deg, Simplify[#["Omega2"] - First[pair], nmAsm] === 0 &][[All, "Multiplicity"]]],
+       {{0, 3}, {2 kp/m, 1}, {2 k/m, 3}, {2 (k + kp)/m, 1}}],
+     And @@ (Length[#["Indices"]] === #["Multiplicity"] &&
+        Union[Simplify[w2[[#["Indices"]]] - #["Omega2"], nmAsm]] === {0} & /@ deg)}],
+  {4, {{3}, {1}, {3}, {1}}, True},
+  TestID -> "modos-cuadrado-degeneraciones"
+]
+
 (* --- Con la base de la ayudantía --- *)
 
 VerificationTest[
@@ -124,6 +145,21 @@ VerificationTest[
   $Failed,
   {NormalModes::noteigen},
   TestID -> "modos-cuadrado-base-vector-no-propio-noteigen"
+]
+
+VerificationTest[
+  NormalModes[nmSquare, "Basis" -> nmBase[[1 ;; 7]]],
+  $Failed,
+  {NormalModes::basis},
+  TestID -> "modos-cuadrado-base-siete-vectores-basis"
+]
+
+(* Todos los vectores son propios, pero el segundo repite el primero *)
+VerificationTest[
+  NormalModes[nmSquare, "Basis" -> ReplacePart[nmBase, 2 -> nmBase[[1]]]],
+  $Failed,
+  {NormalModes::rank},
+  TestID -> "modos-cuadrado-base-vector-repetido-rank"
 ]
 
 (* Listado 9: base «mala» (no Mmat-ortogonal en el subespacio 2k/m). Gram-Schmidt en el orden
@@ -251,6 +287,20 @@ VerificationTest[
     Max[Table[Norm[(sol /. tt -> s0) - (y[s0] /. nd), Infinity], {s0, 0, 30, 0.05}]] < 10^-6],
   True,
   TestID -> "respuesta-cuadrado-contra-NDSolve-listado-10"
+]
+
+VerificationTest[
+  ModeResponse[nmBaseModes, ConstantArray[0, 7], ConstantArray[0, 8]],
+  $Failed,
+  {ModeResponse::ic},
+  TestID -> "respuesta-error-q0-largo-incorrecto-ic"
+]
+
+VerificationTest[
+  ModeResponse[nmBaseModes, ConstantArray[0, 8], ConstantArray[0, 8]]["EnergyShares"],
+  ConstantArray[0, 8],
+  {ModeResponse::rest},
+  TestID -> "respuesta-reposo-rest"
 ]
 
 (* --- Casos con solución conocida (no están en la ayudantía) --- *)
@@ -390,6 +440,13 @@ VerificationTest[
   $Failed,
   {SpringNetwork::anchors},
   TestID -> "red-error-anclaje-indice-fuera-de-rango"
+]
+
+VerificationTest[
+  SpringNetwork[nmPos, nmSprings, m, "Coordinates" -> {x1, y1, x2, y2, x3, y3, x4}],
+  $Failed,
+  {SpringNetwork::coords},
+  TestID -> "red-error-coordenadas-cantidad-incorrecta"
 ]
 
 VerificationTest[
