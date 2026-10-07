@@ -94,7 +94,7 @@ solB = SolveMotion[Lnum, {x, t}, {0.05, 0.3}, 40];   (* con un empujón: recorre
 | Equilibrios | `EquilibriumPoints`, `ClassifyEquilibrium` | Disponible |
 | Pequeñas oscilaciones | `HarmonicExpansion`, `ShowSteps` | Disponible |
 | Movimiento exacto | `EnergyFunction`, `SolveMotion`, `CompareHarmonic`, `PhasePortrait` | Disponible |
-| Gráficos de un grado de libertad | `PotentialPlot`, `EquilibriumDiagram` | En desarrollo |
+| Gráficos de un grado de libertad | `PotentialPlot`, `EquilibriumDiagram` | Especificado |
 | Modos normales en 1, 2 y 3 dimensiones | `SpringNetwork`, `NormalModes`, `ModeResponse`, animaciones | Especificado |
 | Oscilador amortiguado y forzado, funciones de Green | `DampedOscillator`, `GreenFunction`, `GreenSolution`, exploradores interactivos | Especificado |
 
@@ -143,7 +143,7 @@ armónica, y dibujar el potencial y el diagrama de equilibrios en función de un
 | `EquilibriumPoints`, `ClassifyEquilibrium` | Puntos de equilibrio con su condición de existencia; mínimo, máximo, punto de inflexión o caso que depende de los parámetros | [Equilibria.md](docs/specs/Equilibria.md) | Disponible |
 | `HarmonicExpansion`, `ShowSteps` | Masa efectiva, serie del potencial, lagrangiano armónico, cota de amplitud y frecuencia, con los pasos en una tabla | [HarmonicExpansion.md](docs/specs/HarmonicExpansion.md) | Disponible |
 | `EnergyFunction`, `SolveMotion`, `CompareHarmonic`, `PhasePortrait` | Función energía conservada, integración numérica de la ecuación exacta, comparación con la armónica y retrato de fase | [Motion1D.md](docs/specs/Motion1D.md) (parte A) | Disponible |
-| `PotentialPlot`, `EquilibriumDiagram` | Potencial efectivo con una curva por valor de un parámetro y sus mínimos marcados; diagrama de equilibrios estables e inestables en función de un parámetro; notebook de ejemplo | [Motion1D.md](docs/specs/Motion1D.md) (parte B) | En desarrollo |
+| `PotentialPlot`, `EquilibriumDiagram` | Potencial efectivo con una curva por valor de un parámetro y sus mínimos marcados; diagrama de equilibrios estables e inestables en función de un parámetro; notebook de ejemplo | [Motion1D.md](docs/specs/Motion1D.md) (parte B) | Especificado |
 
 **Versión 0.2.0: modos normales en N dimensiones.** Construir redes de masas y resortes en 1, 2 y
 3 dimensiones (o partir de cualquier lagrangiano de N coordenadas), obtener sus modos normales,

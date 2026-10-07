@@ -93,7 +93,7 @@ solB = SolveMotion[Lnum, {x, t}, {0.05, 0.3}, 40];   (* with a push: visits both
 | Equilibria | `EquilibriumPoints`, `ClassifyEquilibrium` | Available |
 | Small oscillations | `HarmonicExpansion`, `ShowSteps` | Available |
 | Exact motion | `EnergyFunction`, `SolveMotion`, `CompareHarmonic`, `PhasePortrait` | Available |
-| One-degree-of-freedom plots | `PotentialPlot`, `EquilibriumDiagram` | In development |
+| One-degree-of-freedom plots | `PotentialPlot`, `EquilibriumDiagram` | Specified |
 | Normal modes in 1, 2 and 3 dimensions | `SpringNetwork`, `NormalModes`, `ModeResponse`, animations | Specified |
 | Damped and driven oscillator, Green's functions | `DampedOscillator`, `GreenFunction`, `GreenSolution`, interactive explorers | Specified |
 
@@ -144,7 +144,7 @@ the potential and the equilibrium diagram as a function of a parameter.
 | `EquilibriumPoints`, `ClassifyEquilibrium` | Equilibrium points with their existence condition; minimum, maximum, inflection point or a case that depends on the parameters | [Equilibria.md](docs/specs/Equilibria.md) | Available |
 | `HarmonicExpansion`, `ShowSteps` | Effective mass, series of the potential, harmonic Lagrangian, amplitude bound and frequency, with the steps in a table | [HarmonicExpansion.md](docs/specs/HarmonicExpansion.md) | Available |
 | `EnergyFunction`, `SolveMotion`, `CompareHarmonic`, `PhasePortrait` | Conserved energy function, numerical integration of the exact equation, comparison with the harmonic one and phase portrait | [Motion1D.md](docs/specs/Motion1D.md) (part A) | Available |
-| `PotentialPlot`, `EquilibriumDiagram` | Effective potential with one curve per value of a parameter and its minima marked; diagram of stable and unstable equilibria as a function of a parameter; example notebook | [Motion1D.md](docs/specs/Motion1D.md) (part B) | In development |
+| `PotentialPlot`, `EquilibriumDiagram` | Effective potential with one curve per value of a parameter and its minima marked; diagram of stable and unstable equilibria as a function of a parameter; example notebook | [Motion1D.md](docs/specs/Motion1D.md) (part B) | Specified |
 
 **Version 0.2.0: normal modes in N dimensions.** Build networks of masses and springs in 1, 2 and
 3 dimensions (or start from any Lagrangian with N coordinates), get their normal modes, including
