@@ -110,15 +110,19 @@ zeroQ[e_, asm_] := With[{s = Simplify[e, asm]},
 ShowSteps[$Failed] := $Failed;
 
 ShowSteps[res_Association /; KeyExistsQ[res, "Steps"]] :=
-  Module[{style = Lookup[$CMPlotStyle, LabelStyle, {}], margins},
+  Module[{style = Lookup[$CMPlotStyle, LabelStyle, {}], size, margins},
+    (* Descripciones y encabezados como texto: estilo "Text" del notebook (su familia, no la
+       monoespaciada de las salidas) con el tamaño de LabelStyle *)
+    size = FirstCase[style, (FontSize -> s_) :> s, 12, Infinity];
     (* Grid no dibuja el espaciado exterior; los Spacer dejan margen en los bordes
        para que la expresión más larga no quede pegada al borde *)
     margins = {Row[{Spacer[8], #1}], #2, Row[{#3, Spacer[16]}]} &;
     Grid[
       Prepend[
-        MapIndexed[margins[First[#2], #1["Description"], TraditionalForm[#1["Expression"]]] &,
+        MapIndexed[margins[First[#2], Style[#1["Description"], "Text", FontSize -> size],
+            TraditionalForm[#1["Expression"]]] &,
           res["Steps"]],
-        margins @@ (Style[tr[#], Bold] & /@
+        margins @@ (Style[tr[#], "Text", Bold, FontSize -> size] & /@
           {"ShowSteps:step", "ShowSteps:description", "ShowSteps:expression"})],
       Alignment -> {{Right, Left, Left}, Center},
       ItemSize -> {{Automatic, 32, Automatic}},

@@ -254,6 +254,18 @@ VerificationTest[
   TestID -> "ShowSteps-devuelve-Grid"
 ]
 
+(* Descripciones y encabezados como texto (estilo "Text" del notebook), con el tamaño de
+   LabelStyle de $CMPlotStyle (docs/specs/Ajustes1D.md, punto 4) *)
+VerificationTest[
+  Module[{grid = ShowSteps[ringPi], texts},
+    texts = Cases[grid, Style[s_String, "Text", ___, FontSize -> 12, ___] :> s, Infinity];
+    {SubsetQ[texts, ringPi["Steps"][[All, "Description"]]],
+     SubsetQ[texts, CMToolkit`Private`tr /@
+       {"ShowSteps:step", "ShowSteps:description", "ShowSteps:expression"}]}],
+  {True, True},
+  TestID -> "ShowSteps-textos-con-estilo-Text"
+]
+
 VerificationTest[
   ShowSteps[$Failed],
   $Failed,
