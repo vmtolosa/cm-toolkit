@@ -94,9 +94,6 @@ solB = SolveMotion[Lnum, {x, t}, {0.05, 0.3}, 40];   (* con un empujón: recorre
 | Equilibrios | `EquilibriumPoints`, `ClassifyEquilibrium` | Disponible |
 | Pequeñas oscilaciones | `HarmonicExpansion`, `ShowSteps` | Disponible |
 | Movimiento exacto | `EnergyFunction`, `SolveMotion`, `CompareHarmonic`, `PhasePortrait` | Disponible |
-| Gráficos de un grado de libertad | `PotentialPlot`, `EquilibriumDiagram` | Especificado |
-| Modos normales en 1, 2 y 3 dimensiones | `SpringNetwork`, `NormalModes`, `ModeResponse`, animaciones | Especificado |
-| Oscilador amortiguado y forzado, funciones de Green | `DampedOscillator`, `GreenFunction`, `GreenSolution`, exploradores interactivos | Especificado |
 
 Los nombres en español de cada función están en su ayuda: `?HarmonicExpansion`.
 El plan completo, con los demás temas de un curso de mecánica clásica, está en la
