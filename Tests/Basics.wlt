@@ -142,6 +142,33 @@ VerificationTest[
   TestID -> "CMPlot-PlotStyle-del-usuario-gana"
 ]
 
+(* --- Números en los mensajes (docs/specs/Ajustes1D.md, punto 8) --- *)
+
+(* Un número de máquina pasa a texto con 6 cifras significativas y sin marca de precisión;
+   una expresión con números de máquina, a texto en InputForm; lo demás no cambia *)
+VerificationTest[
+  CMToolkit`Private`messageArg /@ {1.8540746734841649, -1.36, 4.812345678*^-10, 3, Pi, a + b},
+  {"1.85407", "-1.36", "4.81235*^-10", 3, Pi, a + b},
+  TestID -> "mensajes-formato-de-numeros"
+]
+
+VerificationTest[
+  With[{s = CMToolkit`Private`messageArg[1 + 0.90251234567 Cos[z]]},
+    {StringQ[s], StringContainsQ[s, "0.902512"], StringContainsQ[s, "`"]}],
+  {True, True, False},
+  TestID -> "mensajes-expresion-con-numeros"
+]
+
+(* cmMessage entrega a Message los argumentos ya formateados (Trace los envuelve en
+   HoldCompleteForm; la última forma es la llamada que recibe Message) *)
+VerificationTest[
+  Last[Cases[Trace[Quiet[CMToolkit`Private`cmMessage[SolveMotion, "ndsolve", 10, 1.8540746734841649]],
+      _Message],
+    HoldCompleteForm[Message[_, args___]] :> {args}, Infinity]],
+  {10, "1.85407"},
+  TestID -> "mensajes-cmMessage-formatea-argumentos"
+]
+
 (* --- cmLanguage[] (privada, se llama por su nombre completo) --- *)
 
 VerificationTest[

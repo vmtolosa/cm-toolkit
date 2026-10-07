@@ -63,11 +63,19 @@ tr[key_String] := Lookup[Lookup[$texts, key, <||>], cmLanguage[], key];
 (* Texto con marcadores `q`, `x`, … sustituidos por los valores de vals (plantilla) *)
 tr[key_String, vals_Association] := StringTemplate[tr[key]][vals];
 
-(* Asigna el texto traducido al mensaje justo antes de emitirlo *)
+(* Asigna el texto traducido al mensaje justo antes de emitirlo; los argumentos con números
+   de máquina van como texto (messageArg) *)
 cmMessage[sym_Symbol, tag_String, args___] := (
   MessageName[sym, tag] = tr[SymbolName[sym] <> "::" <> tag];
-  Message[MessageName[sym, tag], args]
+  Message[MessageName[sym, tag], Sequence @@ (messageArg /@ {args})]
 );
+
+(* Números de máquina en los mensajes: 6 cifras significativas y sin marca de precisión, para
+   que el notebook no muestre «1.8540746734841649`». Un número solo pasa a texto; una expresión
+   que contiene números, a texto en InputForm; lo demás no cambia *)
+round6[r_Real] := If[r == 0, 0., N[Round[r, 10^(Floor[Log10[Abs[r]]] - 5)]]];
+messageArg[e_ /; !FreeQ[e, _Real]] := ToString[InputForm[e /. r_Real :> round6[r], NumberMarks -> False]];
+messageArg[e_] := e;
 
 (* Alias en español: misma definición, atributos y opciones que la función en inglés *)
 defineAlias[alias_Symbol, canonical_Symbol] := (
