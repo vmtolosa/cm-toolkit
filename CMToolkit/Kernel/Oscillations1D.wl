@@ -359,8 +359,11 @@ potentialCoefficients[U_, qs_, q0_, asm_, nmax_, nmin_ : 2] :=
 
 (* U(q0 + x) == c0 + c1 x + … retenida, para "Steps": q0 + x sin reordenar y grados crecientes *)
 heldSeries[cs_List, q0_, x_] :=
-  With[{q0h = q0, terms = DeleteCases[cs x^Range[0, Length[cs] - 1], 0]},
-    HoldForm["U"[q0h + x]] == heldSum[terms]];
+  With[{terms = DeleteCases[cs x^Range[0, Length[cs] - 1], 0]},
+    heldU[q0, x] == heldSum[terms]];
+
+(* U(q0 + x) retenida, sin reordenar; si q0 es 0, U(x) *)
+heldU[q0_, x_] := If[zeroQ[q0, True], HoldForm["U"[x]], With[{q0h = q0}, HoldForm["U"[q0h + x]]]];
 
 (* Suma retenida en el orden dado; con un solo término, el término solo (HoldForm[Plus[t]] se
    mostraría como «+ t») *)
@@ -681,10 +684,9 @@ ClassifyEquilibrium[L_, {q_Symbol, t_Symbol}, q0_, x_ /; !OptionQ[x], opts : Opt
         type === "Conditional",
           KeyValueMap[tr["ClassifyEquilibrium:label:" <> #1] -> #2 &, conds],
         type === "Undetermined",
-          With[{q0h = q0}, HoldForm["U"[q0h + x]] \[TildeTilde] c[[1]]],
+          heldU[q0, x] \[TildeTilde] c[[1]],
         True,
-          With[{q0h = q0, terms = DeleteCases[{c[[1]], cn x^lead}, 0]},
-            HoldForm["U"[q0h + x]] \[TildeTilde] heldSum[terms]]]};
+          heldU[q0, x] \[TildeTilde] heldSum[DeleteCases[{c[[1]], cn x^lead}, 0]]]};
 
     steps = Join[
       {{"assumptions", asm},

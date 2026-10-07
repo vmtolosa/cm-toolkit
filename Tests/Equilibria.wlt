@@ -347,6 +347,21 @@ VerificationTest[
   TestID -> "clasificar-serie-de-un-termino-sin-mas"
 ]
 
+(* q0 = 0: el lado izquierdo es U(u), no U(0 + u), en la serie y en la conclusión *)
+VerificationTest[
+  With[{ex = eqRailCritical["Steps"][[All, "Expression"]]},
+    {Count[ex, HoldForm["U"[u]], Infinity], FreeQ[ex, HoldPattern["U"[0 + u]]]}],
+  {2, True},
+  TestID -> "clasificar-q0-cero-muestra-U-de-u"
+]
+
+(* Con q0 distinto de 0 se sigue mostrando U(q0 + x) *)
+VerificationTest[
+  !FreeQ[eqClassify[Pi]["Steps"][[All, "Expression"]], HoldPattern["U"[Pi + x]]],
+  True,
+  TestID -> "clasificar-q0-no-nulo-muestra-U-de-q0-mas-x"
+]
+
 (* --- Errores, en el orden de validación --- *)
 
 VerificationTest[
