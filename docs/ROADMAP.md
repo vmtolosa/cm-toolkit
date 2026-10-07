@@ -45,13 +45,13 @@ del módulo dentro del paquete.
 | --- | --- | --- |
 | Un grado de libertad | `HarmonicExpansion`, `ShowSteps` | Hecho |
 | | `EquilibriumPoints`, `ClassifyEquilibrium` | Hecho |
-| | `EnergyFunction`, `CompareHarmonic` | Siguiente |
-| | `PotentialPlot`, `EquilibriumDiagram`, `PhasePortrait` | Pendiente |
+| | `EnergyFunction`, `SolveMotion`, `CompareHarmonic`, `PhasePortrait` | Hecho |
+| | `PotentialPlot`, `EquilibriumDiagram` | Pendiente (con especificación: `docs/specs/Motion1D.md`, parte B) |
 | Modos normales en N dimensiones | `SmallOscillations` (M y K desde un lagrangiano de N coordenadas) | Pendiente |
-| | `SpringNetwork` (redes de resortes en 2D y 3D) | Pendiente |
+| | `SpringNetwork` (redes de resortes en 1, 2 y 3 dimensiones) | Pendiente |
 | | `NormalModes` (degeneración, base M-ortonormal), `NormalCoordinates`, `ModeResponse` | Pendiente |
 | | `ModeGallery`, `AnimateMode` (2D y 3D), `AnimateMotion`, `SpectrumPlot`, `EnergySharesChart` | Pendiente |
-| Amortiguadas y forzadas | `DampedOscillator`, `ResonanceCurve`, `TransientPlot` | Pendiente |
+| Amortiguadas y forzadas | `DampedOscillator`, `SteadyState`, `ResonanceCurve` | Pendiente |
 | Funciones de Green | `GreenFunction`, `GreenSolution`, `ConvolutionExplorer`, `ImpulseSuperposition`, `SolutionDecompositionPlot`, `InitialConditionExplorer` | Pendiente |
 | Oscilaciones no lineales y perturbaciones | Poincaré–Lindstedt y similares | Fuera de alcance por ahora |
 
