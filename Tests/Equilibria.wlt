@@ -207,7 +207,8 @@ VerificationTest[
 (* === ClassifyEquilibrium === *)
 
 eqClassify[q0_, opts___] := ClassifyEquilibrium[eqRingL, {th, t}, q0, x, opts];
-eqCriticalNote := CMToolkit`Private`tr["ClassifyEquilibrium:criticalnote"];
+(* La nota del caso crítico nombra la función en el idioma vigente (Ajustes1D, punto 5) *)
+eqCriticalNote = "vuelve a llamar a ClasificarEquilibrio";
 
 (* --- Anillo que rota (Problema 1) --- *)
 
@@ -360,6 +361,49 @@ VerificationTest[
   !FreeQ[eqClassify[Pi]["Steps"][[All, "Expression"]], HoldPattern["U"[Pi + x]]],
   True,
   TestID -> "clasificar-q0-no-nulo-muestra-U-de-q0-mas-x"
+]
+
+(* --- Descripciones con los símbolos del usuario (docs/specs/Ajustes1D.md, punto 5) --- *)
+
+(* Ninguna descripción habla de «q» suelta ni de «q0» genéricos *)
+eqNoGenericQ[res_] := NoneTrue[res["Steps"][[All, "Description"]],
+  StringContainsQ[#, RegularExpression["\\bq\\b"] | "q0"] &];
+
+VerificationTest[
+  Module[{res = ClassifyEquilibrium[eqRailL, {x, t}, 0, u], series},
+    series = SelectFirst[res["Steps"][[All, "Description"]], StringContainsQ[#, "Taylor"] &];
+    {eqNoGenericQ[res], StringContainsQ[series, "x = "], StringContainsQ[series, "u"]}],
+  {True, True, True},
+  TestID -> "clasificar-riel-descripciones-con-x-y-u"
+]
+
+VerificationTest[
+  {eqNoGenericQ[eqRailPts],
+   StringContainsQ[eqRailPts["Steps"][[2, "Description"]], "x\:0307"]},
+  {True, True},
+  TestID -> "puntos-riel-descripciones-con-x"
+]
+
+(* q0 corto: se inserta en InputForm *)
+VerificationTest[
+  MemberQ[eqClassify[Pi]["Steps"][[All, "Description"]], s_ /; StringContainsQ[s, "U'(Pi) = 0"]],
+  True,
+  TestID -> "clasificar-q0-corto-insertado"
+]
+
+(* q0 de 20 caracteres o más (ArcCos[-(g/(b*w^2))]): se escribe th0 *)
+VerificationTest[
+  With[{ds = eqClassify[eqTheta0]["Steps"][[All, "Description"]]},
+    {AnyTrue[ds, StringContainsQ[#, "th0"] &], NoneTrue[ds, StringContainsQ[#, "ArcCos"] &]}],
+  {True, True},
+  TestID -> "clasificar-q0-largo-como-th0"
+]
+
+VerificationTest[
+  Block[{$CMLanguage = "English"},
+    StringContainsQ[Last[eqClassify[Pi]["Steps"]]["Description"], "call ClassifyEquilibrium"]],
+  True,
+  TestID -> "clasificar-nota-critica-en-ingles"
 ]
 
 (* --- Errores, en el orden de validación --- *)

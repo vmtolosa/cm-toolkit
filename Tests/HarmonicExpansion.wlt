@@ -246,6 +246,19 @@ VerificationTest[
   TestID -> "resorte-vertical"
 ]
 
+(* --- Descripciones con los símbolos del usuario (docs/specs/Ajustes1D.md, punto 5) --- *)
+
+VerificationTest[
+  Module[{res, ds, series},
+    res = HarmonicExpansion[m/2 x'[t]^2 - k/2 (Sqrt[x[t]^2 + h^2] - l0)^2, {x, t}, 0, u];
+    ds = res["Steps"][[All, "Description"]];
+    series = SelectFirst[ds, StringContainsQ[#, "Taylor"] &];
+    {NoneTrue[ds, StringContainsQ[#, RegularExpression["\\bq\\b"] | "q0"] &],
+     StringContainsQ[series, "x = "], StringContainsQ[series, "u"]}],
+  {True, True, True},
+  TestID -> "expansion-riel-descripciones-con-x-y-u"
+]
+
 (* --- ShowSteps / MostrarPasos --- *)
 
 VerificationTest[

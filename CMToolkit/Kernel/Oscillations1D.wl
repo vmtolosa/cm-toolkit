@@ -80,23 +80,23 @@ AssociateTo[$texts, <|
     "Spanish" -> "Suposiciones usadas.",
     "English" -> "Assumptions used."|>,
   "HarmonicExpansion:potential" -> <|
-    "Spanish" -> "Potencial efectivo: U(q) = \[Minus]L con q\:0307 = 0 (incluye los términos centrífugos).",
-    "English" -> "Effective potential: U(q) = \[Minus]L with q\:0307 = 0 (includes centrifugal terms)."|>,
+    "Spanish" -> "Potencial efectivo: U(`q`) = \[Minus]L con `qdot` = 0 (incluye los términos centrífugos).",
+    "English" -> "Effective potential: U(`q`) = \[Minus]L with `qdot` = 0 (includes centrifugal terms)."|>,
   "HarmonicExpansion:mass" -> <|
-    "Spanish" -> "Masa efectiva: m_ef = \[PartialD]\.b2L/\[PartialD]q\:0307\.b2 en q = q0, q\:0307 = 0.",
-    "English" -> "Effective mass: m_eff = \[PartialD]\.b2L/\[PartialD]q\:0307\.b2 at q = q0, q\:0307 = 0."|>,
+    "Spanish" -> "Masa efectiva: m_ef = \[PartialD]\.b2L/\[PartialD]`qdot`\.b2 en `q` = `q0`, `qdot` = 0.",
+    "English" -> "Effective mass: m_eff = \[PartialD]\.b2L/\[PartialD]`qdot`\.b2 at `q` = `q0`, `qdot` = 0."|>,
   "HarmonicExpansion:linear" -> <|
-    "Spanish" -> " L tiene un término lineal en q\:0307: en 1D es una derivada total y no afecta la ecuación de movimiento.",
-    "English" -> " L has a term linear in q\:0307: in 1D it is a total derivative and does not affect the equation of motion."|>,
+    "Spanish" -> " L tiene un término lineal en `qdot`: en 1D es una derivada total y no afecta la ecuación de movimiento.",
+    "English" -> " L has a term linear in `qdot`: in 1D it is a total derivative and does not affect the equation of motion."|>,
   "HarmonicExpansion:equilibrium" -> <|
-    "Spanish" -> "Comprobación de equilibrio: U'(q0) = 0.",
-    "English" -> "Equilibrium check: U'(q0) = 0."|>,
+    "Spanish" -> "Comprobación de equilibrio: U'(`q0`) = 0.",
+    "English" -> "Equilibrium check: U'(`q0`) = 0."|>,
   "HarmonicExpansion:series" -> <|
-    "Spanish" -> "Serie de Taylor del potencial en torno a q0, con q = q0 + x.",
-    "English" -> "Taylor series of the potential about q0, with q = q0 + x."|>,
+    "Spanish" -> "Serie de Taylor del potencial en torno a `q0`, con `q` = `q0` + `x`.",
+    "English" -> "Taylor series of the potential about `q0`, with `q` = `q0` + `x`."|>,
   "HarmonicExpansion:stiffness" -> <|
-    "Spanish" -> "Constante elástica efectiva: k_ef = U''(q0) = 2 c\:2082.",
-    "English" -> "Effective stiffness: k_eff = U''(q0) = 2 c\:2082."|>,
+    "Spanish" -> "Constante elástica efectiva: k_ef = U''(`q0`) = 2 c\:2082.",
+    "English" -> "Effective stiffness: k_eff = U''(`q0`) = 2 c\:2082."|>,
   "HarmonicExpansion:lagrangian" -> <|
     "Spanish" -> "Lagrangiano armónico: se descarta la constante y se trunca en orden 2.",
     "English" -> "Harmonic Lagrangian: the constant is dropped and the series is truncated at order 2."|>,
@@ -135,20 +135,20 @@ AssociateTo[$texts, <|
     "Spanish" -> "Suposiciones usadas.",
     "English" -> "Assumptions used."|>,
   "EquilibriumPoints:potential" -> <|
-    "Spanish" -> "Potencial efectivo: U(q) = \[Minus]L con q\:0307 = 0 (incluye los términos centrífugos).",
-    "English" -> "Effective potential: U(q) = \[Minus]L with q\:0307 = 0 (includes centrifugal terms)."|>,
+    "Spanish" -> "Potencial efectivo: U(`q`) = \[Minus]L con `qdot` = 0 (incluye los términos centrífugos).",
+    "English" -> "Effective potential: U(`q`) = \[Minus]L with `qdot` = 0 (includes centrifugal terms)."|>,
   "EquilibriumPoints:derivative" -> <|
-    "Spanish" -> "Derivada del potencial, factorizada: los equilibrios son los ceros de U'(q).",
-    "English" -> "Derivative of the potential, factored: the equilibria are the zeros of U'(q)."|>,
+    "Spanish" -> "Derivada del potencial, factorizada: los equilibrios son los ceros de U'(`q`).",
+    "English" -> "Derivative of the potential, factored: the equilibria are the zeros of U'(`q`)."|>,
   "EquilibriumPoints:denominator" -> <|
-    "Spanish" -> "Denominador de U'(q): no da equilibrios (en sus ceros U' no está definida).",
-    "English" -> "Denominator of U'(q): it gives no equilibria (U' is not defined at its zeros)."|>,
+    "Spanish" -> "Denominador de U'(`q`): no da equilibrios (en sus ceros U' no está definida).",
+    "English" -> "Denominator of U'(`q`): it gives no equilibria (U' is not defined at its zeros)."|>,
   "EquilibriumPoints:factor" -> <|
-    "Spanish" -> "Un factor de U'(q) igualado a cero y sus soluciones en el dominio.",
-    "English" -> "A factor of U'(q) set to zero and its solutions in the domain."|>,
+    "Spanish" -> "Un factor de U'(`q`) igualado a cero y sus soluciones en el dominio.",
+    "English" -> "A factor of U'(`q`) set to zero and its solutions in the domain."|>,
   "EquilibriumPoints:unsolved" -> <|
-    "Spanish" -> "Un factor de U'(q) igualado a cero que Solve no logró resolver.",
-    "English" -> "A factor of U'(q) set to zero that Solve could not solve."|>,
+    "Spanish" -> "Un factor de U'(`q`) igualado a cero que Solve no logró resolver.",
+    "English" -> "A factor of U'(`q`) set to zero that Solve could not solve."|>,
   "EquilibriumPoints:points" -> <|
     "Spanish" -> "Puntos de equilibrio, cada uno con su condición de existencia, sin repetir los que coinciden.",
     "English" -> "Equilibrium points, each with its existence condition, without repeating those that coincide."|>,
@@ -175,26 +175,26 @@ AssociateTo[$texts, <|
     "Spanish" -> "Suposiciones usadas.",
     "English" -> "Assumptions used."|>,
   "ClassifyEquilibrium:potential" -> <|
-    "Spanish" -> "Potencial efectivo: U(q) = \[Minus]L con q\:0307 = 0 (incluye los términos centrífugos).",
-    "English" -> "Effective potential: U(q) = \[Minus]L with q\:0307 = 0 (includes centrifugal terms)."|>,
+    "Spanish" -> "Potencial efectivo: U(`q`) = \[Minus]L con `qdot` = 0 (incluye los términos centrífugos).",
+    "English" -> "Effective potential: U(`q`) = \[Minus]L with `qdot` = 0 (includes centrifugal terms)."|>,
   "ClassifyEquilibrium:equilibrium" -> <|
-    "Spanish" -> "Comprobación de equilibrio: U'(q0) = 0.",
-    "English" -> "Equilibrium check: U'(q0) = 0."|>,
+    "Spanish" -> "Comprobación de equilibrio: U'(`q0`) = 0.",
+    "English" -> "Equilibrium check: U'(`q0`) = 0."|>,
   "ClassifyEquilibrium:existence" -> <|
-    "Spanish" -> "Condición de existencia: q0 debe ser real.",
-    "English" -> "Existence condition: q0 must be real."|>,
+    "Spanish" -> "Condición de existencia: `q0` debe ser real.",
+    "English" -> "Existence condition: `q0` must be real."|>,
   "ClassifyEquilibrium:undecided" -> <|
-    "Spanish" -> "Condición de existencia: no se pudo decidir si q0 es real; se supone que existe siempre.",
-    "English" -> "Existence condition: it could not be decided whether q0 is real; it is assumed to always exist."|>,
+    "Spanish" -> "Condición de existencia: no se pudo decidir si `q0` es real; se supone que existe siempre.",
+    "English" -> "Existence condition: it could not be decided whether `q0` is real; it is assumed to always exist."|>,
   "ClassifyEquilibrium:series" -> <|
-    "Spanish" -> "Serie de Taylor del potencial en torno a q0, con q = q0 + x, hasta el primer término no nulo después de la constante.",
-    "English" -> "Taylor series of the potential about q0, with q = q0 + x, up to the first nonzero term after the constant."|>,
+    "Spanish" -> "Serie de Taylor del potencial en torno a `q0`, con `q` = `q0` + `x`, hasta el primer término no nulo después de la constante.",
+    "English" -> "Taylor series of the potential about `q0`, with `q` = `q0` + `x`, up to the first nonzero term after the constant."|>,
   "ClassifyEquilibrium:second" -> <|
-    "Spanish" -> "Segunda derivada: su signo decide si U''(q0) \[NotEqual] 0.",
-    "English" -> "Second derivative: its sign decides when U''(q0) \[NotEqual] 0."|>,
+    "Spanish" -> "Segunda derivada: su signo decide si U''(`q0`) \[NotEqual] 0.",
+    "English" -> "Second derivative: its sign decides when U''(`q0`) \[NotEqual] 0."|>,
   "ClassifyEquilibrium:leading" -> <|
-    "Spanish" -> "U''(q0) = 0: decide el primer coeficiente no nulo de la serie (orden impar: inflexión; orden par: su signo).",
-    "English" -> "U''(q0) = 0: the first nonzero coefficient of the series decides (odd order: inflection; even order: its sign)."|>,
+    "Spanish" -> "U''(`q0`) = 0: decide el primer coeficiente no nulo de la serie (orden impar: inflexión; orden par: su signo).",
+    "English" -> "U''(`q0`) = 0: the first nonzero coefficient of the series decides (odd order: inflection; even order: its sign)."|>,
   "ClassifyEquilibrium:Minimum" -> <|
     "Spanish" -> "Conclusión: mínimo, equilibrio estable.",
     "English" -> "Conclusion: minimum, stable equilibrium."|>,
@@ -214,8 +214,8 @@ AssociateTo[$texts, <|
     "Spanish" -> "Conclusión: el tipo de equilibrio depende de los parámetros (mínimo: estable; máximo: inestable).",
     "English" -> "Conclusion: the type of equilibrium depends on the parameters (minimum: stable; maximum: unstable)."|>,
   "ClassifyEquilibrium:criticalnote" -> <|
-    "Spanish" -> " En el caso crítico (U''(q0) = 0) la estabilidad depende de órdenes superiores: vuelve a llamar a ClassifyEquilibrium con ese valor del parámetro sustituido.",
-    "English" -> " In the critical case (U''(q0) = 0) stability depends on higher orders: call ClassifyEquilibrium again with that parameter value substituted."|>,
+    "Spanish" -> " En el caso crítico (U''(`q0`) = 0) la estabilidad depende de órdenes superiores: vuelve a llamar a ClasificarEquilibrio con ese valor del parámetro sustituido.",
+    "English" -> " In the critical case (U''(`q0`) = 0) stability depends on higher orders: call ClassifyEquilibrium again with that parameter value substituted."|>,
   "ClassifyEquilibrium:label:Minimum" -> <|"Spanish" -> "mínimo", "English" -> "minimum"|>,
   "ClassifyEquilibrium:label:Maximum" -> <|"Spanish" -> "máximo", "English" -> "maximum"|>,
   "ClassifyEquilibrium:label:Critical" -> <|"Spanish" -> "crítico", "English" -> "critical"|>,
@@ -230,17 +230,17 @@ AssociateTo[$texts, <|
 
   (* EnergyFunction: textos de "Steps" *)
   "EnergyFunction:momentum" -> <|
-    "Spanish" -> "Momento conjugado: p = \[PartialD]L/\[PartialD]q\:0307.",
-    "English" -> "Conjugate momentum: p = \[PartialD]L/\[PartialD]q\:0307."|>,
+    "Spanish" -> "Momento conjugado: p = \[PartialD]L/\[PartialD]`qdot`.",
+    "English" -> "Conjugate momentum: p = \[PartialD]L/\[PartialD]`qdot`."|>,
   "EnergyFunction:definition" -> <|
-    "Spanish" -> "Función energía: h = q\:0307 p \[Minus] L.",
-    "English" -> "Energy function: h = q\:0307 p \[Minus] L."|>,
+    "Spanish" -> "Función energía: h = `qdot` p \[Minus] L.",
+    "English" -> "Energy function: h = `qdot` p \[Minus] L."|>,
   "EnergyFunction:simplified" -> <|
-    "Spanish" -> "h simplificada: primero la parte cinética (con q\:0307), luego la potencial.",
-    "English" -> "Simplified h: first the kinetic part (with q\:0307), then the potential part."|>,
+    "Spanish" -> "h simplificada: primero la parte cinética (con `qdot`), luego la potencial.",
+    "English" -> "Simplified h: first the kinetic part (with `qdot`), then the potential part."|>,
   "EnergyFunction:conclusion" -> <|
-    "Spanish" -> "Conclusión: h se conserva porque L no depende explícitamente de t.",
-    "English" -> "Conclusion: h is conserved because L does not depend explicitly on t."|>,
+    "Spanish" -> "Conclusión: h se conserva porque L no depende explícitamente de `t`.",
+    "English" -> "Conclusion: h is conserved because L does not depend explicitly on `t`."|>,
 
   (* SolveMotion: mensajes *)
   "SolveMotion::args" -> <|
@@ -365,6 +365,17 @@ heldSeries[cs_List, q0_, x_] :=
 (* U(q0 + x) retenida, sin reordenar; si q0 es 0, U(x) *)
 heldU[q0_, x_] := If[zeroQ[q0, True], HoldForm["U"[x]], With[{q0h = q0}, HoldForm["U"[q0h + x]]]];
 
+(* Valores de los marcadores de las descripciones de "Steps": los nombres que eligió el
+   estudiante. q̇ lleva el punto encima si la coordenada tiene una letra y la prima si tiene
+   varias (th'); q0 va en InputForm si mide menos de 20 caracteres y, si no, como th0 *)
+stepVars[q_Symbol, t_Symbol, x_ : None, q0_ : None] := Module[{name = SymbolName[q], q0s},
+  q0s = Which[
+    q0 === None, "",
+    StringLength[ToString[q0, InputForm]] < 20, ToString[q0, InputForm],
+    True, name <> "0"];
+  <|"q" -> name, "qdot" -> If[StringLength[name] == 1, name <> "\:0307", name <> "'"],
+    "t" -> SymbolName[t], "x" -> If[x === None, "", SymbolName[x]], "q0" -> q0s|>];
+
 (* Suma retenida en el orden dado; con un solo término, el término solo (HoldForm[Plus[t]] se
    mostraría como «+ t») *)
 heldSum[terms_List] := Switch[Length[terms],
@@ -452,7 +463,7 @@ equilibriumQ1D[f_Symbol, U_, qs_, q0_, asm_] := With[{dU = D[U, qs] /. qs -> q0}
 Options[HarmonicExpansion] = {Assumptions -> Automatic};
 
 HarmonicExpansion[L_, {q_Symbol, t_Symbol}, q0_, x_ /; !OptionQ[x], opts : OptionsPattern[]] :=
-  Module[{form, asm, Lr, qs, qd, U, mef, lin, coeffs, c, n, nmax, bound, series,
+  Module[{form, asm, Lr, qs, qd, U, mef, vars, lin, coeffs, c, n, nmax, bound, series,
       kef, omega2, lagH, eom, steps},
 
     (* Validación, en el orden de la especificación *)
@@ -504,8 +515,9 @@ HarmonicExpansion[L_, {q_Symbol, t_Symbol}, q0_, x_ /; !OptionQ[x], opts : Optio
       {"bound", If[AssociationQ[bound], bound["Condition"], bound]},
       {"eom", With[{o = omega2}, HoldForm[x''[t] + o x[t] == 0]]},
       {"omega2", "\[CapitalOmega]"^2 == omega2}};
-    steps = <|"Description" -> tr["HarmonicExpansion:" <> #[[1]]] <>
-          If[#[[1]] === "mass" && !zeroQ[lin, asm], tr["HarmonicExpansion:linear"], ""],
+    vars = stepVars[q, t, x, q0];
+    steps = <|"Description" -> tr["HarmonicExpansion:" <> #[[1]], vars] <>
+          If[#[[1]] === "mass" && !zeroQ[lin, asm], tr["HarmonicExpansion:linear", vars], ""],
         "Expression" -> #[[2]]|> & /@ steps;
 
     If[zeroQ[c[[3]], asm], cmMessage[HarmonicExpansion, "critical", q0]];
@@ -537,7 +549,7 @@ solutionPoint[qs_ -> ConditionalExpression[v_, cond_], asm_] := {v, Simplify[con
 solutionPoint[qs_ -> v_, asm_] := {v, True};
 
 EquilibriumPoints[L_, {q_Symbol, t_Symbol}, opts : OptionsPattern[]] :=
-  Module[{form, dom, asm, Lr, qs, qd, U, fac, fl, factors, denom, sols, bad, pts, params, coinc,
+  Module[{form, dom, asm, vars, Lr, qs, qd, U, fac, fl, factors, denom, sols, bad, pts, params, coinc,
       steps},
 
     (* Validación *)
@@ -592,7 +604,8 @@ EquilibriumPoints[L_, {q_Symbol, t_Symbol}, opts : OptionsPattern[]] :=
         {factors, sols}],
       {{"points", If[#[[2]] === True, q == #[[1]], ConditionalExpression[q == #[[1]], #[[2]]]] & /@
         pts}}];
-    steps = <|"Description" -> tr["EquilibriumPoints:" <> #[[1]]], "Expression" -> #[[2]]|> & /@
+    vars = stepVars[q, t];
+    steps = <|"Description" -> tr["EquilibriumPoints:" <> #[[1]], vars], "Expression" -> #[[2]]|> & /@
       steps;
 
     Scan[If[!ListQ[sols[[#]]], cmMessage[EquilibriumPoints, "unsolved", factors[[#]] /. qs -> q]] &,
@@ -631,7 +644,7 @@ signBranches[c_, ex_, asm_, params_, withCritical_] := DeleteCases[
   False];
 
 ClassifyEquilibrium[L_, {q_Symbol, t_Symbol}, q0_, x_ /; !OptionQ[x], opts : OptionsPattern[]] :=
-  Module[{form, asm, Lr, qs, qd, U, params, ex, exc, coeffs, c, n, lead, cn, second, sign,
+  Module[{form, asm, Lr, qs, qd, U, params, vars, ex, exc, coeffs, c, n, lead, cn, second, sign,
       conds = <||>, type, stable, conclusion, steps},
 
     (* Validación, en el orden de la especificación *)
@@ -707,9 +720,10 @@ ClassifyEquilibrium[L_, {q_Symbol, t_Symbol}, q0_, x_ /; !OptionQ[x], opts : Opt
           Subscript["c", lead] == cn,
           Row[{Subscript["c", 2], " = \[Ellipsis] = ", Subscript["c", 8], " = 0"}]]}}],
       {conclusion}];
-    steps = <|"Description" -> tr["ClassifyEquilibrium:" <> #[[1]]] <>
+    vars = stepVars[q, t, x, q0];
+    steps = <|"Description" -> tr["ClassifyEquilibrium:" <> #[[1]], vars] <>
           If[#[[1]] === "Conditional" && KeyExistsQ[conds, "Critical"],
-            tr["ClassifyEquilibrium:criticalnote"], ""],
+            tr["ClassifyEquilibrium:criticalnote", vars], ""],
         "Expression" -> #[[2]]|> & /@ steps;
 
     Join[
@@ -725,7 +739,7 @@ ClassifyEquilibrium[___] := (cmMessage[ClassifyEquilibrium, "args"]; $Failed);
 (* --- EnergyFunction: especificación en docs/specs/Motion1D.md --- *)
 
 EnergyFunction[L_, {q_Symbol, t_Symbol}] :=
-  Module[{form, Lr, qs, qd, en, back, p, kin, pot, steps},
+  Module[{form, Lr, qs, qd, en, back, vars, p, kin, pot, steps},
 
     form = autonomousForm[EnergyFunction, L, q, t];
     If[form === $Failed, Return[$Failed]];
@@ -744,7 +758,8 @@ EnergyFunction[L_, {q_Symbol, t_Symbol}] :=
         kin === 0, pot,
         True, With[{k = kin, u = pot}, HoldForm[k + u]]]},
       {"conclusion", With[{tt = t}, HoldForm[Implies[D["L", tt] == 0, Dt["h", tt] == 0]]]}};
-    steps = <|"Description" -> tr["EnergyFunction:" <> #[[1]]], "Expression" -> #[[2]]|> & /@
+    vars = stepVars[q, t];
+    steps = <|"Description" -> tr["EnergyFunction:" <> #[[1]], vars], "Expression" -> #[[2]]|> & /@
       steps;
 
     <|"Momentum" -> p, "EnergyFunction" -> kin + pot, "Steps" -> steps|>

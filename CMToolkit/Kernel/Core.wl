@@ -60,6 +60,9 @@ $texts = <|
 (* Texto en el idioma vigente; una clave inexistente se devuelve tal cual *)
 tr[key_String] := Lookup[Lookup[$texts, key, <||>], cmLanguage[], key];
 
+(* Texto con marcadores `q`, `x`, … sustituidos por los valores de vals (plantilla) *)
+tr[key_String, vals_Association] := StringTemplate[tr[key]][vals];
+
 (* Asigna el texto traducido al mensaje justo antes de emitirlo *)
 cmMessage[sym_Symbol, tag_String, args___] := (
   MessageName[sym, tag] = tr[SymbolName[sym] <> "::" <> tag];

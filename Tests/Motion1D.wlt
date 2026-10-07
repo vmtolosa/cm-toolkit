@@ -82,6 +82,31 @@ VerificationTest[
   TestID -> "energia-ShowSteps-devuelve-Grid"
 ]
 
+(* Descripciones con los símbolos del usuario (docs/specs/Ajustes1D.md, punto 5): una
+   coordenada de una letra lleva el punto encima; una de varias, la prima *)
+VerificationTest[
+  Module[{ds = EnergyFunction[m/2 x'[t]^2 - k/2 (Sqrt[x[t]^2 + h^2] - l0)^2, {x, t}][
+      "Steps"][[All, "Description"]]},
+    {NoneTrue[ds, StringContainsQ[#, RegularExpression["\\bq\\b"]] &],
+     StringContainsQ[First[ds], "x\:0307"]}],
+  {True, True},
+  TestID -> "energia-riel-descripciones-con-x-punto"
+]
+
+VerificationTest[
+  StringContainsQ[moRingE["Steps"][[1, "Description"]], "th'"],
+  True,
+  TestID -> "energia-anillo-descripciones-con-th-prima"
+]
+
+(* El tiempo también es un marcador: con tiempo s, la conclusión no dice «t» *)
+VerificationTest[
+  Module[{d = Last[EnergyFunction[m/2 y'[s]^2 - k/2 y[s]^2, {y, s}]["Steps"]]["Description"]},
+    {StringEndsQ[d, "de s."], StringContainsQ[d, RegularExpression["\\bt\\b"]]}],
+  {True, False},
+  TestID -> "energia-marcador-de-tiempo"
+]
+
 (* === SolveMotion === *)
 
 moSol95 = SolveMotion[moRing[0.95], {th, t}, {Pi + 0.6, 0}, 60];
