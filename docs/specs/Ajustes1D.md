@@ -1,8 +1,10 @@
 # Especificación: ajustes tras la prueba con un sistema nuevo
 
-Estado: aprobada para implementar. Versión 1.2 (6 de octubre de 2026).
+Estado: aprobada para implementar. Versión 1.3 (7 de octubre de 2026).
 - v1.1: agrega el punto 6 (parte potencial de la función energía).
 - v1.2: agrega los puntos 7 (CMPlot con una sola curva) y 8 (números en los mensajes).
+- v1.3: precisiones aprobadas durante la implementación y puntos 9 a 12, que salen de la revisión
+  en notebook del PR de esta rama. El punto 9 reemplaza la regla del punto de equilibrio del punto 5.
 Rama: `fix/ajustes-1d`, después de mergear la parte A de `docs/specs/Motion1D.md`.
 Origen: prueba en notebook con `L = m/2 x'[t]^2 - k/2 (Sqrt[x[t]^2 + h^2] - l0)^2` (masa en un riel
 unida a un resorte anclado a una altura h). Todos los valores salieron correctos; estos son dos
@@ -89,6 +91,60 @@ combinada (último color, más el `Dashed` de la segunda). Con dos o más curvas
 Los números de máquina se insertan en los mensajes con su marca de precisión
 («t = 1.8540746734841649`»). Todos los números que van a un mensaje se formatean con 6 cifras
 significativas y sin marca (función privada en Core.wl, usada por `cmMessage`).
+
+## Precisiones aprobadas durante la implementación
+
+- Punto 1: la clave "Derivative" conserva U' completa, con su denominador.
+- Punto 5: q̇ lleva el punto encima si el nombre de la coordenada tiene una letra (ẋ, θ̇) y la
+  prima si tiene varias (th'). Hay además un marcador `t` para el símbolo del tiempo. El punto 5
+  cubre las descripciones de "Steps"; los mensajes de error siguen usando los nombres de la firma.
+- Punto 7: en el test de dos curvas, los `Dashing` se cuentan en las primitivas dibujadas
+  (`First[g]`), porque `Plot` guarda una copia del estilo en sus metadatos. La evaluación que
+  decide si hay una o varias curvas va en `Quiet`.
+- Punto 8: los argumentos con números de máquina pasan a texto antes de emitir el mensaje: un
+  número suelto, con 6 cifras significativas; una expresión que contiene números, en `InputForm`
+  sin marcas.
+
+## 9. El punto de equilibrio en las descripciones
+
+Reemplaza la regla de los 20 caracteres del punto 5. Con ella, un equilibrio como
+Sqrt[l0^2 − h^2] aparece en el texto como «Sqrt[-h^2 + l0^2]», y se lee mal al lado de la
+expresión tipografiada.
+
+- El punto se inserta tal cual solo si es simple: su texto en `InputForm` mide 8 caracteres o
+  menos y no contiene «[» ni «^» (0, Pi, Pi/2, -a, 1.5708).
+- En cualquier otro caso se escribe el nombre de la coordenada seguido de 0 (x0, th0); la
+  expresión completa se ve en la columna de la derecha.
+- Test: con el riel en el equilibrio lateral, ninguna descripción contiene «Sqrt» ni «^», y la de
+  la serie contiene «x0».
+
+## 10. «con x = 0 + u» en las descripciones
+
+Es el punto 3 llevado al texto. Si `zeroQ[q0]`, las descripciones de la serie dicen
+«con x = u» en vez de «con x = 0 + u», en los dos idiomas.
+
+## 11. Saltos de línea de las descripciones en ShowSteps
+
+En un notebook, las descripciones largas se cortan como si fueran fórmulas: después de un «+» o
+de un «=» y con sangría en la línea siguiente («…con x = 0 +» / «u, hasta el primer término…»;
+«(U''(0) =» / «0) la estabilidad…»).
+
+- Deben cortarse como texto: entre palabras, llenando el ancho de la columna y sin sangría en
+  las líneas de continuación.
+- La forma de lograrlo queda a criterio de la implementación; el resultado sigue siendo un `Grid`.
+- Los números de la columna «Paso» van también con el estilo "Text".
+- Revisión visual en PNG con la clasificación del riel en el centro (su conclusión ocupa cuatro
+  líneas) y, por parte del usuario, en un notebook.
+
+## 12. Factores con exponente que no se puede decidir
+
+En el punto 1, un factor cuyo exponente no es un número (por ejemplo y^(p − 1) con p simbólico)
+no cumple «> 0» ni «< 0» y hoy desaparece sin aviso.
+
+- Va al denominador solo el factor cuyo exponente es negativo con las suposiciones
+  (`TrueQ[Simplify[e < 0, asm]]`). Todos los demás se tratan como factores del numerador, como
+  antes de esta rama.
+- Test: `L = m/2 y'[t]^2 - k y[t]^p` con p simbólico: el factor y sigue en "Factors".
 
 ## Criterio de aceptación
 
