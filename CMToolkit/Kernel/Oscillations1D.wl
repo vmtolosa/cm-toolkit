@@ -752,11 +752,11 @@ EnergyFunction[L_, {q_Symbol, t_Symbol}] :=
     steps = {
       {"momentum", "p" == p},
       {"definition", With[{v = q'[t], pp = p, LL = L}, "h" == HoldForm[v pp - LL]]},
-      (* Retenida para mostrar la parte cinética antes que la potencial *)
-      {"simplified", "h" == Which[
-        pot === 0, kin,
-        kin === 0, pot,
-        True, With[{k = kin, u = pot}, HoldForm[k + u]]]},
+      (* Retenida para mostrar la parte cinética antes que la potencial; la potencial,
+         expandida y término a término, como en el material del curso *)
+      {"simplified", "h" == heldSum[Join[
+        If[kin === 0, {}, {kin}],
+        With[{e = Expand[pot]}, Which[e === 0, {}, Head[e] === Plus, List @@ e, True, {e}]]]]},
       {"conclusion", With[{tt = t}, HoldForm[Implies[D["L", tt] == 0, Dt["h", tt] == 0]]]}};
     vars = stepVars[q, t];
     steps = <|"Description" -> tr["EnergyFunction:" <> #[[1]], vars], "Expression" -> #[[2]]|> & /@

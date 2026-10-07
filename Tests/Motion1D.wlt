@@ -38,12 +38,24 @@ VerificationTest[
   TestID -> "energia-cuatro-pasos"
 ]
 
-(* Paso 3: primero la parte cinética (con th'), luego la potencial (sin th') *)
+(* Paso 3: primero la parte cinética (con th'), luego la potencial (sin th'), esta última
+   expandida y término a término (docs/specs/Ajustes1D.md, punto 6). Verbatim evita que el
+   atributo Flat de Plus agrupe los sumandos de otra forma *)
 VerificationTest[
   MatchQ[moRingE["Steps"][[3, "Expression"]],
-    _ == HoldForm[Plus[kin_, pot_]] /; !FreeQ[kin, Derivative[1][th]] && FreeQ[pot, Derivative[1][th]]],
+    _ == HoldForm[Verbatim[Plus][kin_, pots__]] /;
+      !FreeQ[kin, Derivative[1][th]] && FreeQ[{pots}, Derivative[1][th]] &&
+      Sort[{pots}] === Sort[{b g m Cos[th[t]], -(1/2) b^2 m w^2 Sin[th[t]]^2}]],
   True,
   TestID -> "energia-paso-3-cinetica-antes-que-potencial"
+]
+
+(* La clave "EnergyFunction" no cambia: parte cinética simplificada más potencial simplificada *)
+VerificationTest[
+  moRingE["EnergyFunction"] ===
+    Simplify[m b^2/2 th'[t]^2] + Simplify[m g b Cos[th[t]] - m b^2 w^2/2 Sin[th[t]]^2],
+  True,
+  TestID -> "energia-clave-sin-cambios"
 ]
 
 VerificationTest[
