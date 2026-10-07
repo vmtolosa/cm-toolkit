@@ -399,6 +399,23 @@ VerificationTest[
   TestID -> "clasificar-q0-largo-como-th0"
 ]
 
+(* Punto 9 (v1.3): el punto se inserta tal cual solo si es simple (8 caracteres o menos en
+   InputForm, sin «[» ni «^»); si no, la coordenada seguida de 0 *)
+VerificationTest[
+  CMToolkit`Private`stepVars[x, t, u, #]["q0"] & /@
+    {0, Pi, Pi/2, -a, 1.5708, Sqrt[l0^2 - h^2], ArcCos[-g/(b w^2)], a^2},
+  {"0", "Pi", "Pi/2", "-a", "1.5708", "x0", "x0", "x0"},
+  TestID -> "descripciones-regla-del-punto-simple"
+]
+
+VerificationTest[
+  Module[{ds = ClassifyEquilibrium[eqRailL, {x, t}, Sqrt[l0^2 - h^2], u]["Steps"][[All, "Description"]]},
+    {NoneTrue[ds, StringContainsQ[#, "Sqrt" | "^"] &],
+     StringContainsQ[SelectFirst[ds, StringContainsQ[#, "Taylor"] &], "x0"]}],
+  {True, True},
+  TestID -> "clasificar-riel-lateral-como-x0"
+]
+
 VerificationTest[
   Block[{$CMLanguage = "English"},
     StringContainsQ[Last[eqClassify[Pi]["Steps"]]["Description"], "call ClassifyEquilibrium"]],

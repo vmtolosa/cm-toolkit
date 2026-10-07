@@ -367,11 +367,13 @@ heldU[q0_, x_] := If[zeroQ[q0, True], HoldForm["U"[x]], With[{q0h = q0}, HoldFor
 
 (* Valores de los marcadores de las descripciones de "Steps": los nombres que eligió el
    estudiante. q̇ lleva el punto encima si la coordenada tiene una letra y la prima si tiene
-   varias (th'); q0 va en InputForm si mide menos de 20 caracteres y, si no, como th0 *)
+   varias (th'); q0 se inserta tal cual solo si es simple (8 caracteres o menos en InputForm,
+   sin «[» ni «^»: 0, Pi, Pi/2, -a) y, si no, como th0 *)
 stepVars[q_Symbol, t_Symbol, x_ : None, q0_ : None] := Module[{name = SymbolName[q], q0s},
   q0s = Which[
     q0 === None, "",
-    StringLength[ToString[q0, InputForm]] < 20, ToString[q0, InputForm],
+    With[{s = ToString[q0, InputForm]}, StringLength[s] <= 8 && !StringContainsQ[s, "[" | "^"]],
+      ToString[q0, InputForm],
     True, name <> "0"];
   <|"q" -> name, "qdot" -> If[StringLength[name] == 1, name <> "\:0307", name <> "'"],
     "t" -> SymbolName[t], "x" -> If[x === None, "", SymbolName[x]], "q0" -> q0s|>];
