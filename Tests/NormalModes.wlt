@@ -245,7 +245,7 @@ VerificationTest[
     res = ModeResponse[NormalModes[sys, "Basis" -> nmBase], ConstantArray[0, 8], v0];
     sol = res["Solution"];
     tt = res["Time"];
-    nd = First[NDSolve[{sys["Mmat"] . y''[s] + sys["Kmat"] . y[s] == ConstantArray[0, 8],
+    nd = First[NDSolve[{y''[s] == -LinearSolve[sys["Mmat"], sys["Kmat"]] . y[s],
       y[0] == ConstantArray[0, 8], y'[0] == v0}, y, {s, 0, 30},
       PrecisionGoal -> 12, AccuracyGoal -> 14, MaxSteps -> Infinity]];
     Max[Table[Norm[(sol /. tt -> s0) - (y[s0] /. nd), Infinity], {s0, 0, 30, 0.05}]] < 10^-6],
