@@ -1,10 +1,11 @@
 # Especificación: ajustes tras la prueba con un sistema nuevo
 
-Estado: aprobada para implementar. Versión 1.4 (7 de octubre de 2026).
+Estado: aprobada para implementar. Versión 1.5 (7 de octubre de 2026).
 - v1.1: agrega el punto 6 (parte potencial de la función energía).
 - v1.2: agrega los puntos 7 (CMPlot con una sola curva) y 8 (números en los mensajes).
 - v1.3: precisiones aprobadas durante la implementación y puntos 9 a 12, que salen de la revisión
   en notebook del PR de esta rama. El punto 9 reemplaza la regla del punto de equilibrio del punto 5.
+- v1.5: el punto 11 aclara que la columna de expresiones no debe cambiar.
 - v1.4: se retira el punto 12. Su premisa era incorrecta: `FactorList` no entrega exponentes
   simbólicos (y^(p − 1) sale como {y^p, 1} y {y, −1}), así que el caso que describía no ocurre.
 Rama: `fix/ajustes-1d`, después de mergear la parte A de `docs/specs/Motion1D.md`.
@@ -135,6 +136,10 @@ de un «=» y con sangría en la línea siguiente («…con x = 0 +» / «u, has
   las líneas de continuación.
 - La forma de lograrlo queda a criterio de la implementación; el resultado sigue siendo un `Grid`.
 - Los números de la columna «Paso» van también con el estilo "Text".
+- La columna «Expresión» no cambia: las fracciones siguen apiladas y las raíces con su barra,
+  igual que antes de este punto. En la primera implementación (descripciones con `TextCell`), en
+  un notebook las fracciones anchas pasaron a escribirse en una línea con «/» y las raíces
+  perdieron la barra; en esa forma no se acepta.
 - Revisión visual en PNG con la clasificación del riel en el centro (su conclusión ocupa cuatro
   líneas) y, por parte del usuario, en un notebook.
 
