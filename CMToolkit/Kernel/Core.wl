@@ -121,19 +121,22 @@ zeroQ[e_, asm_] := With[{s = Simplify[e, asm]},
 ShowSteps[$Failed] := $Failed;
 
 ShowSteps[res_Association /; KeyExistsQ[res, "Steps"]] :=
-  Module[{style = Lookup[$CMPlotStyle, LabelStyle, {}], size, margins},
-    (* Descripciones y encabezados como texto: estilo "Text" del notebook (su familia, no la
-       monoespaciada de las salidas) con el tamaño de LabelStyle *)
+  Module[{style = Lookup[$CMPlotStyle, LabelStyle, {}], size, text, margins},
+    (* Descripciones, encabezados y números de paso como celdas de texto (TextCell) con el
+       estilo "Text" del notebook y el tamaño de LabelStyle: se cortan entre palabras, llenando
+       el ancho de la columna y sin sangría. Un String con Style se cortaría como fórmula,
+       después de «=» o «+» y con sangría en la línea siguiente *)
     size = FirstCase[style, (FontSize -> s_) :> s, 12, Infinity];
+    text[s_, opts___] := TextCell[s, "Text", opts, FontSize -> size];
     (* Grid no dibuja el espaciado exterior; los Spacer dejan margen en los bordes
        para que la expresión más larga no quede pegada al borde *)
     margins = {Row[{Spacer[8], #1}], #2, Row[{#3, Spacer[16]}]} &;
     Grid[
       Prepend[
-        MapIndexed[margins[First[#2], Style[#1["Description"], "Text", FontSize -> size],
+        MapIndexed[margins[text[ToString[First[#2]]], text[#1["Description"]],
             TraditionalForm[#1["Expression"]]] &,
           res["Steps"]],
-        margins @@ (Style[tr[#], "Text", Bold, FontSize -> size] & /@
+        margins @@ (text[tr[#], FontWeight -> Bold] & /@
           {"ShowSteps:step", "ShowSteps:description", "ShowSteps:expression"})],
       Alignment -> {{Right, Left, Left}, Center},
       ItemSize -> {{Automatic, 32, Automatic}},
