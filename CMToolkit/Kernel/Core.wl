@@ -60,11 +60,22 @@ $texts = <|
 (* Texto en el idioma vigente; una clave inexistente se devuelve tal cual *)
 tr[key_String] := Lookup[Lookup[$texts, key, <||>], cmLanguage[], key];
 
-(* Asigna el texto traducido al mensaje justo antes de emitirlo *)
+(* Texto con marcadores `q`, `x`, … sustituidos por los valores de vals (plantilla) *)
+tr[key_String, vals_Association] := StringTemplate[tr[key]][vals];
+
+(* Asigna el texto traducido al mensaje justo antes de emitirlo; los argumentos con números
+   de máquina van como texto (messageArg) *)
 cmMessage[sym_Symbol, tag_String, args___] := (
   MessageName[sym, tag] = tr[SymbolName[sym] <> "::" <> tag];
-  Message[MessageName[sym, tag], args]
+  Message[MessageName[sym, tag], Sequence @@ (messageArg /@ {args})]
 );
+
+(* Números de máquina en los mensajes: 6 cifras significativas y sin marca de precisión, para
+   que el notebook no muestre «1.8540746734841649`». Un número solo pasa a texto; una expresión
+   que contiene números, a texto en InputForm; lo demás no cambia *)
+round6[r_Real] := If[r == 0, 0., N[Round[r, 10^(Floor[Log10[Abs[r]]] - 5)]]];
+messageArg[e_ /; !FreeQ[e, _Real]] := ToString[InputForm[e /. r_Real :> round6[r], NumberMarks -> False]];
+messageArg[e_] := e;
 
 (* Alias en español: misma definición, atributos y opciones que la función en inglés *)
 defineAlias[alias_Symbol, canonical_Symbol] := (
@@ -88,10 +99,16 @@ $CMPlotStyle = {
   ImageSize -> 420
 };
 
-(* Las opciones del usuario van primero: Plot usa la primera que encuentra *)
+(* Las opciones del usuario van primero: Plot usa la primera que encuentra.
+   Con una sola curva, Plot combinaría la lista de PlotStyle de $CMPlotStyle en una sola
+   directiva; por eso se le entrega solo el primer estilo. Para saber si f es una lista se
+   evalúa con la variable sin valor (Block), en Quiet: algunas funciones emiten mensajes con
+   argumentos simbólicos y esa evaluación solo sirve para decidir el estilo *)
 SetAttributes[CMPlot, HoldAll];
-CMPlot[f_, dom_, opts : OptionsPattern[Plot]] :=
-  Plot[f, dom, opts, Evaluate[Sequence @@ $CMPlotStyle]];
+CMPlot[f_, dom : {x_Symbol, __}, opts : OptionsPattern[Plot]] :=
+  With[{style = If[TrueQ[Quiet[Block[{x}, ListQ[f]]]], {},
+      {PlotStyle -> First[Lookup[$CMPlotStyle, PlotStyle]]}]},
+    Plot[f, dom, opts, Evaluate[Sequence @@ style], Evaluate[Sequence @@ $CMPlotStyle]]];
 
 (* Criterio de cero único: simbólicamente equivale a === 0; para números inexactos
    acepta 0. y ruido de máquina (Chop) *)
@@ -104,15 +121,22 @@ zeroQ[e_, asm_] := With[{s = Simplify[e, asm]},
 ShowSteps[$Failed] := $Failed;
 
 ShowSteps[res_Association /; KeyExistsQ[res, "Steps"]] :=
-  Module[{style = Lookup[$CMPlotStyle, LabelStyle, {}], margins},
+  Module[{style = Lookup[$CMPlotStyle, LabelStyle, {}], size, text, margins},
+    (* Descripciones, encabezados y números de paso como celdas de texto (TextCell) con el
+       estilo "Text" del notebook y el tamaño de LabelStyle: se cortan entre palabras, llenando
+       el ancho de la columna y sin sangría. Un String con Style se cortaría como fórmula,
+       después de «=» o «+» y con sangría en la línea siguiente *)
+    size = FirstCase[style, (FontSize -> s_) :> s, 12, Infinity];
+    text[s_, opts___] := TextCell[s, "Text", opts, FontSize -> size];
     (* Grid no dibuja el espaciado exterior; los Spacer dejan margen en los bordes
        para que la expresión más larga no quede pegada al borde *)
     margins = {Row[{Spacer[8], #1}], #2, Row[{#3, Spacer[16]}]} &;
     Grid[
       Prepend[
-        MapIndexed[margins[First[#2], #1["Description"], TraditionalForm[#1["Expression"]]] &,
+        MapIndexed[margins[text[ToString[First[#2]]], text[#1["Description"]],
+            TraditionalForm[#1["Expression"]]] &,
           res["Steps"]],
-        margins @@ (Style[tr[#], Bold] & /@
+        margins @@ (text[tr[#], FontWeight -> Bold] & /@
           {"ShowSteps:step", "ShowSteps:description", "ShowSteps:expression"})],
       Alignment -> {{Right, Left, Left}, Center},
       ItemSize -> {{Automatic, 32, Automatic}},

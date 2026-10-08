@@ -106,6 +106,43 @@ VerificationTest[
   TestID -> "puntos-factor-no-resuelto"
 ]
 
+(* --- Denominadores de U' (docs/specs/Ajustes1D.md, punto 1) --- *)
+
+(* Masa en un riel unida a un resorte anclado a una altura h: U' tiene Sqrt[h^2 + x^2] en el
+   denominador, que no da equilibrios *)
+eqAsmRail = m > 0 && k > 0 && h > 0 && l0 > 0;
+eqRailL = m/2 x'[t]^2 - k/2 (Sqrt[x[t]^2 + h^2] - l0)^2;
+eqRailPts = EquilibriumPoints[eqRailL, {x, t}];
+
+VerificationTest[
+  Sort[eqRailPts["Factors"]],
+  Sort[{x, Sqrt[h^2 + x^2] - l0}],
+  TestID -> "puntos-riel-factores-sin-denominador"
+]
+
+VerificationTest[
+  Module[{pts = eqRailPts["Points"]},
+    pts[[All, "Point"]] === {0, -Sqrt[l0^2 - h^2], Sqrt[l0^2 - h^2]} &&
+      pts[[1, "Condition"]] === True &&
+      AllTrue[pts[[2 ;;, "Condition"]], eqEquivalentQ[#, h < l0, eqAsmRail, {h, l0}] &]],
+  True,
+  TestID -> "puntos-riel-puntos"
+]
+
+VerificationTest[
+  MemberQ[eqRailPts["Steps"][[All, "Expression"]], Sqrt[h^2 + x^2]],
+  True,
+  TestID -> "puntos-riel-paso-del-denominador"
+]
+
+(* U'(y) = (y - 1)^2/y^2: el denominador se anula en y = 0, que no es un equilibrio *)
+VerificationTest[
+  Module[{res = EquilibriumPoints[m/2 y'[t]^2 - (y[t] - 2 Log[y[t]] - 1/y[t]), {y, t}]},
+    {res["Factors"], res["Points"]}],
+  {{-1 + y}, {<|"Point" -> 1, "Condition" -> True|>}},
+  TestID -> "puntos-denominador-con-cero-real"
+]
+
 (* --- Errores --- *)
 
 VerificationTest[
@@ -170,7 +207,8 @@ VerificationTest[
 (* === ClassifyEquilibrium === *)
 
 eqClassify[q0_, opts___] := ClassifyEquilibrium[eqRingL, {th, t}, q0, x, opts];
-eqCriticalNote := CMToolkit`Private`tr["ClassifyEquilibrium:criticalnote"];
+(* La nota del caso crítico nombra la función en el idioma vigente (Ajustes1D, punto 5) *)
+eqCriticalNote = "vuelve a llamar a ClasificarEquilibrio";
 
 (* --- Anillo que rota (Problema 1) --- *)
 
@@ -294,6 +332,114 @@ VerificationTest[
     {res["Type"], res["LeadingOrder"], res["LeadingCoefficient"], res["Stable"]}],
   {"Undetermined", Missing["Undetermined"], Missing["Undetermined"], Missing["Undetermined"]},
   TestID -> "clasificar-indeterminado-hasta-orden-8"
+]
+
+(* --- Presentación de la serie retenida (docs/specs/Ajustes1D.md, puntos 2 y 3) --- *)
+
+(* Riel en el caso crítico l0 = h: en x = 0, c0 = c2 = 0 y la serie tiene un solo término,
+   k u^4/(8 h^2) *)
+eqRailCritical = ClassifyEquilibrium[eqRailL /. l0 -> h, {x, t}, 0, u];
+
+(* Un solo término se muestra sin Plus: HoldForm[Plus[t]] se ve como «+ t». Verbatim evita
+   que el atributo Flat de Plus haga calzar también sumas de varios términos *)
+VerificationTest[
+  FreeQ[eqRailCritical["Steps"][[All, "Expression"]], Verbatim[Plus][_]],
+  True,
+  TestID -> "clasificar-serie-de-un-termino-sin-mas"
+]
+
+(* q0 = 0: el lado izquierdo es U(u), no U(0 + u), en la serie y en la conclusión *)
+VerificationTest[
+  With[{ex = eqRailCritical["Steps"][[All, "Expression"]]},
+    {Count[ex, HoldForm["U"[u]], Infinity], FreeQ[ex, HoldPattern["U"[0 + u]]]}],
+  {2, True},
+  TestID -> "clasificar-q0-cero-muestra-U-de-u"
+]
+
+(* Con q0 distinto de 0 se sigue mostrando U(q0 + x) *)
+VerificationTest[
+  !FreeQ[eqClassify[Pi]["Steps"][[All, "Expression"]], HoldPattern["U"[Pi + x]]],
+  True,
+  TestID -> "clasificar-q0-no-nulo-muestra-U-de-q0-mas-x"
+]
+
+(* --- Descripciones con los símbolos del usuario (docs/specs/Ajustes1D.md, punto 5) --- *)
+
+(* Ninguna descripción habla de «q» suelta ni de «q0» genéricos *)
+eqNoGenericQ[res_] := NoneTrue[res["Steps"][[All, "Description"]],
+  StringContainsQ[#, RegularExpression["\\bq\\b"] | "q0"] &];
+
+VerificationTest[
+  Module[{res = ClassifyEquilibrium[eqRailL, {x, t}, 0, u], series},
+    series = SelectFirst[res["Steps"][[All, "Description"]], StringContainsQ[#, "Taylor"] &];
+    {eqNoGenericQ[res], StringContainsQ[series, "x = "], StringContainsQ[series, "u"]}],
+  {True, True, True},
+  TestID -> "clasificar-riel-descripciones-con-x-y-u"
+]
+
+VerificationTest[
+  {eqNoGenericQ[eqRailPts],
+   StringContainsQ[eqRailPts["Steps"][[2, "Description"]], "x\:0307"]},
+  {True, True},
+  TestID -> "puntos-riel-descripciones-con-x"
+]
+
+(* q0 corto: se inserta en InputForm *)
+VerificationTest[
+  MemberQ[eqClassify[Pi]["Steps"][[All, "Description"]], s_ /; StringContainsQ[s, "U'(Pi) = 0"]],
+  True,
+  TestID -> "clasificar-q0-corto-insertado"
+]
+
+(* q0 de 20 caracteres o más (ArcCos[-(g/(b*w^2))]): se escribe th0 *)
+VerificationTest[
+  With[{ds = eqClassify[eqTheta0]["Steps"][[All, "Description"]]},
+    {AnyTrue[ds, StringContainsQ[#, "th0"] &], NoneTrue[ds, StringContainsQ[#, "ArcCos"] &]}],
+  {True, True},
+  TestID -> "clasificar-q0-largo-como-th0"
+]
+
+(* Punto 9 (v1.3): el punto se inserta tal cual solo si es simple (8 caracteres o menos en
+   InputForm, sin «[» ni «^»); si no, la coordenada seguida de 0 *)
+VerificationTest[
+  CMToolkit`Private`stepVars[x, t, u, #]["q0"] & /@
+    {0, Pi, Pi/2, -a, 1.5708, Sqrt[l0^2 - h^2], ArcCos[-g/(b w^2)], a^2},
+  {"0", "Pi", "Pi/2", "-a", "1.5708", "x0", "x0", "x0"},
+  TestID -> "descripciones-regla-del-punto-simple"
+]
+
+VerificationTest[
+  Module[{ds = ClassifyEquilibrium[eqRailL, {x, t}, Sqrt[l0^2 - h^2], u]["Steps"][[All, "Description"]]},
+    {NoneTrue[ds, StringContainsQ[#, "Sqrt" | "^"] &],
+     StringContainsQ[SelectFirst[ds, StringContainsQ[#, "Taylor"] &], "x0"]}],
+  {True, True},
+  TestID -> "clasificar-riel-lateral-como-x0"
+]
+
+(* Punto 10 (v1.3): con q0 = 0, la descripción de la serie dice «x = u», no «x = 0 + u» *)
+eqSeriesText[res_] := SelectFirst[res["Steps"][[All, "Description"]],
+  StringContainsQ[#, "Taylor"] &];
+
+VerificationTest[
+  Table[Block[{$CMLanguage = lang},
+      With[{d = eqSeriesText[ClassifyEquilibrium[eqRailL, {x, t}, 0, u]]},
+        {StringContainsQ[d, "x = u"], StringContainsQ[d, "0 + u"]}]],
+    {lang, {"Spanish", "English"}}],
+  {{True, False}, {True, False}},
+  TestID -> "clasificar-q0-cero-texto-x-igual-u"
+]
+
+VerificationTest[
+  StringContainsQ[eqSeriesText[eqClassify[Pi]], "th = Pi + x"],
+  True,
+  TestID -> "clasificar-q0-no-nulo-texto-q0-mas-x"
+]
+
+VerificationTest[
+  Block[{$CMLanguage = "English"},
+    StringContainsQ[Last[eqClassify[Pi]["Steps"]]["Description"], "call ClassifyEquilibrium"]],
+  True,
+  TestID -> "clasificar-nota-critica-en-ingles"
 ]
 
 (* --- Errores, en el orden de validación --- *)

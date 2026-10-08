@@ -246,12 +246,51 @@ VerificationTest[
   TestID -> "resorte-vertical"
 ]
 
+(* --- Descripciones con los símbolos del usuario (docs/specs/Ajustes1D.md, punto 5) --- *)
+
+VerificationTest[
+  Module[{res, ds, series},
+    res = HarmonicExpansion[m/2 x'[t]^2 - k/2 (Sqrt[x[t]^2 + h^2] - l0)^2, {x, t}, 0, u];
+    ds = res["Steps"][[All, "Description"]];
+    series = SelectFirst[ds, StringContainsQ[#, "Taylor"] &];
+    {NoneTrue[ds, StringContainsQ[#, RegularExpression["\\bq\\b"] | "q0"] &],
+     StringContainsQ[series, "x = "], StringContainsQ[series, "u"]}],
+  {True, True, True},
+  TestID -> "expansion-riel-descripciones-con-x-y-u"
+]
+
+(* Con q0 = 0, la descripción de la serie dice «x = u», no «x = 0 + u» (Ajustes1D, punto 10) *)
+VerificationTest[
+  Table[Block[{$CMLanguage = lang},
+      With[{d = SelectFirst[HarmonicExpansion[m/2 x'[t]^2 - k/2 (Sqrt[x[t]^2 + h^2] - l0)^2,
+            {x, t}, 0, u]["Steps"][[All, "Description"]], StringContainsQ[#, "Taylor"] &]},
+        {StringContainsQ[d, "x = u"], StringContainsQ[d, "0 + u"]}]],
+    {lang, {"Spanish", "English"}}],
+  {{True, False}, {True, False}},
+  TestID -> "expansion-q0-cero-texto-x-igual-u"
+]
+
 (* --- ShowSteps / MostrarPasos --- *)
 
 VerificationTest[
   Head[ShowSteps[ringPi]],
   Grid,
   TestID -> "ShowSteps-devuelve-Grid"
+]
+
+(* Descripciones, encabezados y números de paso como celdas de texto (estilo "Text" del
+   notebook), con el tamaño de LabelStyle de $CMPlotStyle: así se cortan entre palabras, sin
+   sangría, y no como fórmulas (docs/specs/Ajustes1D.md, puntos 4 y 11) *)
+VerificationTest[
+  Module[{grid = ShowSteps[ringPi], texts},
+    texts = Cases[grid, TextCell[s_String, "Text", ___, FontSize -> 12, ___] :> s, Infinity];
+    {SubsetQ[texts, ringPi["Steps"][[All, "Description"]]],
+     SubsetQ[texts, CMToolkit`Private`tr /@
+       {"ShowSteps:step", "ShowSteps:description", "ShowSteps:expression"}],
+     SubsetQ[texts, ToString /@ Range[Length[ringPi["Steps"]]]],
+     Head[grid]}],
+  {True, True, True, Grid},
+  TestID -> "ShowSteps-textos-con-estilo-Text"
 ]
 
 VerificationTest[
