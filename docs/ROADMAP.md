@@ -66,6 +66,11 @@ Notación del oscilador amortiguado y forzado: ẍ + 2γ ẋ + ω₀² x = F(t)/
 | 0.3.0 | Amortiguadas, forzadas y funciones de Green | Sí |
 | 0.4.0 en adelante | Núcleo lagrangiano y los demás temas, según el calendario del curso | Sí |
 
+Orden de trabajo de oscilaciones (desde el 10 de octubre de 2026): primero los modos normales
+(0.2.0) y después los gráficos de un grado de libertad (`PotentialPlot`, `EquilibriumDiagram`),
+porque los modos normales son lo que más se usa en las evaluaciones del tema. Así la versión pasa
+de 0.0.x a 0.2.0, y los gráficos 1D entran como 0.2.1.
+
 El orden de los temas después de 0.3.0 se decide según lo que el curso esté viendo en cada
 momento. El núcleo lagrangiano tiene prioridad porque los demás módulos lo reutilizan.
 

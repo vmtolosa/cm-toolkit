@@ -1,6 +1,8 @@
 # Especificación: movimiento y gráficos de un grado de libertad
 
-Estado: aprobada para implementar. Versión 1.2 (6 de octubre de 2026).
+Estado: aprobada para implementar. Versión 1.3 (10 de octubre de 2026).
+- v1.3: la Parte B se implementa después de los modos normales (ver docs/ROADMAP.md). Si para
+  entonces la versión ya es 0.2.0, su cierre la sube a 0.2.1 en vez de fijarla en 0.1.0.
 - v1.1: corrige la condición inicial del retrato de fase de la revisión visual; estilo de las
   trayectorias; nombre de los mensajes de las funciones que usan el núcleo numérico; alcance de `mass`.
 - v1.2: incorpora las precisiones de la implementación de la parte A (PR #6).

@@ -1,6 +1,8 @@
 # Especificación: modos normales en N dimensiones
 
-Estado: aprobada para implementar. Versión 1 (6 de octubre de 2026).
+Estado: aprobada para implementar. Versión 1.1 (10 de octubre de 2026).
+- v1.1: fija cuatro formatos que la v1 dejaba abiertos (ver «Precisiones de la v1.1», al final de
+  la Parte A); los tests del PR de `test/normal-modes` ya los suponen.
 Módulo nuevo: `CMToolkit/Kernel/NormalModes.wl` (se agrega al cargador después de Oscillations1D).
 Referencia: Ayudantía 6, Problema 2 completo (cuatro masas y seis resortes), ecs. (35)–(93).
 Versión del paquete al terminar: 0.2.0.
@@ -176,6 +178,23 @@ q_μ(t)), "ModeEnergies", "EnergyShares", "TotalEnergy", "Time", "Steps", más l
 
 Validación: `ic` (q0 y v0 deben ser listas de largo N).
 Si la energía total es cero, "EnergyShares" es una lista de ceros y se emite `rest` (informativo).
+
+## Precisiones de la v1.1
+
+1. **Nombres por defecto de las coordenadas de `SpringNetwork`.** Son símbolos comunes, x1, y1,
+   z1, x2, …, creados en el contexto vigente al llamar la función (el del notebook del estudiante,
+   normalmente `Global``), como si los hubiera escrito él. La regla «nada en `Global``» de
+   CLAUDE.md es para las definiciones del paquete, no para los símbolos de un resultado. Si alguno
+   de esos símbolos ya tiene un valor asignado: mensaje `coords`, que sugiere usar la opción
+   `"Coordinates"`, y `$Failed`.
+2. **Formato de "NormalCoordinates" e "Inverse".** Listas de expresiones, no de ecuaciones.
+   "NormalCoordinates" tiene las N expresiones Q_n en función de las coordenadas originales, y
+   "Inverse" las N expresiones q_μ en función de las coordenadas normales. En ambas, los símbolos
+   van sin `[t]`.
+3. **Tiempo del "Lagrangian" de `NormalCoordinates`.** Las coordenadas normales van como Q_n[t]
+   con t = `\[FormalT]`, el mismo valor por defecto de `ModeResponse`.
+4. **Resortes de constante 0.** Se aceptan sin mensaje; aportan cero a Kmat. Sirven para el caso
+   «sin diagonales» escrito como kp → 0.
 
 ## Tests de la Parte A (Tests/NormalModes.wlt)
 
