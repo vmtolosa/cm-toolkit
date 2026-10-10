@@ -38,12 +38,24 @@ VerificationTest[
   TestID -> "energia-cuatro-pasos"
 ]
 
-(* Paso 3: primero la parte cinética (con th'), luego la potencial (sin th') *)
+(* Paso 3: primero la parte cinética (con th'), luego la potencial (sin th'), esta última
+   expandida y término a término (docs/specs/Ajustes1D.md, punto 6). Verbatim evita que el
+   atributo Flat de Plus agrupe los sumandos de otra forma *)
 VerificationTest[
   MatchQ[moRingE["Steps"][[3, "Expression"]],
-    _ == HoldForm[Plus[kin_, pot_]] /; !FreeQ[kin, Derivative[1][th]] && FreeQ[pot, Derivative[1][th]]],
+    _ == HoldForm[Verbatim[Plus][kin_, pots__]] /;
+      !FreeQ[kin, Derivative[1][th]] && FreeQ[{pots}, Derivative[1][th]] &&
+      Sort[{pots}] === Sort[{b g m Cos[th[t]], -(1/2) b^2 m w^2 Sin[th[t]]^2}]],
   True,
   TestID -> "energia-paso-3-cinetica-antes-que-potencial"
+]
+
+(* La clave "EnergyFunction" no cambia: parte cinética simplificada más potencial simplificada *)
+VerificationTest[
+  moRingE["EnergyFunction"] ===
+    Simplify[m b^2/2 th'[t]^2] + Simplify[m g b Cos[th[t]] - m b^2 w^2/2 Sin[th[t]]^2],
+  True,
+  TestID -> "energia-clave-sin-cambios"
 ]
 
 VerificationTest[
@@ -80,6 +92,31 @@ VerificationTest[
   Head[ShowSteps[moRingE]],
   Grid,
   TestID -> "energia-ShowSteps-devuelve-Grid"
+]
+
+(* Descripciones con los símbolos del usuario (docs/specs/Ajustes1D.md, punto 5): una
+   coordenada de una letra lleva el punto encima; una de varias, la prima *)
+VerificationTest[
+  Module[{ds = EnergyFunction[m/2 x'[t]^2 - k/2 (Sqrt[x[t]^2 + h^2] - l0)^2, {x, t}][
+      "Steps"][[All, "Description"]]},
+    {NoneTrue[ds, StringContainsQ[#, RegularExpression["\\bq\\b"]] &],
+     StringContainsQ[First[ds], "x\:0307"]}],
+  {True, True},
+  TestID -> "energia-riel-descripciones-con-x-punto"
+]
+
+VerificationTest[
+  StringContainsQ[moRingE["Steps"][[1, "Description"]], "th'"],
+  True,
+  TestID -> "energia-anillo-descripciones-con-th-prima"
+]
+
+(* El tiempo también es un marcador: con tiempo s, la conclusión no dice «t» *)
+VerificationTest[
+  Module[{d = Last[EnergyFunction[m/2 y'[s]^2 - k/2 y[s]^2, {y, s}]["Steps"]]["Description"]},
+    {StringEndsQ[d, "de s."], StringContainsQ[d, RegularExpression["\\bt\\b"]]}],
+  {True, False},
+  TestID -> "energia-marcador-de-tiempo"
 ]
 
 (* === SolveMotion === *)

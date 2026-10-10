@@ -70,6 +70,105 @@ VerificationTest[
   TestID -> "alias-GraficoCM-opcion-usuario-tiene-prioridad"
 ]
 
+(* --- Estilos de CMPlot según el número de curvas (docs/specs/Ajustes1D.md, punto 7) --- *)
+
+(* Una curva: el primer estilo (azul, continuo), sin Dashing *)
+bsOneCurveQ[g_] := !FreeQ[g, RGBColor[0.12, 0.35, 0.65]] && FreeQ[g, _Dashing];
+
+(* Dos curvas: los dos primeros colores y un solo Dashing entre las primitivas dibujadas.
+   Plot guarda además una copia de los estilos en una Association de metadatos dentro de las
+   primitivas; se quita antes de contar *)
+bsDrawn[g_] := First[g] /. _Association -> Nothing;
+bsTwoCurvesQ[g_] := !FreeQ[bsDrawn[g], RGBColor[0.12, 0.35, 0.65]] &&
+  !FreeQ[bsDrawn[g], RGBColor[0.85, 0.37, 0.01]] && Count[bsDrawn[g], _Dashing, Infinity] === 1;
+
+VerificationTest[
+  bsOneCurveQ[CMPlot[Sin[x], {x, 0, 2 Pi}]],
+  True,
+  TestID -> "CMPlot-una-curva-primer-estilo"
+]
+
+VerificationTest[
+  bsTwoCurvesQ[CMPlot[{Sin[x], Cos[x]}, {x, 0, 2 Pi}]],
+  True,
+  TestID -> "CMPlot-dos-curvas-estilos-en-orden"
+]
+
+(* HoldAll: la variable del gráfico tiene un valor asignado *)
+VerificationTest[
+  Module[{g}, bsVar = 3; g = CMPlot[Sin[bsVar], {bsVar, 0, 2 Pi}]; Clear[bsVar]; bsOneCurveQ[g]],
+  True,
+  TestID -> "CMPlot-una-curva-variable-con-valor"
+]
+
+(* Una expresión que no es una lista a simple vista *)
+VerificationTest[
+  Module[{sol = <|"Solution" -> NDSolveValue[{bsY'[s] == -bsY[s], bsY[0] == 1}, bsY, {s, 0, 6}]|>},
+    bsOneCurveQ[CMPlot[sol["Solution"][tt], {tt, 0, 6}]]],
+  True,
+  TestID -> "CMPlot-una-curva-interpolacion"
+]
+
+(* Un símbolo cuyo valor es una lista de funciones *)
+VerificationTest[
+  Module[{g}, bsFuns = {Sin[x], Cos[x]}; g = CMPlot[bsFuns, {x, 0, 2 Pi}]; Clear[bsFuns];
+    bsTwoCurvesQ[g]],
+  True,
+  TestID -> "CMPlot-simbolo-con-lista"
+]
+
+(* Una función definida solo para argumentos numéricos: una curva azul, sin mensajes *)
+VerificationTest[
+  Module[{g}, bsNum[s_?NumericQ] := NIntegrate[Cos[u], {u, 0, s}];
+    g = CMPlot[bsNum[x], {x, 0, 2 Pi}]; Clear[bsNum]; bsOneCurveQ[g]],
+  True,
+  TestID -> "CMPlot-una-curva-funcion-numerica"
+]
+
+(* Sin ?NumericQ, NIntegrate emite NIntegrate::nlim con la variable simbólica: la evaluación que
+   decide el estilo va en Quiet, así que CMPlot no emite mensajes (Plot solo, tampoco) *)
+VerificationTest[
+  Module[{g}, bsInt[s_] := NIntegrate[Cos[u], {u, 0, s}];
+    g = CMPlot[bsInt[x], {x, 0, 2 Pi}]; Clear[bsInt];
+    {bsOneCurveQ[g], Head[g]}],
+  {True, Graphics},
+  TestID -> "CMPlot-una-curva-evaluacion-silenciada"
+]
+
+VerificationTest[
+  Module[{g = CMPlot[Sin[x], {x, 0, 2 Pi}, PlotStyle -> Red]},
+    !FreeQ[g, RGBColor[1, 0, 0]] && FreeQ[g, RGBColor[0.12, 0.35, 0.65]]],
+  True,
+  TestID -> "CMPlot-PlotStyle-del-usuario-gana"
+]
+
+(* --- Números en los mensajes (docs/specs/Ajustes1D.md, punto 8) --- *)
+
+(* Un número de máquina pasa a texto con 6 cifras significativas y sin marca de precisión;
+   una expresión con números de máquina, a texto en InputForm; lo demás no cambia *)
+VerificationTest[
+  CMToolkit`Private`messageArg /@ {1.8540746734841649, -1.36, 4.812345678*^-10, 3, Pi, a + b},
+  {"1.85407", "-1.36", "4.81235*^-10", 3, Pi, a + b},
+  TestID -> "mensajes-formato-de-numeros"
+]
+
+VerificationTest[
+  With[{s = CMToolkit`Private`messageArg[1 + 0.90251234567 Cos[z]]},
+    {StringQ[s], StringContainsQ[s, "0.902512"], StringContainsQ[s, "`"]}],
+  {True, True, False},
+  TestID -> "mensajes-expresion-con-numeros"
+]
+
+(* cmMessage entrega a Message los argumentos ya formateados (Trace los envuelve en
+   HoldCompleteForm; la última forma es la llamada que recibe Message) *)
+VerificationTest[
+  Last[Cases[Trace[Quiet[CMToolkit`Private`cmMessage[SolveMotion, "ndsolve", 10, 1.8540746734841649]],
+      _Message],
+    HoldCompleteForm[Message[_, args___]] :> {args}, Infinity]],
+  {10, "1.85407"},
+  TestID -> "mensajes-cmMessage-formatea-argumentos"
+]
+
 (* --- cmLanguage[] (privada, se llama por su nombre completo) --- *)
 
 VerificationTest[
