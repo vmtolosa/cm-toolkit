@@ -183,7 +183,7 @@ Si la energía total es cero, "EnergyShares" es una lista de ceros y se emite `r
 
 1. **Nombres por defecto de las coordenadas de `SpringNetwork`.** Son símbolos comunes, x1, y1,
    z1, x2, …, creados en el contexto vigente al llamar la función (el del notebook del estudiante,
-   normalmente `Global``), como si los hubiera escrito él. La regla «nada en `Global``» de
+   normalmente ``Global` ``), como si los hubiera escrito él. La regla «nada en ``Global` ``» de
    CLAUDE.md es para las definiciones del paquete, no para los símbolos de un resultado. Si alguno
    de esos símbolos ya tiene un valor asignado: mensaje `coords`, que sugiere usar la opción
    `"Coordinates"`, y `$Failed`.
