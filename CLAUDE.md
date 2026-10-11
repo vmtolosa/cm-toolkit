@@ -11,7 +11,8 @@ Mathematica. El paquete es genérico: no menciona ningún curso, institución ni
 - CMToolkit/PacletInfo.wl: metadatos. La versión se cambia solo aquí.
 - CMToolkit/Kernel/CMToolkit.wl: cargador. BeginPackage, carga los módulos en orden explícito
   (Core.wl primero) y EndPackage. Sin variables: se crearían como símbolos públicos.
-- CMToolkit/Kernel/Core.wl: idioma, $texts, tr, cmMessage, defineAlias, zeroQ, $CMPlotStyle,
+- CMToolkit/Kernel/Core.wl: idioma, $texts, tr, cmMessage, defineAlias, zeroQ, freeSymbols,
+  positiveAssumptions (suposiciones de Assumptions -> Automatic), $CMPlotStyle,
   CMPlot, ShowSteps y CMToolkitVersion.
 - CMToolkit/Kernel/Oscillations1D.wl: un grado de libertad (HarmonicExpansion) y sus funciones
   privadas compartidas (validateDeviation1D, autonomousForm, assumptions1D, potentialCoefficients).
