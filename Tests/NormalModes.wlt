@@ -374,6 +374,25 @@ VerificationTest[
   TestID -> "pequenas-error-no-es-equilibrio"
 ]
 
+(* Un lagrangiano que depende explícitamente del tiempo no es autónomo *)
+VerificationTest[
+  SmallOscillations[nmPendulumL + m g l Cos[t] th1[t], {th1, th2}, t, {0, 0}],
+  $Failed,
+  {SmallOscillations::time},
+  TestID -> "pequenas-error-tiempo-explicito"
+]
+
+(* Sin ningún término con th2' (ni th2'^2 ni el cruzado th1' th2'), Mmat es singular: primero se
+   comprueba que su determinante sea cero *)
+VerificationTest[
+  Module[{lag = m l^2 th1'[t]^2 + m g l (2 Cos[th1[t]] + Cos[th2[t]])},
+    {Det[D[lag, {{th1'[t], th2'[t]}, 2}]],
+     SmallOscillations[lag, {th1, th2}, t, {0, 0}]}],
+  {0, $Failed},
+  {SmallOscillations::mass},
+  TestID -> "pequenas-error-masa-singular"
+]
+
 VerificationTest[
   Module[{keys = {"Omega2", "Frequencies", "Modes", "SecularDeterminant", "Degeneracies",
       "ZeroModes", "Rank"}},
