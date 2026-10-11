@@ -8,5 +8,6 @@ BeginPackage["CMToolkit`"];
    Sin variables aquí: se crearían como símbolos públicos de CMToolkit`. *)
 Get[FileNameJoin[{DirectoryName[$InputFileName], "Core.wl"}]];
 Get[FileNameJoin[{DirectoryName[$InputFileName], "Oscillations1D.wl"}]];
+Get[FileNameJoin[{DirectoryName[$InputFileName], "NormalModes.wl"}]];
 
 EndPackage[];
