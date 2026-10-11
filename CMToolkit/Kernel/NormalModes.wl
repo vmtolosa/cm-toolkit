@@ -81,6 +81,35 @@ AssociateTo[$texts, <|
   "SmallOscillations::args" -> <|
     "Spanish" -> "SmallOscillations se llama con cuatro argumentos: SmallOscillations[L, {q1, q2, \[Ellipsis]}, t, {q10, q20, \[Ellipsis]}], con el lagrangiano escrito con q1[t], q1'[t], \[Ellipsis] y el punto de equilibrio.",
     "English" -> "SmallOscillations takes four arguments: SmallOscillations[L, {q1, q2, \[Ellipsis]}, t, {q10, q20, \[Ellipsis]}], with the Lagrangian written with q1[t], q1'[t], \[Ellipsis] and the equilibrium point."|>,
+  "SmallOscillations::time" -> <|
+    "Spanish" -> "SmallOscillations requiere un lagrangiano autónomo: solo puede depender de las coordenadas `1` evaluadas en `2` y de sus primeras derivadas, sin `2` explícito ni derivadas de orden superior.",
+    "English" -> "SmallOscillations requires an autonomous Lagrangian: it may depend only on the coordinates `1` evaluated at `2` and on their first derivatives, with no explicit `2` and no higher derivatives."|>,
+  "SmallOscillations::noteq" -> <|
+    "Spanish" -> "No se pudo comprobar que `1` = `2` sea un equilibrio: \[PartialD]U/\[PartialD]q en ese punto se simplifica a `3`, no a 0. Revisa el punto o entrega con Assumptions las suposiciones que permiten comprobarlo.",
+    "English" -> "Could not verify that `1` = `2` is an equilibrium: \[PartialD]U/\[PartialD]q at that point simplifies to `3`, not 0. Check the point, or give with Assumptions the assumptions that make it verifiable."|>,
+  "SmallOscillations::mass" -> <|
+    "Spanish" -> "La matriz de masas en el equilibrio es singular (determinante 0): `1`. Alguna coordenada, o combinación de coordenadas, no tiene término cinético, y no hay oscilaciones que describir.",
+    "English" -> "The mass matrix at equilibrium is singular (determinant 0): `1`. Some coordinate, or combination of coordinates, has no kinetic term, and there are no oscillations to describe."|>,
+  (* SmallOscillations: textos de "Steps", en el orden en que se haría a mano *)
+  "SmallOscillations:potential" -> <|
+    "Spanish" -> "Energía potencial: U = \[Minus]L con todas las velocidades en cero.",
+    "English" -> "Potential energy: U = \[Minus]L with all velocities set to zero."|>,
+  "SmallOscillations:kinetic" -> <|
+    "Spanish" -> "Energía cinética: T = L + U.",
+    "English" -> "Kinetic energy: T = L + U."|>,
+  "SmallOscillations:equilibrium" -> <|
+    "Spanish" -> "Comprobación del equilibrio: todas las derivadas \[PartialD]U/\[PartialD]q_\[Mu] se anulan en el punto dado.",
+    "English" -> "Equilibrium check: every derivative \[PartialD]U/\[PartialD]q_\[Mu] vanishes at the given point."|>,
+  "SmallOscillations:at" -> <|"Spanish" -> "en", "English" -> "at"|>,
+  "SmallOscillations:mass" -> <|
+    "Spanish" -> "Matriz de masas: Mmat_\[Mu]\[Nu] = \[PartialD]\.b2T/\[PartialD]q\:0307_\[Mu]\[PartialD]q\:0307_\[Nu], evaluada en el equilibrio con velocidades cero.",
+    "English" -> "Mass matrix: Mmat_\[Mu]\[Nu] = \[PartialD]\.b2T/\[PartialD]q\:0307_\[Mu]\[PartialD]q\:0307_\[Nu], evaluated at equilibrium with zero velocities."|>,
+  "SmallOscillations:stiffness" -> <|
+    "Spanish" -> "Matriz de constantes elásticas: Kmat_\[Mu]\[Nu] = \[PartialD]\.b2U/\[PartialD]q_\[Mu]\[PartialD]q_\[Nu], evaluada en el equilibrio.",
+    "English" -> "Stiffness matrix: Kmat_\[Mu]\[Nu] = \[PartialD]\.b2U/\[PartialD]q_\[Mu]\[PartialD]q_\[Nu], evaluated at equilibrium."|>,
+  "SmallOscillations:lagrangian" -> <|
+    "Spanish" -> "Lagrangiano de pequeñas oscilaciones. Desde aquí las coordenadas son las desviaciones respecto al equilibrio, con el mismo nombre.",
+    "English" -> "Small-oscillation Lagrangian. From here on the coordinates are the deviations from equilibrium, with the same names."|>,
   "NormalModes::args" -> <|
     "Spanish" -> "NormalModes se llama con un sistema de SpringNetwork o SmallOscillations, NormalModes[sistema], o con las dos matrices, NormalModes[Mmat, Kmat].",
     "English" -> "NormalModes takes a system from SpringNetwork or SmallOscillations, NormalModes[system], or the two matrices, NormalModes[Mmat, Kmat]."|>,
@@ -226,6 +255,55 @@ SpringNetwork[___] := (cmMessage[SpringNetwork, "args"]; $Failed);
 (* --- SmallOscillations: especificación en docs/specs/NormalModes.md --- *)
 
 Options[SmallOscillations] = {Assumptions -> Automatic};
+
+SmallOscillations[L_, qlist : {__Symbol}, t_Symbol, q0_List, opts : OptionsPattern[]] /;
+    Length[q0] === Length[qlist] && !MemberQ[qlist, t] :=
+  Module[{nq = Length[qlist], qs, qd, toLocal, back, Lr, asm, U, T, grad, eqRules, mmat, kmat,
+      steps, held},
+
+    (* Como en un grado de libertad: q_μ[t] y q_μ'[t] pasan a símbolos locales; si queda t,
+       el lagrangiano no es autónomo *)
+    qs = Table[Module[{q}, q], {nq}]; qd = Table[Module[{v}, v], {nq}];
+    toLocal = Join[Thread[(Derivative[1][#][t] & /@ qlist) -> qd], Thread[(#[t] & /@ qlist) -> qs]];
+    back = Join[Thread[qs -> (#[t] & /@ qlist)], Thread[qd -> (Derivative[1][#][t] & /@ qlist)]];
+    Lr = L /. toLocal;
+    If[!FreeQ[Lr, t], cmMessage[SmallOscillations, "time", qlist, t]; Return[$Failed]];
+
+    asm = OptionValue[Assumptions];
+    If[asm === Automatic, asm = positiveAssumptions[{L, q0}, Join[qlist, {t}]]];
+
+    U = -Lr /. Thread[qd -> 0];
+    T = Lr + U;
+    eqRules = Join[Thread[qs -> q0], Thread[qd -> 0]];
+
+    (* Equilibrio: ∂U/∂q_μ = 0 en el punto, con zeroQ o con FullSimplify si Simplify no basta *)
+    grad = D[U, {qs}] /. eqRules;
+    If[!AllTrue[grad, zeroQ[#, asm] || zeroQ[FullSimplify[#, asm], asm] &],
+      cmMessage[SmallOscillations, "noteq", qlist, q0, Simplify[grad, asm]]; Return[$Failed]];
+
+    mmat = Simplify[D[T, {qd, 2}] /. eqRules, asm];
+    kmat = Simplify[D[U, {qs, 2}] /. eqRules, asm];
+    If[zeroQ[Det[mmat], asm],
+      cmMessage[SmallOscillations, "mass", mmat]; Return[$Failed]];
+
+    (* Lagrangiano de pequeñas oscilaciones, con las desviaciones respecto al equilibrio;
+       retenido para que no se expanda *)
+    held = With[{v = Derivative[1][#][t] & /@ qlist, x = #[t] & /@ qlist},
+      With[{tq = Expand[v . mmat . v], uq = Expand[x . kmat . x]}, HoldForm[1/2 tq - 1/2 uq]]];
+    steps = {
+      {"potential", "U" == (U /. back)},
+      {"kinetic", "T" == Simplify[T /. back, asm]},
+      {"equilibrium", Row[{"\[PartialD]U/\[PartialD]q" == Simplify[grad, asm],
+        "  " <> tr["SmallOscillations:at"] <> "  ", qlist == q0}]},
+      {"mass", "Mmat" == MatrixForm[mmat]},
+      {"stiffness", "Kmat" == MatrixForm[kmat]},
+      {"lagrangian", "L" == held}};
+    steps = <|"Description" -> tr["SmallOscillations:" <> #[[1]]], "Expression" -> #[[2]]|> & /@
+      steps;
+
+    <|"Coordinates" -> qlist, "Mmat" -> mmat, "Kmat" -> kmat, "Assumptions" -> asm,
+      "Equilibrium" -> q0, "Steps" -> steps|>
+  ];
 
 SmallOscillations[___] := (cmMessage[SmallOscillations, "args"]; $Failed);
 
