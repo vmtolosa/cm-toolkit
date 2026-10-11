@@ -1,5 +1,5 @@
 (* Tests de SpringNetwork, SmallOscillations, NormalModes, NormalCoordinates y ModeResponse.
-   Especificación: docs/specs/NormalModes.md (versión 1, Parte A).
+   Especificación: docs/specs/NormalModes.md (versión 1.1, Parte A).
    Valores de referencia: Ayudantía 6, Problema 2 (cuatro masas y seis resortes), ecs. (35)–(93),
    tabla de la p. 12, base de la p. 17, Listados 6, 9, 10 y 11. *)
 
@@ -204,12 +204,10 @@ VerificationTest[
 
 (* === NormalCoordinates === *)
 
-(* El lagrangiano es exactamente Σ (½ Q̇² − ½ ω² Q²): sin términos cruzados. El símbolo del
-   tiempo se lee del propio lagrangiano *)
-nmDiagonalLagrangianQ[lag_, qs_List, w2_List] := Module[{tt},
-  tt = First[Cases[lag, Derivative[1][First[qs]][s_] :> s, Infinity], $Failed];
-  tt =!= $Failed &&
-    Simplify[lag - Sum[(qs[[n]]'[tt]^2 - w2[[n]] qs[[n]][tt]^2)/2, {n, Length[qs]}], nmAsm] === 0];
+(* El lagrangiano es exactamente Σ (½ Q̇² − ½ ω² Q²): sin términos cruzados. Las coordenadas
+   normales van como Q_n[t] con t = \[FormalT] (precisión 3 de la v1.1) *)
+nmDiagonalLagrangianQ[lag_, qs_List, w2_List] := With[{tt = \[FormalT]},
+  Simplify[lag - Sum[(qs[[n]]'[tt]^2 - w2[[n]] qs[[n]][tt]^2)/2, {n, Length[qs]}], nmAsm] === 0];
 
 VerificationTest[
   nmDiagonalLagrangianQ[NormalCoordinates[nmBaseModes]["Lagrangian"],
@@ -225,13 +223,14 @@ VerificationTest[
   TestID -> "coordenadas-cuadrado-nombres-del-usuario"
 ]
 
-(* Q(q) y q(Q) son una la inversa de la otra; si vienen como ecuaciones se toma el lado derecho *)
+(* Q(q) y q(Q) son una la inversa de la otra. Son listas de expresiones, sin [t] (precisión 2
+   de la v1.1) *)
 VerificationTest[
   Module[{qs = {Q1, Q2, Q3, Q4, Q5, Q6, Q7, Q8}, coords, res, ofq, ofQ},
     coords = nmBaseModes["Coordinates"];
     res = NormalCoordinates[nmBaseModes, qs];
-    ofq = res["NormalCoordinates"] /. Equal[_, rhs_] :> rhs;
-    ofQ = res["Inverse"] /. Equal[_, rhs_] :> rhs;
+    ofq = res["NormalCoordinates"];
+    ofQ = res["Inverse"];
     {Simplify[(ofq /. Thread[coords -> ofQ]) - qs, nmAsm],
      Simplify[(ofQ /. Thread[qs -> ofq]) - coords, nmAsm]}],
   {ConstantArray[0, 8], ConstantArray[0, 8]},
