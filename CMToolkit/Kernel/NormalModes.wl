@@ -108,8 +108,12 @@ AssociateTo[$texts, <|
     "Spanish" -> "Matriz de constantes elásticas: Kmat_\[Mu]\[Nu] = \[PartialD]\.b2U/\[PartialD]q_\[Mu]\[PartialD]q_\[Nu], evaluada en el equilibrio.",
     "English" -> "Stiffness matrix: Kmat_\[Mu]\[Nu] = \[PartialD]\.b2U/\[PartialD]q_\[Mu]\[PartialD]q_\[Nu], evaluated at equilibrium."|>,
   "SmallOscillations:lagrangian" -> <|
-    "Spanish" -> "Lagrangiano de pequeñas oscilaciones. Desde aquí las coordenadas son las desviaciones respecto al equilibrio, con el mismo nombre.",
-    "English" -> "Small-oscillation Lagrangian. From here on the coordinates are the deviations from equilibrium, with the same names."|>,
+    "Spanish" -> "Lagrangiano de pequeñas oscilaciones, con las coordenadas `coords` medidas desde el equilibrio: desde aquí son desviaciones respecto al equilibrio, aunque conserven su nombre.",
+    "English" -> "Small-oscillation Lagrangian, with the coordinates `coords` measured from equilibrium: from here on they are deviations from equilibrium, even though they keep their names."|>,
+  "SmallOscillations:lagrangian1" -> <|
+    "Spanish" -> "Lagrangiano de pequeñas oscilaciones, con la coordenada `coords` medida desde el equilibrio: desde aquí es la desviación respecto al equilibrio, aunque conserve su nombre.",
+    "English" -> "Small-oscillation Lagrangian, with the coordinate `coords` measured from equilibrium: from here on it is the deviation from equilibrium, even though it keeps its name."|>,
+  "NormalModes:and" -> <|"Spanish" -> "y", "English" -> "and"|>,
   "NormalModes::args" -> <|
     "Spanish" -> "NormalModes se llama con un sistema de SpringNetwork o SmallOscillations, NormalModes[sistema], o con las dos matrices, NormalModes[Mmat, Kmat].",
     "English" -> "NormalModes takes a system from SpringNetwork or SmallOscillations, NormalModes[system], or the two matrices, NormalModes[Mmat, Kmat]."|>,
@@ -297,13 +301,18 @@ SmallOscillations[L_, qlist : {__Symbol}, t_Symbol, q0_List, opts : OptionsPatte
         "  " <> tr["SmallOscillations:at"] <> "  ", qlist == q0}]},
       {"mass", "Mmat" == MatrixForm[mmat]},
       {"stiffness", "Kmat" == MatrixForm[kmat]},
-      {"lagrangian", "L" == held}};
-    steps = <|"Description" -> tr["SmallOscillations:" <> #[[1]]], "Expression" -> #[[2]]|> & /@
-      steps;
+      {If[nq == 1, "lagrangian1", "lagrangian"], "L" == held}};
+    steps = <|"Description" -> tr["SmallOscillations:" <> #[[1]], <|"coords" -> namesText[qlist]|>],
+      "Expression" -> #[[2]]|> & /@ steps;
 
     <|"Coordinates" -> qlist, "Mmat" -> mmat, "Kmat" -> kmat, "Assumptions" -> asm,
       "Equilibrium" -> q0, "Steps" -> steps|>
   ];
+
+(* Nombres de símbolos como texto: «th1», «th1 y th2», «x, y y z» *)
+namesText[{s_}] := SymbolName[s];
+namesText[l_List] := StringRiffle[SymbolName /@ Most[l], ", "] <> " " <> tr["NormalModes:and"] <>
+  " " <> SymbolName[Last[l]];
 
 SmallOscillations[___] := (cmMessage[SmallOscillations, "args"]; $Failed);
 
