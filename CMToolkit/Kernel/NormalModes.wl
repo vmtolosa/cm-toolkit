@@ -45,6 +45,39 @@ AssociateTo[$texts, <|
   "SpringNetwork::args" -> <|
     "Spanish" -> "SpringNetwork se llama con tres argumentos: SpringNetwork[posiciones, resortes, masas]. Por ejemplo, dos masas en una recta unidas por un resorte: SpringNetwork[{0, 1}, {{1, 2, k}}, m].",
     "English" -> "SpringNetwork takes three arguments: SpringNetwork[positions, springs, masses]. For example, two masses on a line joined by a spring: SpringNetwork[{0, 1}, {{1, 2, k}}, m]."|>,
+  "SpringNetwork::positions" -> <|
+    "Spanish" -> "Las posiciones deben ser una lista de puntos de la misma dimensión, 1, 2 o 3, sin dos masas en el mismo punto. En una dimensión se aceptan números sueltos: {1, 2, 3}.",
+    "English" -> "The positions must be a list of points of the same dimension, 1, 2 or 3, with no two masses at the same point. In one dimension plain numbers are accepted: {1, 2, 3}."|>,
+  "SpringNetwork::springs" -> <|
+    "Spanish" -> "Cada resorte se escribe {j, i, k}: j e i son los números de dos masas distintas, entre 1 y `1`, y k es la constante elástica. Revisa `2`.",
+    "English" -> "Each spring is written {j, i, k}: j and i are the numbers of two different masses, between 1 and `1`, and k is the spring constant. Check `2`."|>,
+  "SpringNetwork::masses" -> <|
+    "Spanish" -> "Las masas deben ser un solo valor (todas iguales) o una lista de `1` valores, uno por masa; la lista dada tiene `2`.",
+    "English" -> "The masses must be a single value (all equal) or a list of `1` values, one per mass; the given list has `2`."|>,
+  "SpringNetwork::anchors" -> <|
+    "Spanish" -> "Cada anclaje se escribe {i, punto, k}: i es el número de una masa, entre 1 y `1`; punto es un punto fijo de dimensión `2`, distinto de la posición de la masa; y k es la constante elástica. Revisa `3`.",
+    "English" -> "Each anchor is written {i, point, k}: i is the number of a mass, between 1 and `1`; point is a fixed point of dimension `2`, different from the position of the mass; and k is the spring constant. Check `3`."|>,
+  "SpringNetwork::coords" -> <|
+    "Spanish" -> "Las coordenadas deben ser `1` símbolos distintos, sin valor asignado, que no aparezcan en los datos de la red; no cumple `2`. Si los nombres por defecto (x1, y1, \[Ellipsis]) ya tienen valor, elige otros con la opción \"Coordinates\" -> {\[Ellipsis]}.",
+    "English" -> "The coordinates must be `1` distinct symbols with no assigned value that do not appear in the network data; `2` does not qualify. If the default names (x1, y1, \[Ellipsis]) already have values, choose others with the option \"Coordinates\" -> {\[Ellipsis]}."|>,
+  (* SpringNetwork: textos de "Steps", en el orden de la ayudantía *)
+  "SpringNetwork:natural" -> <|
+    "Spanish" -> "Supuesto: en el equilibrio todos los resortes están en su largo natural (sin tensión previa). A primer orden, un resorte de la masa j a la masa i se estira δl = n\[CenterDot](r_i \[Minus] r_j), con n el vector unitario de j a i y r los desplazamientos.",
+    "English" -> "Assumption: at equilibrium every spring is at its natural length (no pretension). To first order, a spring from mass j to mass i stretches by δl = n\[CenterDot](r_i \[Minus] r_j), with n the unit vector from j to i and r the displacements."|>,
+  "SpringNetwork:table" -> <|
+    "Spanish" -> "Tabla de resortes: dirección n = (R_i \[Minus] R_j)/|R_i \[Minus] R_j| en el equilibrio y estiramiento δl = c\[CenterDot]q de cada resorte. Un resorte a una pared se estira δl = n\[CenterDot]r_i.",
+    "English" -> "Spring table: direction n = (R_i \[Minus] R_j)/|R_i \[Minus] R_j| at equilibrium and stretch δl = c\[CenterDot]q of each spring. A spring to a wall stretches by δl = n\[CenterDot]r_i."|>,
+  "SpringNetwork:mass" -> <|
+    "Spanish" -> "Matriz de masas: diagonal, con la masa de cada partícula en cada una de sus coordenadas.",
+    "English" -> "Mass matrix: diagonal, with the mass of each particle on each of its coordinates."|>,
+  "SpringNetwork:stiffness" -> <|
+    "Spanish" -> "Matriz de constantes elásticas: la energía potencial es \[CapitalSigma] \.bd k δl\.b2 = \.bd q\[CenterDot]Kmat\[CenterDot]q, así que Kmat = \[CapitalSigma] k c c\[Transpose], sumando sobre los resortes.",
+    "English" -> "Stiffness matrix: the potential energy is \[CapitalSigma] \.bd k δl\.b2 = \.bd q\[CenterDot]Kmat\[CenterDot]q, so Kmat = \[CapitalSigma] k c c\[Transpose], summing over the springs."|>,
+  "SpringNetwork:spring" -> <|"Spanish" -> "Resorte", "English" -> "Spring"|>,
+  "SpringNetwork:direction" -> <|"Spanish" -> "Dirección n", "English" -> "Direction n"|>,
+  "SpringNetwork:stretch" -> <|"Spanish" -> "Estiramiento δl", "English" -> "Stretch δl"|>,
+  "SpringNetwork:constant" -> <|"Spanish" -> "Constante", "English" -> "Constant"|>,
+  "SpringNetwork:wall" -> <|"Spanish" -> "pared", "English" -> "wall"|>,
   "SmallOscillations::args" -> <|
     "Spanish" -> "SmallOscillations se llama con cuatro argumentos: SmallOscillations[L, {q1, q2, \[Ellipsis]}, t, {q10, q20, \[Ellipsis]}], con el lagrangiano escrito con q1[t], q1'[t], \[Ellipsis] y el punto de equilibrio.",
     "English" -> "SmallOscillations takes four arguments: SmallOscillations[L, {q1, q2, \[Ellipsis]}, t, {q10, q20, \[Ellipsis]}], with the Lagrangian written with q1[t], q1'[t], \[Ellipsis] and the equilibrium point."|>,
@@ -62,6 +95,131 @@ AssociateTo[$texts, <|
 (* --- SpringNetwork: especificación en docs/specs/NormalModes.md --- *)
 
 Options[SpringNetwork] = {"Anchors" -> {}, "Coordinates" -> Automatic, Assumptions -> Automatic};
+
+(* Posiciones como lista de puntos de dimensión d ∈ {1, 2, 3}; en 1D se aceptan números
+   sueltos. Devuelve {puntos, d} o $Failed *)
+networkPositions[pos_List /; pos =!= {} && FreeQ[pos, _List, {1}]] := {List /@ pos, 1};
+networkPositions[pos : {__List}] := With[{d = Length[First[pos]]},
+  If[MemberQ[{1, 2, 3}, d] && AllTrue[pos, Length[#] === d && FreeQ[#, _List, {1}] &],
+    {pos, d}, $Failed]];
+networkPositions[_] := $Failed;
+
+(* Punto de un anclaje: en 1D también un número suelto *)
+anchorPoint[p_List, d_] := If[Length[p] === d && FreeQ[p, _List, {1}], p, $Failed];
+anchorPoint[p_, 1] := {p};
+anchorPoint[_, _] := $Failed;
+
+(* Anclaje {i, punto, k}: una masa de la red y un punto fijo distinto de su posición *)
+anchorQ[a_, pos_, d_, asm_] := MatchQ[a, {i_Integer, _, _} /; 1 <= i <= Length[pos]] &&
+  With[{p = anchorPoint[a[[2]], d]},
+    p =!= $Failed && !zeroQ[(pos[[a[[1]]]] - p) . (pos[[a[[1]]]] - p), asm]];
+
+(* Nombres por defecto x1, y1, z1, x2, …: símbolos del contexto vigente al llamar la función,
+   como si los hubiera escrito el usuario (precisión 1 de la v1.1) *)
+defaultCoordinates[n_, d_] := ToExpression[
+  Flatten[Table[l <> ToString[i], {i, n}, {l, Take[{"x", "y", "z"}, d]}]], InputForm, Hold];
+
+(* Las coordenadas son símbolos distintos, sin valor, que no aparecen en los datos de la red *)
+coordinatesQ[held_List, nn_, data_] :=
+  Length[held] === nn && AllTrue[held, MatchQ[#, Hold[_Symbol]] &] &&
+    DuplicateFreeQ[held] &&
+    AllTrue[held, Function[h, (OwnValues @@ h) === {} &&
+      !MemberQ[Attributes @@ h, Protected] && FreeQ[data, First[h]]]];
+
+(* Vector c del estiramiento δl = c·q: +n en las coordenadas de la masa i y −n en las de j
+   (j = None para un anclaje) *)
+stretchVector[nn_, d_, i_, j_, nvec_] := Module[{c = ConstantArray[0, nn]},
+  c[[d (i - 1) + 1 ;; d i]] = nvec;
+  If[j =!= None, c[[d (j - 1) + 1 ;; d j]] = -nvec];
+  c];
+
+unitVector[r_, asm_] := Simplify[r/Sqrt[r . r], asm];
+
+SpringNetwork[pos0_List, springs_List, masses0_, opts : OptionsPattern[]] /; !OptionQ[masses0] :=
+  Module[{pp, pos, d, n, nn, bad, masses, anchors0, anchors, asm, held, coords, rows, anchorRows,
+      kmat, mmat, steps},
+
+    (* Posiciones: dimensión común y sin dos masas en el mismo punto *)
+    pp = networkPositions[pos0];
+    If[pp === $Failed, cmMessage[SpringNetwork, "positions"]; Return[$Failed]];
+    {pos, d} = pp;
+    n = Length[pos]; nn = n d;
+    anchors0 = OptionValue["Anchors"];
+    asm = OptionValue[Assumptions];
+    If[asm === Automatic,
+      asm = positiveAssumptions[{pos0, springs, masses0, anchors0}, {}]];
+    If[AnyTrue[Subsets[Range[n], {2}],
+        zeroQ[(pos[[#[[1]]]] - pos[[#[[2]]]]) . (pos[[#[[1]]]] - pos[[#[[2]]]]), asm] &],
+      cmMessage[SpringNetwork, "positions"]; Return[$Failed]];
+
+    (* Resortes {j, i, k}: dos masas distintas de la red *)
+    bad = SelectFirst[springs,
+      !MatchQ[#, {j_Integer, i_Integer, _} /; 1 <= j <= n && 1 <= i <= n && j != i] &, None];
+    If[bad =!= None, cmMessage[SpringNetwork, "springs", n, bad]; Return[$Failed]];
+
+    (* Masas: un valor para todas o una lista de n *)
+    masses = If[ListQ[masses0], masses0, ConstantArray[masses0, n]];
+    If[Length[masses] =!= n,
+      cmMessage[SpringNetwork, "masses", n, Length[masses]]; Return[$Failed]];
+
+    (* Anclajes {i, punto, k}: una masa de la red y un punto distinto de su posición *)
+    If[!ListQ[anchors0], cmMessage[SpringNetwork, "anchors", n, d, anchors0]; Return[$Failed]];
+    bad = SelectFirst[anchors0, !anchorQ[#, pos, d, asm] &, None];
+    If[bad =!= None, cmMessage[SpringNetwork, "anchors", n, d, bad]; Return[$Failed]];
+    anchors = {#[[1]], anchorPoint[#[[2]], d], #[[3]]} & /@ anchors0;
+
+    (* Coordenadas: las de la opción o x1, y1, … *)
+    held = Replace[OptionValue["Coordinates"],
+      {Automatic :> defaultCoordinates[n, d], l_List :> (Hold /@ l)}];
+    If[!ListQ[held] || !coordinatesQ[held, nn, {pos0, springs, masses0, anchors0}],
+      cmMessage[SpringNetwork, "coords", nn,
+        If[ListQ[held], Replace[held, Hold[c_] :> HoldForm[c], {1}], held]]; Return[$Failed]];
+    coords = ReleaseHold[held];
+
+    (* Cada resorte: dirección n de j a i, vector c y estiramiento δl = c·q *)
+    rows = Function[{j, i, k}, With[{nvec = unitVector[pos[[i]] - pos[[j]], asm]},
+        With[{c = stretchVector[nn, d, i, j, nvec]},
+          <|"Spring" -> {j, i}, "Direction" -> nvec, "Stretch" -> c . coords, "Constant" -> k,
+            "c" -> c|>]]] @@@ springs;
+    anchorRows = Function[{i, p, k}, With[{nvec = unitVector[pos[[i]] - p, asm]},
+        With[{c = stretchVector[nn, d, i, None, nvec]},
+          <|"Anchor" -> {i, p}, "Direction" -> nvec, "Stretch" -> c . coords, "Constant" -> k,
+            "c" -> c|>]]] @@@ anchors;
+
+    kmat = If[rows === {} && anchorRows === {}, ConstantArray[0, {nn, nn}],
+      Simplify[Total[(#["Constant"] Outer[Times, #["c"], #["c"]]) & /@ Join[rows, anchorRows]],
+        asm]];
+    mmat = DiagonalMatrix[Flatten[ConstantArray[#, d] & /@ masses]];
+
+    steps = {
+      {"natural", HoldForm["\[Delta]l" == CenterDot["n", Subscript["r", "i"] - Subscript["r", "j"]]]},
+      {"table", springTableGrid[rows, anchorRows]},
+      {"mass", "Mmat" == MatrixForm[mmat]},
+      {"stiffness", "Kmat" == MatrixForm[kmat]}};
+    steps = <|"Description" -> tr["SpringNetwork:" <> #[[1]]], "Expression" -> #[[2]]|> & /@
+      steps;
+
+    <|"Coordinates" -> coords, "Mmat" -> mmat, "Kmat" -> kmat, "Assumptions" -> asm,
+      "Dimension" -> d, "Positions" -> pos, "Springs" -> springs, "Anchors" -> anchors,
+      "Masses" -> masses, "SpringTable" -> (KeyDrop[#, "c"] & /@ rows), "Steps" -> steps|>
+  ];
+
+(* Tabla de resortes para "Steps": resorte, dirección, estiramiento y constante; los anclajes
+   al final, con la pared en vez de la segunda masa *)
+springTableGrid[rows_, anchorRows_] := Grid[
+  Join[
+    {tableText /@ tr /@ {"SpringNetwork:spring", "SpringNetwork:direction",
+      "SpringNetwork:stretch", "SpringNetwork:constant"}},
+    {tableText[StringRiffle[#["Spring"], "\[Dash]"]], #["Direction"], #["Stretch"],
+      #["Constant"]} & /@ rows,
+    {tableText[ToString[First[#["Anchor"]]] <> "\[Dash]" <> tr["SpringNetwork:wall"]],
+      #["Direction"], #["Stretch"], #["Constant"]} & /@ anchorRows],
+  Alignment -> Left, Spacings -> {2, 0.6},
+  Dividers -> {None, {2 -> GrayLevel[0.8]}}];
+
+(* Encabezados y nombres de resortes como texto, no como fórmula (letra de texto, sin comillas) *)
+tableText[s_String] := TextCell[s, "Text",
+  FontSize -> FirstCase[Lookup[$CMPlotStyle, LabelStyle, {}], (FontSize -> f_) :> f, 12, Infinity]];
 
 SpringNetwork[___] := (cmMessage[SpringNetwork, "args"]; $Failed);
 
