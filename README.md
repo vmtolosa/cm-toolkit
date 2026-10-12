@@ -94,6 +94,7 @@ solB = SolveMotion[Lnum, {x, t}, {0.05, 0.3}, 40];   (* con un empujón: recorre
 | Equilibrios | `EquilibriumPoints`, `ClassifyEquilibrium` | Disponible |
 | Pequeñas oscilaciones | `HarmonicExpansion`, `ShowSteps` | Disponible |
 | Movimiento exacto | `EnergyFunction`, `SolveMotion`, `CompareHarmonic`, `PhasePortrait` | Disponible |
+| Modos normales | `SpringNetwork`, `SmallOscillations`, `NormalModes`, `NormalCoordinates`, `ModeResponse` | Disponible |
 
 Los nombres en español de cada función están en su ayuda: `?HarmonicExpansion`.
 El plan completo, con los demás temas de un curso de mecánica clásica, está en la
@@ -151,7 +152,7 @@ primera versión publicada.
 
 | Funciones | Qué permite hacer | Especificación | Estado |
 | --- | --- | --- | --- |
-| `SpringNetwork`, `SmallOscillations`, `NormalModes`, `NormalCoordinates`, `ModeResponse` | Matrices de masas y de constantes elásticas; frecuencias y modos Mmat-ortonormales, con una base elegida por el usuario si se quiere; coordenadas normales y lagrangiano diagonal; respuesta a condiciones iniciales y fracción de energía en cada modo | [NormalModes.md](docs/specs/NormalModes.md) (parte A) | Especificado |
+| `SpringNetwork`, `SmallOscillations`, `NormalModes`, `NormalCoordinates`, `ModeResponse` | Matrices de masas y de constantes elásticas; frecuencias y modos Mmat-ortonormales, con una base elegida por el usuario si se quiere; coordenadas normales y lagrangiano diagonal; respuesta a condiciones iniciales y fracción de energía en cada modo | [NormalModes.md](docs/specs/NormalModes.md) (parte A) | Disponible |
 | `ModeGallery`, `AnimateMode`, `AnimateMotion`, `SpectrumPlot`, `EnergySharesChart` | Todos los modos en una grilla, animación de un modo o del movimiento completo (en 1D, 2D y 3D), ω² en función de un parámetro y barras con la energía de cada modo; notebook de ejemplo | [NormalModes.md](docs/specs/NormalModes.md) (parte B) | Especificado |
 
 **Versión 0.3.0: oscilador amortiguado y forzado, funciones de Green.** Clasificar el régimen del

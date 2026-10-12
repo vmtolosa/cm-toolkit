@@ -335,12 +335,7 @@ autonomousForm[f_Symbol, L_, q_, t_] := Module[{qs, qd, Lr},
 
 (* Automatic: todos los símbolos libres de exprs, salvo los de exclude, son reales positivos
    (HarmonicExpansion y ClassifyEquilibrium: {L, q0} y {q, t, x}; EquilibriumPoints: {L} y {q, t}) *)
-assumptions1D[Automatic, exprs_List, exclude_List] := And @@ Thread[freeSymbols[exprs, exclude] > 0];
-
-(* Símbolos libres (los parámetros) de exprs, salvo los de exclude *)
-freeSymbols[exprs_List, exclude_List] := Complement[
-  Union[Cases[exprs, s_Symbol /; Context[s] =!= "System`", {0, Infinity}, Heads -> False]],
-  exclude];
+assumptions1D[Automatic, exprs_List, exclude_List] := positiveAssumptions[exprs, exclude];
 assumptions1D[asm_, ___] := asm;
 
 (* Coeficientes c_k = U^(k)(q0)/k! de la serie de U en torno a q0. Calcula siempre hasta
