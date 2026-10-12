@@ -1,6 +1,8 @@
 # Especificación: modos normales en N dimensiones
 
-Estado: aprobada para implementar. Versión 1.1 (10 de octubre de 2026).
+Estado: aprobada para implementar. Versión 1.2 (12 de octubre de 2026).
+- v1.2: la Parte A está implementada; se agregan las «Precisiones de la v1.2», con lo que se
+  decidió durante la implementación (PR de `feat/normal-modes`).
 - v1.1: fija cuatro formatos que la v1 dejaba abiertos (ver «Precisiones de la v1.1», al final de
   la Parte A); los tests del PR de `test/normal-modes` ya los suponen.
 Módulo nuevo: `CMToolkit/Kernel/NormalModes.wl` (se agrega al cargador después de Oscillations1D).
@@ -195,6 +197,50 @@ Si la energía total es cero, "EnergyShares" es una lista de ceros y se emite `r
    con t = `\[FormalT]`, el mismo valor por defecto de `ModeResponse`.
 4. **Resortes de constante 0.** Se aceptan sin mensaje; aportan cero a Kmat. Sirven para el caso
    «sin diagonales» escrito como kp → 0.
+
+## Precisiones de la v1.2
+
+Decididas durante la implementación de la Parte A; lo que no está aquí sigue como arriba.
+
+- **Assumptions** es opción de `SpringNetwork` y de `SmallOscillations`, se guarda en el sistema y
+  la heredan las demás funciones. El atajo `NormalModes[Mmat, Kmat]` usa todos los símbolos libres
+  positivos y las coordenadas `\[FormalQ][1]`, …, `\[FormalQ][N]`.
+- **SpringNetwork:** `"SpringTable"` lleva solo los resortes entre masas (la tabla de la p. 12);
+  los anclajes están en `"Anchors"` y en la tabla de "Steps", como «i–pared». El mensaje `coords`
+  también rechaza nombres que aparecen en los datos de la red (por ejemplo `k`) o que están
+  protegidos. Las posiciones y los anclajes se guardan como puntos también en 1D.
+- **SmallOscillations:** `time` se emite si el lagrangiano depende explícitamente de t o tiene
+  derivadas de orden superior. "Steps": U, T, comprobación del equilibrio, Mmat, Kmat y el
+  lagrangiano de pequeñas oscilaciones, que aclara que las coordenadas se miden desde el
+  equilibrio aunque conserven su nombre.
+- **NormalModes:**
+  - `"Rank"` es N menos los modos nulos (igual al rango de Kmat porque Mmat es definida positiva).
+  - El atajo con Mmat singular emite `mass` (mismo texto que en `SmallOscillations`).
+  - `symbolic` cubre dos casos: los valores propios no salen en 30 s, o salen solo como `Root`
+    con parámetros simbólicos. Si `NullSpace` no da la multiplicidad esperada, el mensaje es
+    `nullspace`.
+  - Con números inexactos, la tolerancia de 10⁻⁸ es relativa al mayor |ω²|, y los ω² bajo ella
+    se toman como 0.
+  - Simplificación: `Simplify` y, si termina en 2 s, `FullSimplify`; después se corrigen formas
+    que se leen mal, como −(−2 + √2) g/l → (2 − √2) g/l y √(l² m) → l √m con l > 0.
+- **Opción "Basis":** el ω² de cada vector es v·Kmat·v / v·Mmat·v. Los mensajes se revisan en el
+  orden `basis`, `noteigen` (primer vector que falla; un vector de ceros también da `noteigen`) y
+  `rank`. Con `"Basis"` no se llama a `Eigenvalues`. En `"Degeneracies"`, cada ω² aparece en el
+  orden de su primera aparición en la base, y `"Indices"` son posiciones en la base.
+- **NormalCoordinates** devuelve solo sus cuatro claves (no hereda las del sistema). Los nombres
+  elegidos deben ser N símbolos distintos que no coincidan con las coordenadas originales; si no,
+  `args`.
+- **ModeResponse:** el símbolo del tiempo no puede aparecer en las matrices, los modos ni las
+  condiciones iniciales (`args`). `"Solution"` se agrupa por cosenos, senos y t, simplificando solo
+  los coeficientes. Los símbolos de q0 y v0 no reciben suposiciones (pueden ser negativos).
+- **Presentación de "Steps"** (vale también para la Parte B):
+  - Las expresiones de las tablas deben caber en una ventana de unos 1000 px: si una fila es más
+    ancha, el notebook la escribe en forma lineal. Por eso los modos llevan el factor común afuera,
+    (1/(2√m)) {−1, 1, −1, 0, 0, 0, 0, 1}, las direcciones van como {1, 1}/√2 y los estiramientos
+    con denominador común. Con números inexactos no se factoriza.
+  - Los símbolos formales (`\[FormalCapitalQ][n]`, `\[FormalT]`) se muestran como Q₁ y t.
+  - Sin modos nulos, el paso 4 de `NormalModes` dice solo «No hay modos nulos: Kmat tiene rango
+    completo».
 
 ## Tests de la Parte A (Tests/NormalModes.wlt)
 

@@ -115,6 +115,15 @@ CMPlot[f_, dom : {x_Symbol, __}, opts : OptionsPattern[Plot]] :=
 zeroQ[e_, asm_] := With[{s = Simplify[e, asm]},
   TrueQ[s == 0] || (InexactNumberQ[s] && Chop[s] == 0)];
 
+(* Símbolos libres (los parámetros) de exprs, salvo los de exclude *)
+freeSymbols[exprs_List, exclude_List] := Complement[
+  Union[Cases[exprs, s_Symbol /; Context[s] =!= "System`", {0, Infinity}, Heads -> False]],
+  exclude];
+
+(* Suposiciones de Assumptions -> Automatic: todos los símbolos libres de exprs, salvo los de
+   exclude, son reales positivos *)
+positiveAssumptions[exprs_List, exclude_List] := And @@ Thread[freeSymbols[exprs, exclude] > 0];
+
 (* --- ShowSteps: los pasos como tabla (número, descripción, expresión) --- *)
 
 (* El error ya se informó en la función que devolvió $Failed *)

@@ -1,6 +1,8 @@
 # Especificación: oscilador amortiguado y forzado, y funciones de Green
 
-Estado: aprobada para implementar. Versión 1 (6 de octubre de 2026).
+Estado: aprobada para implementar. Versión 1.1 (12 de octubre de 2026).
+- v1.1: «Precisiones de la v1.1», al final de la Parte A, que responden las preguntas del PR de
+  `test/driven-oscillator` (tests escritos antes de la implementación).
 Módulo nuevo: `CMToolkit/Kernel/DrivenOscillator.wl` (se agrega al cargador).
 Versión del paquete al terminar: 0.3.0.
 
@@ -145,6 +147,24 @@ Respuesta estacionaria a F(t) = F0 Cos[ω t]: x(t) = A Cos[ω t − δ].
 
 Con γ = 0 y ω = ω0 simbólicamente iguales: mensaje `resonance` (la amplitud estacionaria no
 existe; crece linealmente: usar GreenSolution) y `$Failed`.
+
+## Precisiones de la v1.1
+
+1. **Pasos de "Steps".** `DampedOscillator` tiene 4: ecuación; ensayo e^{r t} y ecuación
+   característica; raíces; régimen y qué significa físicamente. `SteadyState` tiene 5: ensayo
+   complejo; χ(ω); amplitud y fase; frecuencia de resonancia; relación con la función de Green.
+2. **`GreenSolution::var`:** t debe ser un símbolo sin valor que no aparezca en el oscilador (igual
+   que τ en `GreenFunction`).
+3. **`SteadyState::args`:** existe, como en todas las funciones (`SteadyState[___]` con otra forma
+   de llamada da `args` y `$Failed`).
+4. **"MaxAmplitude" sin resonancia** (ω0² ≤ 2γ²): el máximo de A(ω) para ω ≥ 0 está en ω = 0, así
+   que vale F0/(m ω0²), y "ResonanceFrequency" es 0. Si con las suposiciones no se puede decidir
+   si ω0² > 2γ², las dos claves son `Piecewise` con esa condición.
+5. **`params`:** se prueba con γ < 0, con m ≤ 0 y con ω0 ≤ 0.
+6. **Escalón como fuerza.** Además del escalón desde t0 = 0 escrito como la constante F0, se prueba
+   un escalón retardado F0 UnitStep[t − t1] (t1 > 0) desde el reposo: x = 0 para 0 < t < t1, y
+   para t > t1 la solución del escalón desplazada en t1. Se compara a cada lado de t1, sin depender
+   de cómo se escriba el escalón en el resultado.
 
 ## Tests de la Parte A (Tests/DrivenOscillator.wlt)
 
