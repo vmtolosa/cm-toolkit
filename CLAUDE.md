@@ -19,6 +19,9 @@ Mathematica. El paquete es genérico: no menciona ningún curso, institución ni
 - CMToolkit/Kernel/NormalModes.wl: modos normales en N dimensiones (SpringNetwork, SmallOscillations,
   NormalModes, NormalCoordinates, ModeResponse) y sus funciones privadas (systemQ, modesQ,
   niceSimplify, tidy, massOrthonormalize).
+- CMToolkit/Kernel/DrivenOscillator.wl: oscilador amortiguado y forzado (DampedOscillator,
+  GreenFunction, GreenSolution, SteadyState) y sus funciones privadas (oscillatorQ, greenCausal,
+  heldOperator, coefTerm, timedSimplify).
 - Cada módulo: símbolos públicos con ::usage antes de Begin["`Private`"]; sus textos se agregan
   a $texts con AssociateTo; sus defineAlias van al final del módulo. Un módulo nuevo se agrega
   al cargador.
