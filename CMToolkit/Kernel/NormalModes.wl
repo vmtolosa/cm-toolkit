@@ -120,6 +120,15 @@ AssociateTo[$texts, <|
   "NormalModes::symbolic" -> <|
     "Spanish" -> "No se encontraron en 30 s los valores propios en forma cerrada: el sistema es grande o tiene demasiados parámetros simbólicos. Da valores numéricos a los parámetros (por ejemplo con /. {k -> 1, m -> 1}) y vuelve a llamar a NormalModes.",
     "English" -> "The eigenvalues could not be found in closed form within 30 s: the system is large or has too many symbolic parameters. Give numeric values to the parameters (for example with /. {k -> 1, m -> 1}) and call NormalModes again."|>,
+  "NormalModes::basis" -> <|
+    "Spanish" -> "La opción \"Basis\" debe ser una lista de `1` vectores, cada uno con `1` componentes (una por coordenada).",
+    "English" -> "The \"Basis\" option must be a list of `1` vectors, each with `1` components (one per coordinate)."|>,
+  "NormalModes::noteigen" -> <|
+    "Spanish" -> "El vector `1` de \"Basis\", `2`, no es un modo: Kmat\[CenterDot]v no es igual a \[Omega]\.b2 Mmat\[CenterDot]v para ningún \[Omega]\.b2. Cada vector de la base tiene que resolver (Kmat \[Minus] \[Omega]\.b2 Mmat) v = 0.",
+    "English" -> "Vector `1` of \"Basis\", `2`, is not a mode: Kmat\[CenterDot]v is not equal to \[Omega]\.b2 Mmat\[CenterDot]v for any \[Omega]\.b2. Each basis vector must solve (Kmat \[Minus] \[Omega]\.b2 Mmat) v = 0."|>,
+  "NormalModes::rank" -> <|
+    "Spanish" -> "Los vectores de \"Basis\" no son linealmente independientes: alguno es combinación de los otros. Hacen falta `1` modos independientes.",
+    "English" -> "The \"Basis\" vectors are not linearly independent: one of them is a combination of the others. `1` independent modes are needed."|>,
   (* NormalModes: textos de "Steps", en el orden en que se haría a mano *)
   "NormalModes:secular" -> <|
     "Spanish" -> "Ecuación secular: los modos resuelven (Kmat \[Minus] \[Omega]\.b2 Mmat) A = 0, que tiene solución no nula solo si det(Kmat \[Minus] \[Lambda] Mmat) = 0, con \[Lambda] = \[Omega]\.b2. El determinante, factorizado:",
@@ -133,6 +142,9 @@ AssociateTo[$texts, <|
   "NormalModes:basisDegenerate" -> <|
     "Spanish" -> "Para cada \[Omega]\.b2, una base del subespacio de soluciones de (Kmat \[Minus] \[Omega]\.b2 Mmat) A = 0, ortonormalizada con el producto u\[CenterDot]Mmat\[CenterDot]v. En un subespacio degenerado la base es una elección: cualquier combinación de modos de igual frecuencia es también un modo (la opción \"Basis\" permite elegir otra).",
     "English" -> "For each \[Omega]\.b2, a basis of the solution subspace of (Kmat \[Minus] \[Omega]\.b2 Mmat) A = 0, orthonormalized with the product u\[CenterDot]Mmat\[CenterDot]v. In a degenerate subspace the basis is a choice: any combination of modes with the same frequency is also a mode (the \"Basis\" option lets you choose another one)."|>,
+  "NormalModes:basisGiven" -> <|
+    "Spanish" -> "Base elegida (opción \"Basis\"): cada vector v es un modo, con \[Omega]\.b2 = v\[CenterDot]Kmat\[CenterDot]v / v\[CenterDot]Mmat\[CenterDot]v. Dentro de cada subespacio se ortonormaliza con el producto u\[CenterDot]Mmat\[CenterDot]v en el orden dado (Gram-Schmidt): si los vectores ya son Mmat-ortogonales, solo se normalizan. Los modos quedan en el orden de la base.",
+    "English" -> "Chosen basis (\"Basis\" option): each vector v is a mode, with \[Omega]\.b2 = v\[CenterDot]Kmat\[CenterDot]v / v\[CenterDot]Mmat\[CenterDot]v. Within each subspace it is orthonormalized with the product u\[CenterDot]Mmat\[CenterDot]v in the given order (Gram-Schmidt): if the vectors are already Mmat-orthogonal, they are only normalized. The modes keep the order of the basis."|>,
   "NormalModes:zero" -> <|
     "Spanish" -> "Modos nulos (\[Omega]\.b2 = 0): `zero`. Son movimientos que no cambian la energía potencial a segundo orden; en una red de resortes, los que no estiran ningún resorte, como traslaciones y rotaciones rígidas. El rango de Kmat es el número de coordenadas, `n`, menos los modos nulos.",
     "English" -> "Zero modes (\[Omega]\.b2 = 0): `zero`. They are motions that do not change the potential energy to second order; in a spring network, those that stretch no spring, such as rigid translations and rotations. The rank of Kmat is the number of coordinates, `n`, minus the zero modes."|>,
@@ -397,24 +409,57 @@ numericSubspaces[mm_, kk_] := Module[{vals, vecs, ord, tol, groups},
   {If[Abs[#] <= tol, 0, #] &[Mean[#[[All, 1]]]],
     Orthogonalize[#[[All, 2]], #1 . mm . #2 &]} & /@ groups];
 
+(* Opción "Basis": lista de {ω², {modos}, posiciones}, con los ω² en el orden en que aparecen
+   en la base y cada subespacio ortonormalizado en el orden dado; o $Failed con su mensaje *)
+basisSubspaces[basis_, mm_, kk_, asm_] :=
+  Module[{nn = Length[mm], numeric, w2s, bad, tol, sameQ, distinct = {}, pos, groups = {}},
+    If[!MatrixQ[basis] || Dimensions[basis] =!= {nn, nn},
+      cmMessage[NormalModes, "basis", nn]; Return[$Failed]];
+    numeric = inexactQ[{mm, kk, basis}];
+    (* ω² de cada vector con el cociente de Rayleigh; el vector es un modo si Kmat·v = ω² Mmat·v *)
+    w2s = Function[v, With[{den = niceSimplify[v . mm . v, asm]},
+        If[zeroQ[den, asm], $Failed, niceSimplify[v . kk . v/den, asm]]]] /@ basis;
+    bad = SelectFirst[Range[nn], w2s[[#]] === $Failed ||
+        With[{r = kk . basis[[#]] - w2s[[#]] mm . basis[[#]]},
+          If[numeric, Norm[r] > 10^-8 Max[1, Norm[kk . basis[[#]]]],
+            !AllTrue[r, zeroQ[#, asm] &]]] &, None];
+    If[bad =!= None, cmMessage[NormalModes, "noteigen", bad, basis[[bad]]]; Return[$Failed]];
+    If[If[numeric, MatrixRank[basis] < nn, zeroQ[Det[basis], asm]],
+      cmMessage[NormalModes, "rank", nn]; Return[$Failed]];
+    (* Mismos ω² con zeroQ, o a menos de 10^-8 relativo al mayor |ω²| si son inexactos *)
+    tol = 10^-8 Max[1, Abs[w2s]];
+    sameQ[a_, b_] := If[numeric, Abs[a - b] <= tol, zeroQ[a - b, asm]];
+    Do[pos = FirstPosition[distinct, d_ /; sameQ[d, w2s[[i]]], None, {1}];
+      If[pos === None, AppendTo[distinct, w2s[[i]]]; AppendTo[groups, {i}],
+        AppendTo[groups[[First[pos]]], i]],
+      {i, nn}];
+    If[numeric, distinct = If[Abs[#] <= tol, 0, #] & /@ distinct];
+    MapThread[{#1, massOrthonormalize[basis[[#2]], mm, asm], #2} &, {distinct, groups}]];
+
 NormalModes[sys_Association?systemQ, opts : OptionsPattern[]] :=
-  Module[{mm, kk, asm, nn, lam = \[FormalLambda], det, subspaces, omega2, modes, indices, deg,
-      zero, steps},
+  Module[{mm, kk, asm, nn, lam = \[FormalLambda], basis, det, subspaces, omega2, modes, deg, zero,
+      steps},
     mm = sys["Mmat"]; kk = sys["Kmat"]; nn = Length[mm];
     asm = Lookup[sys, "Assumptions", positiveAssumptions[{mm, kk}, {}]];
+    basis = OptionValue["Basis"];
 
     det = Factor[Simplify[Det[kk - lam mm], asm]];
-    subspaces = If[inexactQ[{mm, kk}], numericSubspaces[mm, kk], exactSubspaces[mm, kk, asm]];
-    If[subspaces === $Failed, cmMessage[NormalModes, "symbolic"]; Return[$Failed]];
+    (* subspaces: lista de {ω², {modos}, posiciones de esos modos en "Modes"} *)
+    If[basis =!= Automatic,
+      subspaces = basisSubspaces[basis, mm, kk, asm];
+      If[subspaces === $Failed, Return[$Failed]],
+      subspaces = If[inexactQ[{mm, kk}], numericSubspaces[mm, kk], exactSubspaces[mm, kk, asm]];
+      If[subspaces === $Failed, cmMessage[NormalModes, "symbolic"]; Return[$Failed]];
+      subspaces = MapThread[Append, {subspaces,
+        TakeList[Range[nn], Length /@ subspaces[[All, 2]]]}]];
 
-    omega2 = Join @@ (ConstantArray[#[[1]], Length[#[[2]]]] & /@ subspaces);
-    modes = Join @@ subspaces[[All, 2]];
-    indices = TakeList[Range[nn], Length /@ subspaces[[All, 2]]];
-    deg = MapThread[<|"Omega2" -> #1[[1]], "Multiplicity" -> Length[#1[[2]]], "Indices" -> #2|> &,
-      {subspaces, indices}];
+    omega2 = modes = ConstantArray[0, nn];
+    Do[omega2[[s[[3]]]] = s[[1]]; modes[[s[[3]]]] = s[[2]], {s, subspaces}];
+    deg = <|"Omega2" -> #[[1]], "Multiplicity" -> Length[#[[2]]], "Indices" -> #[[3]]|> & /@
+      subspaces;
     zero = Count[omega2, w_ /; zeroQ[w, asm]];
 
-    steps = normalModesSteps[mm, det, subspaces, deg, modes, zero, nn, asm];
+    steps = normalModesSteps[mm, det, subspaces, deg, modes, zero, nn, asm, basis =!= Automatic];
 
     Join[KeyDrop[sys, "Steps"],
       <|"SecularDeterminant" -> det, "Omega2" -> omega2,
@@ -429,13 +474,15 @@ NormalModes[mm_?SquareMatrixQ, kk_?SquareMatrixQ, opts : OptionsPattern[]] /;
     "Assumptions" -> positiveAssumptions[{mm, kk}, {}]|>, opts];
 
 (* "Steps" de NormalModes, en el orden en que se haría a mano *)
-normalModesSteps[mm_, det_, subspaces_, deg_, modes_, zero_, nn_, asm_] := Module[{steps},
+normalModesSteps[mm_, det_, subspaces_, deg_, modes_, zero_, nn_, asm_, given_] :=
+ Module[{steps},
   steps = {
     {"secular", "det(Kmat \[Minus] \[Lambda] Mmat)" == (det /. \[FormalLambda] -> "\[Lambda]")},
     {"roots", Grid[Prepend[{#["Omega2"], #["Multiplicity"]} & /@ deg,
         tableText /@ tr /@ {"NormalModes:omega2", "NormalModes:multiplicity"}],
       Alignment -> Left, Spacings -> {3, 0.6}, Dividers -> {None, {2 -> GrayLevel[0.8]}}]},
-    {If[Max[Length /@ subspaces[[All, 2]]] > 1, "basisDegenerate", "basis"],
+    {Which[given, "basisGiven", Max[Length /@ subspaces[[All, 2]]] > 1, "basisDegenerate",
+        True, "basis"],
       Grid[Prepend[{#[[1]], Column[#[[2]]]} & /@ subspaces,
         tableText /@ tr /@ {"NormalModes:omega2", "NormalModes:modes"}],
       Alignment -> {Left, Center}, Spacings -> {3, 0.8}, Dividers -> {None, {2 -> GrayLevel[0.8]}}]},
