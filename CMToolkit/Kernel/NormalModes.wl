@@ -597,6 +597,11 @@ NormalModes[___] := (cmMessage[NormalModes, "args"]; $Failed);
 
 (* --- NormalCoordinates: especificación en docs/specs/NormalModes.md --- *)
 
+(* En "Steps", los símbolos formales se muestran sin el punto debajo: \[FormalCapitalQ][n] como
+   Q_n, \[FormalQ][n] como q_n y \[FormalT] como t. Las claves de datos no cambian *)
+formalDisplay[e_] := e /. {\[FormalCapitalQ][n_] :> Subscript["Q", n],
+  \[FormalQ][n_] :> Subscript["q", n], \[FormalT] -> Style["t", Italic]};
+
 (* Un resultado de NormalModes: un sistema con N modos y N valores de ω² *)
 modesQ[res_Association] := systemQ[res] &&
   MatrixQ[Lookup[res, "Modes"]] && Dimensions[res["Modes"]] === Dimensions[res["Mmat"]] &&
@@ -628,7 +633,8 @@ NormalCoordinates[res_Association?modesQ, names_List] /; normalNamesQ[names, res
       {"ofq", Column[Thread[names == ofq]]},
       {"ofQ", Column[Thread[coords == ofQ]]},
       {"lagrangian", "L" == heldModeSum[names, w2, tt, asm]}};
-    steps = <|"Description" -> tr["NormalCoordinates:" <> #[[1]]], "Expression" -> #[[2]]|> & /@
+    steps = <|"Description" -> tr["NormalCoordinates:" <> #[[1]]],
+      "Expression" -> formalDisplay[#[[2]]]|> & /@
       steps;
 
     <|"NormalCoordinates" -> ofq, "Inverse" -> ofQ, "Lagrangian" -> lag, "Steps" -> steps|>
@@ -678,7 +684,8 @@ ModeResponse[res_Association?modesQ, q0_, v0_, t_Symbol] /;
       {"solution", Column[MapThread[#1[t] == #2 &, {coords, sol}]]},
       {"energy", Column[{modeTable[{"E_n", tr["ModeResponse:share"]}, {energies, shares}],
         "E" == total}, Spacings -> 1]}};
-    steps = <|"Description" -> tr["ModeResponse:" <> #[[1]]], "Expression" -> #[[2]]|> & /@
+    steps = <|"Description" -> tr["ModeResponse:" <> #[[1]]],
+      "Expression" -> formalDisplay[#[[2]]]|> & /@
       steps;
 
     Join[KeyDrop[res, "Steps"],
