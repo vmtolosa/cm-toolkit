@@ -148,6 +148,9 @@ AssociateTo[$texts, <|
   "NormalModes:basisGiven" -> <|
     "Spanish" -> "Base elegida (opción \"Basis\"): cada vector v es un modo, con \[Omega]\.b2 = v\[CenterDot]Kmat\[CenterDot]v / v\[CenterDot]Mmat\[CenterDot]v. Dentro de cada subespacio se ortonormaliza con el producto u\[CenterDot]Mmat\[CenterDot]v en el orden dado (Gram-Schmidt): si los vectores ya son Mmat-ortogonales, solo se normalizan. Los modos quedan en el orden de la base.",
     "English" -> "Chosen basis (\"Basis\" option): each vector v is a mode, with \[Omega]\.b2 = v\[CenterDot]Kmat\[CenterDot]v / v\[CenterDot]Mmat\[CenterDot]v. Within each subspace it is orthonormalized with the product u\[CenterDot]Mmat\[CenterDot]v in the given order (Gram-Schmidt): if the vectors are already Mmat-orthogonal, they are only normalized. The modes keep the order of the basis."|>,
+  "NormalModes:zeroNone" -> <|
+    "Spanish" -> "No hay modos nulos: Kmat tiene rango completo.",
+    "English" -> "There are no zero modes: Kmat has full rank."|>,
   "NormalModes:zero" -> <|
     "Spanish" -> "Modos nulos (\[Omega]\.b2 = 0): `zero`. Son movimientos que no cambian la energía potencial a segundo orden; en una red de resortes, los que no estiran ningún resorte, como traslaciones y rotaciones rígidas. El rango de Kmat es el número de coordenadas, `n`, menos los modos nulos.",
     "English" -> "Zero modes (\[Omega]\.b2 = 0): `zero`. They are motions that do not change the potential energy to second order; in a spring network, those that stretch no spring, such as rigid translations and rotations. The rank of Kmat is the number of coordinates, `n`, minus the zero modes."|>,
@@ -587,7 +590,7 @@ normalModesSteps[mm_, det_, subspaces_, deg_, modes_, zero_, nn_, asm_, given_] 
       Grid[Prepend[{#[[1]], Column[modeForm[#, asm] & /@ #[[2]]]} & /@ subspaces,
         tableText /@ tr /@ {"NormalModes:omega2", "NormalModes:modes"}],
       Alignment -> {Left, Center}, Spacings -> {3, 0.8}, Dividers -> {None, {2 -> GrayLevel[0.8]}}]},
-    {"zero", Row[{tr["NormalModes:rank"], "(Kmat) = ", nn, " \[Minus] ", zero, " = ", nn - zero}]},
+    {If[zero === 0, "zeroNone", "zero"], Row[{tr["NormalModes:rank"], "(Kmat) = ", nn, " \[Minus] ", zero, " = ", nn - zero}]},
     {"check", "A\[CenterDot]Mmat\[CenterDot]A\[Transpose]" ==
       MatrixForm[niceSimplify[modes . mm . Transpose[modes], asm]]}};
   <|"Description" -> tr["NormalModes:" <> #[[1]], <|"zero" -> zero, "n" -> nn|>],
