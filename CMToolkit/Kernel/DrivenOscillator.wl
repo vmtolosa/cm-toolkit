@@ -26,6 +26,13 @@ SolucionDeGreen::usage =
   "SolucionDeGreen[osc, F, {t, t0}, {x0, v0}] es el alias en español de GreenSolution. Los mensajes de error aparecen con el nombre GreenSolution.\n\
 SolucionDeGreen[osc, F, {t, t0}, {x0, v0}] is the Spanish alias of GreenSolution. Error messages appear under the name GreenSolution.";
 
+SteadyState::usage =
+  "SteadyState[osc, F0, \[Omega]] entrega la respuesta estacionaria del oscilador osc de DampedOscillator a la fuerza F0 Cos[\[Omega] t]: x(t) = A Cos[\[Omega] t \[Minus] \[Delta]]. Entrega una Association con la amplitud A, la fase \[Delta], la susceptibilidad \[Chi](\[Omega]), la frecuencia de resonancia, la amplitud máxima, la solución y los pasos intermedios (\"Steps\"). Alias: EstadoEstacionario.\n\
+SteadyState[osc, F0, \[Omega]] gives the steady-state response of the oscillator osc from DampedOscillator to the force F0 Cos[\[Omega] t]: x(t) = A Cos[\[Omega] t \[Minus] \[Delta]]. It returns an Association with the amplitude A, the phase \[Delta], the susceptibility \[Chi](\[Omega]), the resonance frequency, the maximum amplitude, the solution and the intermediate steps (\"Steps\").";
+EstadoEstacionario::usage =
+  "EstadoEstacionario[osc, F0, \[Omega]] es el alias en español de SteadyState. Los mensajes de error aparecen con el nombre SteadyState.\n\
+EstadoEstacionario[osc, F0, \[Omega]] is the Spanish alias of SteadyState. Error messages appear under the name SteadyState.";
+
 Begin["`Private`"];
 
 (* Textos de este módulo: se agregan a la tabla $texts de Core.wl *)
@@ -122,7 +129,29 @@ AssociateTo[$texts, <|
     "English" -> "Total solution: x = x_h + x_p."|>,
   "GreenSolution:note" -> <|
     "Spanish" -> "Las condiciones iniciales entran solo en la parte homogénea, y la fuerza solo en la particular: cambiar x0 o v0 no cambia x_p, y cambiar F no cambia x_h.",
-    "English" -> "The initial conditions enter only the homogeneous part, and the force only the particular one: changing x0 or v0 does not change x_p, and changing F does not change x_h."|>
+    "English" -> "The initial conditions enter only the homogeneous part, and the force only the particular one: changing x0 or v0 does not change x_p, and changing F does not change x_h."|>,
+  "SteadyState::args" -> <|
+    "Spanish" -> "SteadyState se llama con un oscilador de DampedOscillator, la amplitud de la fuerza y su frecuencia: SteadyState[osc, F0, \[Omega]], para F(t) = F0 Cos[\[Omega] t].",
+    "English" -> "SteadyState takes an oscillator from DampedOscillator, the amplitude of the force and its frequency: SteadyState[osc, F0, \[Omega]], for F(t) = F0 Cos[\[Omega] t]."|>,
+  "SteadyState::resonance" -> <|
+    "Spanish" -> "Sin amortiguamiento y con \[Omega] = \[Omega]0 no hay respuesta estacionaria: la amplitud crece linealmente con el tiempo. Usa GreenSolution para ver ese crecimiento.",
+    "English" -> "With no damping and \[Omega] = \[Omega]0 there is no steady-state response: the amplitude grows linearly with time. Use GreenSolution to see that growth."|>,
+  (* SteadyState: textos de "Steps", los cinco pasos de la especificación *)
+  "SteadyState:trial" -> <|
+    "Spanish" -> "Ensayo complejo: F0 Cos[\[Omega] t] es la parte real de F0 e^(i\[Omega] t). Se busca x = Re(X e^(i\[Omega] t)): al reemplazarlo, la ecuación queda algebraica para X.",
+    "English" -> "Complex trial: F0 Cos[\[Omega] t] is the real part of F0 e^(i\[Omega] t). One looks for x = Re(X e^(i\[Omega] t)): substituting it, the equation becomes algebraic for X."|>,
+  "SteadyState:susceptibility" -> <|
+    "Spanish" -> "Susceptibilidad: X = \[Chi](\[Omega]) F0, con \[Chi](\[Omega]) = 1/(m (\[Omega]0\.b2 \[Minus] \[Omega]\.b2 + 2i\[Gamma]\[Omega])).",
+    "English" -> "Susceptibility: X = \[Chi](\[Omega]) F0, with \[Chi](\[Omega]) = 1/(m (\[Omega]0\.b2 \[Minus] \[Omega]\.b2 + 2i\[Gamma]\[Omega]))."|>,
+  "SteadyState:amplitude" -> <|
+    "Spanish" -> "Amplitud y fase: A = F0 |\[Chi]| y \[Delta] es el ángulo de 1/\[Chi], entre 0 y \[Pi]: la respuesta se atrasa respecto a la fuerza, poco por debajo de \[Omega]0 y casi \[Pi] por encima.",
+    "English" -> "Amplitude and phase: A = F0 |\[Chi]| and \[Delta] is the angle of 1/\[Chi], between 0 and \[Pi]: the response lags behind the force, a little below \[Omega]0 and almost \[Pi] above it."|>,
+  "SteadyState:resonance" -> <|
+    "Spanish" -> "Resonancia: A(\[Omega]) es máxima en \[Omega]_r = \[Sqrt](\[Omega]0\.b2 \[Minus] 2\[Gamma]\.b2) si \[Omega]0\.b2 > 2\[Gamma]\.b2, con A_max = F0/(2m\[Gamma]\[Omega]_d). Si no, A(\[Omega]) decrece desde \[Omega] = 0, donde vale F0/(m \[Omega]0\.b2), y \[Omega]_r = 0.",
+    "English" -> "Resonance: A(\[Omega]) is maximal at \[Omega]_r = \[Sqrt](\[Omega]0\.b2 \[Minus] 2\[Gamma]\.b2) if \[Omega]0\.b2 > 2\[Gamma]\.b2, with A_max = F0/(2m\[Gamma]\[Omega]_d). Otherwise A(\[Omega]) decreases from \[Omega] = 0, where it equals F0/(m \[Omega]0\.b2), and \[Omega]_r = 0."|>,
+  "SteadyState:green" -> <|
+    "Spanish" -> "Relación con la función de Green: \[Chi](\[Omega]) es su transformada de Fourier. La respuesta a e^(i\[Omega] t) es la suma de las respuestas a los golpes de los que está hecha.",
+    "English" -> "Relation to the Green's function: \[Chi](\[Omega]) is its Fourier transform. The response to e^(i\[Omega] t) is the sum of the responses to the impulses it is made of."|>
 |>];
 
 (* --- Funciones privadas de este módulo --- *)
@@ -331,9 +360,51 @@ GreenSolution[osc_Association?oscillatorQ, F_, {t_, t0_}, {x0_, v0_}, opts : Opt
 
 GreenSolution[___] := (cmMessage[GreenSolution, "args"]; $Failed);
 
+(* --- SteadyState: especificación en docs/specs/DrivenOscillator.md --- *)
+
+SteadyState[osc_Association?oscillatorQ, F0_, om_] :=
+  Module[{m, g, w, asm, chi, amp, phase, cond, decided, rfYes, maxYes, maxNo, rf, maxA, steps},
+    m = osc["Mass"]; g = osc["Gamma"]; w = osc["Omega0"];
+    asm = osc["Assumptions"] && positiveAssumptions[{F0, om}, {}];
+    If[zeroQ[g, asm] && zeroQ[om - w, asm],
+      cmMessage[SteadyState, "resonance"]; Return[$Failed]];
+
+    chi = Simplify[1/(m (w^2 - om^2 + 2 I g om)), asm];
+    amp = tidySimplify[(F0/m)/Sqrt[(w^2 - om^2)^2 + 4 g^2 om^2], asm];
+    phase = ArcTan[w^2 - om^2, 2 g om];
+
+    (* Resonancia si ω0² > 2γ²; si no, el máximo está en ω = 0 (v1.1, precisión 4). Si las
+       suposiciones no lo deciden, Piecewise con esa condición *)
+    cond = w^2 > 2 g^2;
+    rfYes = tidySimplify[Sqrt[w^2 - 2 g^2], asm];
+    maxYes = If[zeroQ[g, asm], Infinity, tidySimplify[F0/(2 m g Sqrt[w^2 - g^2]), asm]];
+    maxNo = tidySimplify[F0/(m w^2), asm];
+    decided = Simplify[cond, asm];
+    {rf, maxA} = Which[
+      TrueQ[decided], {rfYes, maxYes},
+      decided === False, {0, maxNo},
+      True, {Piecewise[{{rfYes, cond}}, 0], Piecewise[{{maxYes, cond}}, maxNo]}];
+
+    steps = With[{oo = om, cc = chi},
+      {{"trial", HoldForm["x"["t"] == Re["X" Exp[I oo "t"]]]},
+       {"susceptibility", HoldForm["\[Chi]"[oo] == cc]},
+       {"amplitude", Column[{"A" == amp, "\[Delta]" == phase}]},
+       {"resonance", Column[{Subscript["\[Omega]", "r"] == rf, Subscript["A", "max"] == maxA}]},
+       {"green", HoldForm["\[Chi]"[oo] ==
+         Integrate["G"["\[Tau]"] Exp[-I oo "\[Tau]"], {"\[Tau]", 0, Infinity}]]}}];
+    steps = <|"Description" -> tr["SteadyState:" <> #[[1]]], "Expression" -> #[[2]]|> & /@
+      steps;
+
+    <|"Amplitude" -> amp, "Phase" -> phase, "Susceptibility" -> chi, "ResonanceFrequency" -> rf,
+      "MaxAmplitude" -> maxA, "Solution" -> amp Cos[om \[FormalT] - phase], "Steps" -> steps|>
+  ];
+
+SteadyState[___] := (cmMessage[SteadyState, "args"]; $Failed);
+
 (* --- Alias en español (al final, cuando las funciones ya tienen sus atributos) --- *)
 defineAlias[OsciladorAmortiguado, DampedOscillator];
 defineAlias[FuncionDeGreen, GreenFunction];
 defineAlias[SolucionDeGreen, GreenSolution];
+defineAlias[EstadoEstacionario, SteadyState];
 
 End[];
