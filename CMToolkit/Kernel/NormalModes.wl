@@ -118,8 +118,11 @@ AssociateTo[$texts, <|
     "Spanish" -> "NormalModes se llama con un sistema de SpringNetwork o SmallOscillations, NormalModes[sistema], o con las dos matrices, NormalModes[Mmat, Kmat].",
     "English" -> "NormalModes takes a system from SpringNetwork or SmallOscillations, NormalModes[system], or the two matrices, NormalModes[Mmat, Kmat]."|>,
   "NormalModes::symbolic" -> <|
-    "Spanish" -> "No se encontraron en 30 s los valores propios en forma cerrada: el sistema es grande o tiene demasiados parámetros simbólicos. Da valores numéricos a los parámetros (por ejemplo con /. {k -> 1, m -> 1}) y vuelve a llamar a NormalModes.",
-    "English" -> "The eigenvalues could not be found in closed form within 30 s: the system is large or has too many symbolic parameters. Give numeric values to the parameters (for example with /. {k -> 1, m -> 1}) and call NormalModes again."|>,
+    "Spanish" -> "No se encontraron los valores propios en forma cerrada: no salieron en 30 s, o salieron solo como Root (raíces de un polinomio sin fórmula). El sistema es grande o tiene demasiados parámetros simbólicos. Da valores numéricos a los parámetros (por ejemplo con /. {k -> 1, m -> 1}) y vuelve a llamar a NormalModes.",
+    "English" -> "The eigenvalues could not be found in closed form: they did not come out within 30 s, or came out only as Root (roots of a polynomial with no formula). The system is large or has too many symbolic parameters. Give numeric values to the parameters (for example with /. {k -> 1, m -> 1}) and call NormalModes again."|>,
+  "NormalModes::nullspace" -> <|
+    "Spanish" -> "Para \[Omega]\.b2 = `1` no se encontraron tantos modos independientes como indica su multiplicidad, `2`: Mathematica no logró simplificar Kmat \[Minus] \[Omega]\.b2 Mmat lo suficiente. Da valores numéricos a los parámetros (por ejemplo con /. {k -> 1, m -> 1}) o agrega suposiciones con la opción Assumptions del sistema.",
+    "English" -> "For \[Omega]\.b2 = `1`, fewer independent modes were found than its multiplicity, `2`: Mathematica could not simplify Kmat \[Minus] \[Omega]\.b2 Mmat enough. Give numeric values to the parameters (for example with /. {k -> 1, m -> 1}) or add assumptions with the Assumptions option of the system."|>,
   "NormalModes::basis" -> <|
     "Spanish" -> "La opción \"Basis\" debe ser una lista de `1` vectores, cada uno con `1` componentes (una por coordenada).",
     "English" -> "The \"Basis\" option must be a list of `1` vectors, each with `1` components (one per coordinate)."|>,
@@ -196,6 +199,10 @@ AssociateTo[$texts, <|
   "ModeResponse:mode" -> <|"Spanish" -> "Modo", "English" -> "Mode"|>,
   "ModeResponse:share" -> <|"Spanish" -> "Fracción", "English" -> "Share"|>
 |>];
+
+(* El atajo NormalModes[Mmat, Kmat] rechaza una Mmat singular con el mismo texto que
+   SmallOscillations *)
+AssociateTo[$texts, "NormalModes::mass" -> $texts["SmallOscillations::mass"]];
 
 (* --- SpringNetwork: especificación en docs/specs/NormalModes.md --- *)
 
@@ -430,12 +437,13 @@ massOrthonormalize[vecs_List, mm_, asm_] := Module[{basis = {}, u},
     {v, vecs}];
   basis];
 
-(* Subespacios exactos: lista de {ω², {modos}} con los modos Mmat-ortonormales, o $Failed si
-   Eigenvalues no da forma cerrada en 30 s *)
+(* Subespacios exactos: lista de {ω², {modos}} con los modos Mmat-ortonormales, o $Failed con
+   su mensaje: symbolic si Eigenvalues no da forma cerrada en 30 s, nullspace si NullSpace no
+   da tantos modos como la multiplicidad *)
 exactSubspaces[mm_, kk_, asm_] := Module[{vals, distinct = {}, mult = {}, pos, order},
   vals = TimeConstrained[Eigenvalues[{kk, mm}], 30, $TimedOut];
   If[vals === $TimedOut || (!FreeQ[vals, _Root] && freeSymbols[{mm, kk}, {}] =!= {}),
-    Return[$Failed]];
+    cmMessage[NormalModes, "symbolic"]; Return[$Failed]];
   (* ω² distintos con su multiplicidad, en el orden en que salen *)
   Do[pos = FirstPosition[distinct, d_ /; zeroQ[d - v, asm], None, {1}];
     If[pos === None, AppendTo[distinct, v]; AppendTo[mult, 1], mult[[First[pos]]] += 1],
@@ -445,7 +453,7 @@ exactSubspaces[mm_, kk_, asm_] := Module[{vals, distinct = {}, mult = {}, pos, o
     Replace[Simplify[a <= b, asm], {True -> True, False -> False, _ :> Throw[None]}]]]];
   If[order =!= None, distinct = distinct[[order]]; mult = mult[[order]]];
   MapThread[Function[{w2, g}, With[{ns = NullSpace[Simplify[kk - w2 mm, asm]]},
-      If[Length[ns] =!= g, Return[$Failed, Module]];
+      If[Length[ns] =!= g, cmMessage[NormalModes, "nullspace", w2, g]; Return[$Failed, Module]];
       {w2, massOrthonormalize[ns, mm, asm]}]],
     {distinct, mult}]];
 
@@ -499,7 +507,7 @@ NormalModes[sys_Association?systemQ, opts : OptionsPattern[]] :=
       subspaces = basisSubspaces[basis, mm, kk, asm];
       If[subspaces === $Failed, Return[$Failed]],
       subspaces = If[inexactQ[{mm, kk}], numericSubspaces[mm, kk], exactSubspaces[mm, kk, asm]];
-      If[subspaces === $Failed, cmMessage[NormalModes, "symbolic"]; Return[$Failed]];
+      If[subspaces === $Failed, Return[$Failed]];
       subspaces = MapThread[Append, {subspaces,
         TakeList[Range[nn], Length /@ subspaces[[All, 2]]]}]];
 
@@ -520,8 +528,11 @@ NormalModes[sys_Association?systemQ, opts : OptionsPattern[]] :=
 (* Atajo: las matrices directamente, con coordenadas \[FormalQ][1], …, \[FormalQ][N] *)
 NormalModes[mm_?SquareMatrixQ, kk_?SquareMatrixQ, opts : OptionsPattern[]] /;
     Length[mm] === Length[kk] :=
-  NormalModes[<|"Coordinates" -> Array[\[FormalQ], Length[mm]], "Mmat" -> mm, "Kmat" -> kk,
-    "Assumptions" -> positiveAssumptions[{mm, kk}, {}]|>, opts];
+  With[{asm = positiveAssumptions[{mm, kk}, {}]},
+    If[zeroQ[Det[mm], asm],
+      cmMessage[NormalModes, "mass", mm]; $Failed,
+      NormalModes[<|"Coordinates" -> Array[\[FormalQ], Length[mm]], "Mmat" -> mm, "Kmat" -> kk,
+        "Assumptions" -> asm|>, opts]]];
 
 (* "Steps" de NormalModes, en el orden en que se haría a mano *)
 normalModesSteps[mm_, det_, subspaces_, deg_, modes_, zero_, nn_, asm_, given_] :=

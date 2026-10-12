@@ -427,6 +427,15 @@ VerificationTest[
   TestID -> "modos-atajo-matrices-pendulo-doble"
 ]
 
+(* Atajo con Mmat singular: la segunda coordenada no tiene término cinético *)
+VerificationTest[
+  Module[{mm = {{m, 0}, {0, 0}}},
+    {Det[mm], NormalModes[mm, {{2 k, -k}, {-k, 2 k}}]}],
+  {0, $Failed},
+  {NormalModes::mass},
+  TestID -> "modos-atajo-error-masa-singular"
+]
+
 (* --- Errores de SpringNetwork --- *)
 
 VerificationTest[
