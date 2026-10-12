@@ -19,6 +19,13 @@ FuncionDeGreen::usage =
   "FuncionDeGreen[osc, \[Tau]] es el alias en español de GreenFunction. Los mensajes de error aparecen con el nombre GreenFunction.\n\
 FuncionDeGreen[osc, \[Tau]] is the Spanish alias of GreenFunction. Error messages appear under the name GreenFunction.";
 
+GreenSolution::usage =
+  "GreenSolution[osc, F, {t, t0}, {x0, v0}] resuelve m(x\:0308 + 2\[Gamma] x\:0307 + \[Omega]0\.b2 x) = F(t) para t \[GreaterEqual] t0 con x(t0) = x0 y x\:0307(t0) = v0, para el oscilador osc de DampedOscillator y una fuerza F escrita en t. La solución particular sale de la integral de convolución con la función de Green y parte en reposo; la homogénea lleva las condiciones iniciales. Entrega una Association con las soluciones homogénea, particular y total, la integral de convolución, el método (\"Symbolic\" o \"Numeric\") y los pasos intermedios (\"Steps\"). Opción: \"MaxTime\" -> 50 (solo si la integral se calcula numéricamente). Alias: SolucionDeGreen.\n\
+GreenSolution[osc, F, {t, t0}, {x0, v0}] solves m(x\:0308 + 2\[Gamma] x\:0307 + \[Omega]0\.b2 x) = F(t) for t \[GreaterEqual] t0 with x(t0) = x0 and x\:0307(t0) = v0, for the oscillator osc from DampedOscillator and a force F written in t. The particular solution comes from the convolution integral with the Green's function and starts at rest; the homogeneous one carries the initial conditions. It returns an Association with the homogeneous, particular and total solutions, the convolution integral, the method (\"Symbolic\" or \"Numeric\") and the intermediate steps (\"Steps\"). Option: \"MaxTime\" -> 50 (used only when the integral is computed numerically).";
+SolucionDeGreen::usage =
+  "SolucionDeGreen[osc, F, {t, t0}, {x0, v0}] es el alias en español de GreenSolution. Los mensajes de error aparecen con el nombre GreenSolution.\n\
+SolucionDeGreen[osc, F, {t, t0}, {x0, v0}] is the Spanish alias of GreenSolution. Error messages appear under the name GreenSolution.";
+
 Begin["`Private`"];
 
 (* Textos de este módulo: se agregan a la tabla $texts de Core.wl *)
@@ -75,7 +82,47 @@ AssociateTo[$texts, <|
     "English" -> "Conditions at \[Tau] = 0: G is continuous (it is 0 just after the impulse) and, integrating the equation over a small interval around 0, G' jumps by 1/m."|>,
   "GreenFunction:result" -> <|
     "Spanish" -> "Resultado: la solución homogénea que cumple esas condiciones, multiplicada por el escalón HeavisideTheta[\[Tau]].",
-    "English" -> "Result: the homogeneous solution that satisfies those conditions, multiplied by the step HeavisideTheta[\[Tau]]."|>
+    "English" -> "Result: the homogeneous solution that satisfies those conditions, multiplied by the step HeavisideTheta[\[Tau]]."|>,
+  "GreenSolution::args" -> <|
+    "Spanish" -> "GreenSolution se llama con cuatro argumentos: GreenSolution[osc, F, {t, t0}, {x0, v0}], con osc de DampedOscillator, la fuerza F escrita en t, el instante inicial t0 y las condiciones iniciales x(t0) = x0 y x\:0307(t0) = v0. Por ejemplo: GreenSolution[osc, F0 Cos[\[Omega] t], {t, 0}, {0, 0}].",
+    "English" -> "GreenSolution takes four arguments: GreenSolution[osc, F, {t, t0}, {x0, v0}], with osc from DampedOscillator, the force F written in t, the initial time t0 and the initial conditions x(t0) = x0 and x\:0307(t0) = v0. For example: GreenSolution[osc, F0 Cos[\[Omega] t], {t, 0}, {0, 0}]."|>,
+  "GreenSolution::var" -> <|
+    "Spanish" -> "El tiempo debe ser un símbolo sin valor asignado que no aparezca en el oscilador; `1` no cumple.",
+    "English" -> "The time must be a symbol with no assigned value that does not appear in the oscillator; `1` does not qualify."|>,
+  "GreenSolution::ic" -> <|
+    "Spanish" -> "El instante inicial y las condiciones iniciales no pueden depender del tiempo `1`: `2`.",
+    "English" -> "The initial time and the initial conditions cannot depend on the time `1`: `2`."|>,
+  "GreenSolution::integral" -> <|
+    "Spanish" -> "La integral de convolución no tiene forma cerrada (o no salió en 20 s), y con parámetros simbólicos no se puede calcular numéricamente. \"Particular\" queda como la integral sin evaluar. Da valores numéricos a los parámetros para obtener la solución numérica.",
+    "English" -> "The convolution integral has no closed form (or did not come out within 20 s), and with symbolic parameters it cannot be computed numerically. \"Particular\" is left as the unevaluated integral. Give numeric values to the parameters to get the numerical solution."|>,
+  (* GreenSolution: textos de "Steps", los siete pasos de la especificación *)
+  "GreenSolution:equation" -> <|
+    "Spanish" -> "Ecuación del oscilador forzado: x\:0308 + 2\[Gamma] x\:0307 + \[Omega]0\.b2 x = F(t)/m.",
+    "English" -> "Equation of the driven oscillator: x\:0308 + 2\[Gamma] x\:0307 + \[Omega]0\.b2 x = F(t)/m."|>,
+  "GreenSolution:green" -> <|
+    "Spanish" -> "Función de Green del oscilador: la respuesta a un golpe unitario.",
+    "English" -> "Green's function of the oscillator: the response to a unit impulse."|>,
+  "GreenSolution:convolution" -> <|
+    "Spanish" -> "La fuerza es una suma de golpes F(t\[Prime]) dt\[Prime], y cada uno produce la respuesta G(t \[Minus] t\[Prime]) F(t\[Prime]) dt\[Prime]. Al sumarlas queda la integral de convolución, que parte en reposo en t0.",
+    "English" -> "The force is a sum of impulses F(t\[Prime]) dt\[Prime], and each one produces the response G(t \[Minus] t\[Prime]) F(t\[Prime]) dt\[Prime]. Adding them up gives the convolution integral, which starts at rest at t0."|>,
+  "GreenSolution:particular" -> <|
+    "Spanish" -> "Solución particular: la integral calculada. Cumple x_p(t0) = 0 y x\:0307_p(t0) = 0.",
+    "English" -> "Particular solution: the computed integral. It satisfies x_p(t0) = 0 and x\:0307_p(t0) = 0."|>,
+  "GreenSolution:particularNumeric" -> <|
+    "Spanish" -> "Solución particular: la integral no tiene forma cerrada, así que se calcula numéricamente (función de interpolación), partiendo en reposo en t0.",
+    "English" -> "Particular solution: the integral has no closed form, so it is computed numerically (interpolating function), starting at rest at t0."|>,
+  "GreenSolution:particularOpen" -> <|
+    "Spanish" -> "Solución particular: la integral no tiene forma cerrada y queda sin evaluar.",
+    "English" -> "Particular solution: the integral has no closed form and is left unevaluated."|>,
+  "GreenSolution:homogeneous" -> <|
+    "Spanish" -> "Solución homogénea con las condiciones iniciales: x_h(t) = m [v0 G(t \[Minus] t0) + x0 (G\[Prime](t \[Minus] t0) + 2\[Gamma] G(t \[Minus] t0))], que cumple x_h(t0) = x0 y x\:0307_h(t0) = v0.",
+    "English" -> "Homogeneous solution with the initial conditions: x_h(t) = m [v0 G(t \[Minus] t0) + x0 (G\[Prime](t \[Minus] t0) + 2\[Gamma] G(t \[Minus] t0))], which satisfies x_h(t0) = x0 and x\:0307_h(t0) = v0."|>,
+  "GreenSolution:total" -> <|
+    "Spanish" -> "Solución total: x = x_h + x_p.",
+    "English" -> "Total solution: x = x_h + x_p."|>,
+  "GreenSolution:note" -> <|
+    "Spanish" -> "Las condiciones iniciales entran solo en la parte homogénea, y la fuerza solo en la particular: cambiar x0 o v0 no cambia x_p, y cambiar F no cambia x_h.",
+    "English" -> "The initial conditions enter only the homogeneous part, and the force only the particular one: changing x0 or v0 does not change x_p, and changing F does not change x_h."|>
 |>];
 
 (* --- Funciones privadas de este módulo --- *)
@@ -124,6 +171,12 @@ greenCausal[osc_, tau_] := With[{m = osc["Mass"], g = osc["Gamma"], w = osc["Ome
 (* Lado izquierdo y'' + 2γ y' + ω0² y retenido, con y el nombre dado (una cadena) *)
 heldOperator[y_String, var_, g_, w_] := heldSum[{HoldForm[Derivative[2][y][var]],
   coefTerm[2 g, HoldForm[Derivative[1][y][var]]], coefTerm[w^2, HoldForm[y[var]]]}];
+
+(* Simplify con límite de tiempo: si tarda más de 10 s, la expresión queda como está *)
+timedSimplify[e_, asm_] := TimeConstrained[Simplify[e, asm], 10, e];
+
+(* En "Steps", la variable de integración \[FormalS] se muestra como t′ y \[FormalTau] como τ *)
+greenDisplay[e_] := e /. {\[FormalS] -> "t\[Prime]", \[FormalTau] -> "\[Tau]"};
 
 (* --- DampedOscillator: especificación en docs/specs/DrivenOscillator.md --- *)
 
@@ -215,8 +268,72 @@ GreenFunction[osc_Association?oscillatorQ, tau_] :=
 
 GreenFunction[___] := (cmMessage[GreenFunction, "args"]; $Failed);
 
+(* --- GreenSolution: especificación en docs/specs/DrivenOscillator.md --- *)
+
+Options[GreenSolution] = {"MaxTime" -> 50};
+
+GreenSolution[osc_Association?oscillatorQ, F_, {t_, t0_}, {x0_, v0_}, opts : OptionsPattern[]] :=
+  Module[{m, g, w, asm, s = \[FormalS], tau = \[FormalTau], gt, integrand, conv, xp, xh, method,
+      kind, tmax, steps},
+    If[!freeVariableQ[t, oscillatorData[osc]],
+      cmMessage[GreenSolution, "var", t]; Return[$Failed]];
+    If[!FreeQ[{t0, x0, v0}, t],
+      cmMessage[GreenSolution, "ic", t, {t0, x0, v0}]; Return[$Failed]];
+    m = osc["Mass"]; g = osc["Gamma"]; w = osc["Omega0"];
+    (* Las del oscilador, los parámetros de la fuerza y t0 reales positivos (como en todo el
+       paquete) y t > t0 *)
+    asm = osc["Assumptions"] && positiveAssumptions[{F, t0}, {t}] && t > t0;
+    gt = greenCausal[osc, tau];
+
+    (* Particular: ∫ G(t − t′) F(t′) dt′ desde t0 hasta t, simbólica en 20 s *)
+    integrand = (gt /. tau -> t - s) (F /. t -> s);
+    conv = Inactive[Integrate][integrand, {s, t0, t}];
+    xp = Quiet[TimeConstrained[Integrate[integrand, {s, t0, t}, Assumptions -> asm], 20, $Failed]];
+    Which[
+      xp =!= $Failed && FreeQ[xp, Integrate],
+        xp = timedSimplify[xp /. ConditionalExpression[e_, _] :> e, asm];
+        method = "Symbolic"; kind = "particular",
+      (* Sin forma cerrada y todo numérico: la ecuación con reposo en t0, integrada hasta
+         "MaxTime" *)
+      freeSymbols[{m, g, w, F, t0}, {t}] === {},
+        tmax = OptionValue["MaxTime"];
+        xp = Module[{y, u},
+          NDSolveValue[{y''[u] + 2 g y'[u] + w^2 y[u] == (F /. t -> u)/m, y[t0] == 0, y'[t0] == 0},
+            y, {u, t0, tmax}, AccuracyGoal -> 12, PrecisionGoal -> 12, MaxSteps -> Infinity]][t];
+        method = "Numeric"; kind = "particularNumeric",
+      True,
+        cmMessage[GreenSolution, "integral"];
+        xp = conv; method = "Symbolic"; kind = "particularOpen"];
+
+    (* Homogénea: x_h = m [v0 G(t − t0) + x0 (G′(t − t0) + 2γ G(t − t0))] *)
+    xh = timedSimplify[m (v0 gt + x0 (D[gt, tau] + 2 g gt)) /. tau -> t - t0,
+      osc["Assumptions"] && t > t0];
+
+    (* With inserta los valores en las formas retenidas (HoldForm no evalúa los símbolos) *)
+    steps = With[{xx = Subscript["x", "h"][t] + Subscript["x", "p"][t], tt0 = t0, xx0 = x0,
+        vv0 = v0, ta = tau, gg = HeavisideTheta[tau] gt},
+      {{"equation", heldOperator["x", t, g, w] == F/m},
+       {"green", HoldForm["G"[ta] == gg]},
+       {"convolution", Subscript["x", "p"][t] == conv},
+       {kind, Subscript["x", "p"][t] == xp},
+       {"homogeneous", Column[{Subscript["x", "h"][t] == xh,
+         Row[{HoldForm["x"[tt0] == xx0], ",     ", HoldForm[Derivative[1]["x"][tt0] == vv0]}]}]},
+       {"total", Row[{HoldForm["x"[t] == xx], " = ", xh + xp}]},
+       {"note", Row[{Subscript["x", "h"], " \[LeftArrow] {", x0, ", ", v0, "},     ",
+         Subscript["x", "p"], " \[LeftArrow] F"}]}}];
+    steps = <|"Description" -> tr["GreenSolution:" <> #[[1]]],
+      "Expression" -> greenDisplay[#[[2]]]|> & /@ steps;
+
+    <|"Homogeneous" -> xh, "Particular" -> xp, "Total" -> xh + xp, "ConvolutionIntegral" -> conv,
+      "GreenFunction" -> gt, "Force" -> F, "Time" -> t, "InitialTime" -> t0,
+      "InitialConditions" -> {x0, v0}, "Method" -> method, "Oscillator" -> osc, "Steps" -> steps|>
+  ];
+
+GreenSolution[___] := (cmMessage[GreenSolution, "args"]; $Failed);
+
 (* --- Alias en español (al final, cuando las funciones ya tienen sus atributos) --- *)
 defineAlias[OsciladorAmortiguado, DampedOscillator];
 defineAlias[FuncionDeGreen, GreenFunction];
+defineAlias[SolucionDeGreen, GreenSolution];
 
 End[];
