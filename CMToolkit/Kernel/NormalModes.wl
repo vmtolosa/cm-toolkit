@@ -117,6 +117,32 @@ AssociateTo[$texts, <|
   "NormalModes::args" -> <|
     "Spanish" -> "NormalModes se llama con un sistema de SpringNetwork o SmallOscillations, NormalModes[sistema], o con las dos matrices, NormalModes[Mmat, Kmat].",
     "English" -> "NormalModes takes a system from SpringNetwork or SmallOscillations, NormalModes[system], or the two matrices, NormalModes[Mmat, Kmat]."|>,
+  "NormalModes::symbolic" -> <|
+    "Spanish" -> "No se encontraron en 30 s los valores propios en forma cerrada: el sistema es grande o tiene demasiados parámetros simbólicos. Da valores numéricos a los parámetros (por ejemplo con /. {k -> 1, m -> 1}) y vuelve a llamar a NormalModes.",
+    "English" -> "The eigenvalues could not be found in closed form within 30 s: the system is large or has too many symbolic parameters. Give numeric values to the parameters (for example with /. {k -> 1, m -> 1}) and call NormalModes again."|>,
+  (* NormalModes: textos de "Steps", en el orden en que se haría a mano *)
+  "NormalModes:secular" -> <|
+    "Spanish" -> "Ecuación secular: los modos resuelven (Kmat \[Minus] \[Omega]\.b2 Mmat) A = 0, que tiene solución no nula solo si det(Kmat \[Minus] \[Lambda] Mmat) = 0, con \[Lambda] = \[Omega]\.b2. El determinante, factorizado:",
+    "English" -> "Secular equation: the modes solve (Kmat \[Minus] \[Omega]\.b2 Mmat) A = 0, which has a nonzero solution only if det(Kmat \[Minus] \[Lambda] Mmat) = 0, with \[Lambda] = \[Omega]\.b2. The determinant, factored:"|>,
+  "NormalModes:roots" -> <|
+    "Spanish" -> "Raíces de la ecuación secular: los valores de \[Omega]\.b2, cada uno con su multiplicidad (cuántos modos independientes tienen esa frecuencia).",
+    "English" -> "Roots of the secular equation: the values of \[Omega]\.b2, each with its multiplicity (how many independent modes have that frequency)."|>,
+  "NormalModes:basis" -> <|
+    "Spanish" -> "Para cada \[Omega]\.b2, el modo resuelve (Kmat \[Minus] \[Omega]\.b2 Mmat) A = 0 y se normaliza con A\[CenterDot]Mmat\[CenterDot]A = 1.",
+    "English" -> "For each \[Omega]\.b2, the mode solves (Kmat \[Minus] \[Omega]\.b2 Mmat) A = 0 and is normalized with A\[CenterDot]Mmat\[CenterDot]A = 1."|>,
+  "NormalModes:basisDegenerate" -> <|
+    "Spanish" -> "Para cada \[Omega]\.b2, una base del subespacio de soluciones de (Kmat \[Minus] \[Omega]\.b2 Mmat) A = 0, ortonormalizada con el producto u\[CenterDot]Mmat\[CenterDot]v. En un subespacio degenerado la base es una elección: cualquier combinación de modos de igual frecuencia es también un modo (la opción \"Basis\" permite elegir otra).",
+    "English" -> "For each \[Omega]\.b2, a basis of the solution subspace of (Kmat \[Minus] \[Omega]\.b2 Mmat) A = 0, orthonormalized with the product u\[CenterDot]Mmat\[CenterDot]v. In a degenerate subspace the basis is a choice: any combination of modes with the same frequency is also a mode (the \"Basis\" option lets you choose another one)."|>,
+  "NormalModes:zero" -> <|
+    "Spanish" -> "Modos nulos (\[Omega]\.b2 = 0): `zero`. Son movimientos que no cambian la energía potencial a segundo orden; en una red de resortes, los que no estiran ningún resorte, como traslaciones y rotaciones rígidas. El rango de Kmat es el número de coordenadas, `n`, menos los modos nulos.",
+    "English" -> "Zero modes (\[Omega]\.b2 = 0): `zero`. They are motions that do not change the potential energy to second order; in a spring network, those that stretch no spring, such as rigid translations and rotations. The rank of Kmat is the number of coordinates, `n`, minus the zero modes."|>,
+  "NormalModes:check" -> <|
+    "Spanish" -> "Comprobación: con los modos como filas de A, A\[CenterDot]Mmat\[CenterDot]A\[Transpose] es la identidad, así que los modos son Mmat-ortonormales.",
+    "English" -> "Check: with the modes as rows of A, A\[CenterDot]Mmat\[CenterDot]A\[Transpose] is the identity, so the modes are Mmat-orthonormal."|>,
+  "NormalModes:omega2" -> <|"Spanish" -> "\[Omega]\.b2", "English" -> "\[Omega]\.b2"|>,
+  "NormalModes:multiplicity" -> <|"Spanish" -> "Multiplicidad", "English" -> "Multiplicity"|>,
+  "NormalModes:modes" -> <|"Spanish" -> "Modos", "English" -> "Modes"|>,
+  "NormalModes:rank" -> <|"Spanish" -> "rango", "English" -> "rank"|>,
   "NormalCoordinates::args" -> <|
     "Spanish" -> "NormalCoordinates se llama con el resultado de NormalModes: NormalCoordinates[modos], o NormalCoordinates[modos, {Q1, Q2, \[Ellipsis]}] para elegir los nombres.",
     "English" -> "NormalCoordinates takes a NormalModes result: NormalCoordinates[modes], or NormalCoordinates[modes, {Q1, Q2, \[Ellipsis]}] to choose the names."|>,
@@ -319,6 +345,105 @@ SmallOscillations[___] := (cmMessage[SmallOscillations, "args"]; $Failed);
 (* --- NormalModes: especificación en docs/specs/NormalModes.md --- *)
 
 Options[NormalModes] = {"Basis" -> Automatic};
+
+(* Un sistema: Mmat y Kmat cuadradas del mismo tamaño, y una coordenada por fila *)
+systemQ[sys_Association] := With[{mm = Lookup[sys, "Mmat"], kk = Lookup[sys, "Kmat"]},
+  SquareMatrixQ[mm] && SquareMatrixQ[kk] && Length[mm] === Length[kk] &&
+    Length[Lookup[sys, "Coordinates", {}]] === Length[mm]];
+systemQ[_] := False;
+
+(* Matrices numéricas inexactas: se usa Eigensystem y se agrupan los ω² cercanos *)
+inexactQ[mats_] := AllTrue[Flatten[mats], NumericQ] && !FreeQ[mats, _Real];
+
+(* Simplify y, si termina en 2 s, FullSimplify: deja las raíces anidadas en forma legible,
+   como Sqrt[2 - Sqrt[2]], sin arriesgar tiempos largos en sistemas grandes *)
+niceSimplify[e_, asm_] := With[{s = Simplify[e, asm]},
+  TimeConstrained[FullSimplify[s, asm], 2, s]];
+
+(* Gram-Schmidt en el orden dado, con el producto u·Mmat·v *)
+massOrthonormalize[vecs_List, mm_, asm_] := Module[{basis = {}, u},
+  Do[u = If[basis === {}, v, v - Total[(v . mm . #) # & /@ basis]];
+    u = niceSimplify[u, asm];
+    AppendTo[basis, niceSimplify[u/Sqrt[niceSimplify[u . mm . u, asm]], asm]],
+    {v, vecs}];
+  basis];
+
+(* Subespacios exactos: lista de {ω², {modos}} con los modos Mmat-ortonormales, o $Failed si
+   Eigenvalues no da forma cerrada en 30 s *)
+exactSubspaces[mm_, kk_, asm_] := Module[{vals, distinct = {}, mult = {}, pos, order},
+  vals = TimeConstrained[Eigenvalues[{kk, mm}], 30, $TimedOut];
+  If[vals === $TimedOut || (!FreeQ[vals, _Root] && freeSymbols[{mm, kk}, {}] =!= {}),
+    Return[$Failed]];
+  (* ω² distintos con su multiplicidad, en el orden en que salen *)
+  Do[pos = FirstPosition[distinct, d_ /; zeroQ[d - v, asm], None, {1}];
+    If[pos === None, AppendTo[distinct, v]; AppendTo[mult, 1], mult[[First[pos]]] += 1],
+    {v, niceSimplify[vals, asm]}];
+  (* De menor a mayor solo si las suposiciones deciden todas las comparaciones *)
+  order = Catch[Ordering[distinct, All, Function[{a, b},
+    Replace[Simplify[a <= b, asm], {True -> True, False -> False, _ :> Throw[None]}]]]];
+  If[order =!= None, distinct = distinct[[order]]; mult = mult[[order]]];
+  MapThread[Function[{w2, g}, With[{ns = NullSpace[Simplify[kk - w2 mm, asm]]},
+      If[Length[ns] =!= g, Return[$Failed, Module]];
+      {w2, massOrthonormalize[ns, mm, asm]}]],
+    {distinct, mult}]];
+
+(* Subespacios numéricos: ω² ordenados; los que difieren en menos de 10^-8 (relativo al mayor
+   |ω²|) forman un subespacio degenerado, y los que quedan bajo esa tolerancia son nulos *)
+numericSubspaces[mm_, kk_] := Module[{vals, vecs, ord, tol, groups},
+  {vals, vecs} = Chop[Eigensystem[{kk, mm}]];
+  ord = Ordering[vals];
+  tol = 10^-8 Max[1, Abs[vals]];
+  groups = Split[Transpose[{vals[[ord]], vecs[[ord]]}], Abs[#1[[1]] - #2[[1]]] <= tol &];
+  {If[Abs[#] <= tol, 0, #] &[Mean[#[[All, 1]]]],
+    Orthogonalize[#[[All, 2]], #1 . mm . #2 &]} & /@ groups];
+
+NormalModes[sys_Association?systemQ, opts : OptionsPattern[]] :=
+  Module[{mm, kk, asm, nn, lam = \[FormalLambda], det, subspaces, omega2, modes, indices, deg,
+      zero, steps},
+    mm = sys["Mmat"]; kk = sys["Kmat"]; nn = Length[mm];
+    asm = Lookup[sys, "Assumptions", positiveAssumptions[{mm, kk}, {}]];
+
+    det = Factor[Simplify[Det[kk - lam mm], asm]];
+    subspaces = If[inexactQ[{mm, kk}], numericSubspaces[mm, kk], exactSubspaces[mm, kk, asm]];
+    If[subspaces === $Failed, cmMessage[NormalModes, "symbolic"]; Return[$Failed]];
+
+    omega2 = Join @@ (ConstantArray[#[[1]], Length[#[[2]]]] & /@ subspaces);
+    modes = Join @@ subspaces[[All, 2]];
+    indices = TakeList[Range[nn], Length /@ subspaces[[All, 2]]];
+    deg = MapThread[<|"Omega2" -> #1[[1]], "Multiplicity" -> Length[#1[[2]]], "Indices" -> #2|> &,
+      {subspaces, indices}];
+    zero = Count[omega2, w_ /; zeroQ[w, asm]];
+
+    steps = normalModesSteps[mm, det, subspaces, deg, modes, zero, nn, asm];
+
+    Join[KeyDrop[sys, "Steps"],
+      <|"SecularDeterminant" -> det, "Omega2" -> omega2,
+        "Frequencies" -> Simplify[Sqrt[omega2], asm], "Modes" -> modes, "Degeneracies" -> deg,
+        "ZeroModes" -> zero, "Rank" -> nn - zero, "Steps" -> steps|>]
+  ];
+
+(* Atajo: las matrices directamente, con coordenadas \[FormalQ][1], …, \[FormalQ][N] *)
+NormalModes[mm_?SquareMatrixQ, kk_?SquareMatrixQ, opts : OptionsPattern[]] /;
+    Length[mm] === Length[kk] :=
+  NormalModes[<|"Coordinates" -> Array[\[FormalQ], Length[mm]], "Mmat" -> mm, "Kmat" -> kk,
+    "Assumptions" -> positiveAssumptions[{mm, kk}, {}]|>, opts];
+
+(* "Steps" de NormalModes, en el orden en que se haría a mano *)
+normalModesSteps[mm_, det_, subspaces_, deg_, modes_, zero_, nn_, asm_] := Module[{steps},
+  steps = {
+    {"secular", "det(Kmat \[Minus] \[Lambda] Mmat)" == (det /. \[FormalLambda] -> "\[Lambda]")},
+    {"roots", Grid[Prepend[{#["Omega2"], #["Multiplicity"]} & /@ deg,
+        tableText /@ tr /@ {"NormalModes:omega2", "NormalModes:multiplicity"}],
+      Alignment -> Left, Spacings -> {3, 0.6}, Dividers -> {None, {2 -> GrayLevel[0.8]}}]},
+    {If[Max[Length /@ subspaces[[All, 2]]] > 1, "basisDegenerate", "basis"],
+      Grid[Prepend[{#[[1]], Column[#[[2]]]} & /@ subspaces,
+        tableText /@ tr /@ {"NormalModes:omega2", "NormalModes:modes"}],
+      Alignment -> {Left, Center}, Spacings -> {3, 0.8}, Dividers -> {None, {2 -> GrayLevel[0.8]}}]},
+    {"zero", Row[{tr["NormalModes:rank"], "(Kmat) = ", nn, " \[Minus] ", zero, " = ", nn - zero}]},
+    {"check", "A\[CenterDot]Mmat\[CenterDot]A\[Transpose]" ==
+      MatrixForm[niceSimplify[modes . mm . Transpose[modes], asm]]}};
+  <|"Description" -> tr["NormalModes:" <> #[[1]], <|"zero" -> zero, "n" -> nn|>],
+    "Expression" -> #[[2]]|> & /@ steps];
 
 NormalModes[___] := (cmMessage[NormalModes, "args"]; $Failed);
 
