@@ -305,7 +305,7 @@ SpringNetwork[pos0_List, springs_List, masses0_, opts : OptionsPattern[]] /; !Op
 
     steps = {
       {"natural", HoldForm["\[Delta]l" == CenterDot["n", Subscript["r", "i"] - Subscript["r", "j"]]]},
-      {"table", springTableGrid[rows, anchorRows]},
+      {"table", springTableGrid[rows, anchorRows, coords, asm]},
       {"mass", "Mmat" == MatrixForm[mmat]},
       {"stiffness", "Kmat" == MatrixForm[kmat]}};
     steps = <|"Description" -> tr["SpringNetwork:" <> #[[1]]], "Expression" -> #[[2]]|> & /@
@@ -318,16 +318,56 @@ SpringNetwork[pos0_List, springs_List, masses0_, opts : OptionsPattern[]] /; !Op
 
 (* Tabla de resortes para "Steps": resorte, dirección, estiramiento y constante; los anclajes
    al final, con la pared en vez de la segunda masa *)
-springTableGrid[rows_, anchorRows_] := Grid[
+(* Dirección y estiramiento en forma angosta: {1, 1}/√2 y (x3 + y3 − x1 − y1)/√2 *)
+springTableGrid[rows_, anchorRows_, coords_, asm_] := Grid[
   Join[
     {tableText /@ tr /@ {"SpringNetwork:spring", "SpringNetwork:direction",
       "SpringNetwork:stretch", "SpringNetwork:constant"}},
-    {tableText[StringRiffle[#["Spring"], "\[Dash]"]], #["Direction"], #["Stretch"],
-      #["Constant"]} & /@ rows,
+    {tableText[StringRiffle[#["Spring"], "\[Dash]"]], directionForm[#["Direction"], asm],
+      stretchForm[#["c"], coords, asm], #["Constant"]} & /@ rows,
     {tableText[ToString[First[#["Anchor"]]] <> "\[Dash]" <> tr["SpringNetwork:wall"]],
-      #["Direction"], #["Stretch"], #["Constant"]} & /@ anchorRows],
+      directionForm[#["Direction"], asm], stretchForm[#["c"], coords, asm], #["Constant"]} & /@
+      anchorRows],
   Alignment -> Left, Spacings -> {2, 0.6},
   Dividers -> {None, {2 -> GrayLevel[0.8]}}];
+
+(* Vectores de "Steps" en forma angosta, con el factor común afuera. Una fila ancha de la tabla
+   hace que el front end escriba las fracciones en forma lineal, con «/» y paréntesis.
+   commonFactor da {c, w} con v = c w, c > 0 y w de números (enteros si se puede), o {1, v} si
+   no hay un factor así *)
+commonFactor[v_List, asm_] := Module[{nz, c, w, den},
+  nz = Select[v, !zeroQ[#, asm] &];
+  If[nz === {} || !FreeQ[v, _Real], Return[{1, v}]];
+  c = First[nz]; If[TrueQ[Simplify[c < 0, asm]], c = -c];
+  w = tidySimplify[v/c, asm];
+  If[!AllTrue[w, NumericQ], Return[{1, v}]];
+  If[AllTrue[w, MatchQ[#, _Integer | _Rational] &],
+    den = LCM @@ Denominator[w]; w = den w; c = c/den];
+  If[w === v, {1, v}, {tidySimplify[c, asm], w}]];
+
+(* Modo: (1/(2√m)) {−1, 1, −1, 0, 0, 0, 0, 1}. Con Row y no con HoldForm[c w], que se mostraría
+   como una fracción con la lista en el numerador *)
+modeForm[v_List, asm_] := With[{cw = commonFactor[v, asm]},
+  If[cw[[1]] === 1, v, Row[{cw[[1]], " ", cw[[2]]}]]];
+
+(* Dirección: {1, 1}/√2 *)
+directionForm[v_List, asm_] := With[{cw = commonFactor[v, asm]},
+  If[cw[[1]] === 1, v, overForm[cw[[1]], cw[[2]], False]]];
+
+(* Estiramiento c·q: (x3 + y3 − x1 − y1)/√2, con los términos positivos primero *)
+stretchForm[c_List, coords_List, asm_] := Module[{cw = commonFactor[c, asm], terms},
+  terms = DeleteCases[cw[[2]] coords, 0];
+  terms = Join[Select[terms, !negativeTermQ[#] &], Select[terms, negativeTermQ]];
+  If[Length[terms] === 1,
+    If[cw[[1]] === 1, First[terms], overForm[cw[[1]], First[terms], False]],
+    With[{sum = HoldForm[Plus[##]] & @@ terms},
+      If[cw[[1]] === 1, sum, overForm[cw[[1]], sum, True]]]]];
+
+(* f·e escrito como e/den, num e/den o num e, en una línea *)
+overForm[f_, e_, paren_] := With[{num = Numerator[f], den = Denominator[f],
+    ee = If[paren, Row[{"(", e, ")"}], e]},
+  Which[den === 1, Row[{num, " ", ee}], num === 1, Row[{ee, "/", den}],
+    True, Row[{num, " ", ee, "/", den}]]];
 
 (* Encabezados y nombres de resortes como texto, no como fórmula (letra de texto, sin comillas) *)
 tableText[s_String] := TextCell[s, "Text",
@@ -544,7 +584,7 @@ normalModesSteps[mm_, det_, subspaces_, deg_, modes_, zero_, nn_, asm_, given_] 
       Alignment -> Left, Spacings -> {3, 0.6}, Dividers -> {None, {2 -> GrayLevel[0.8]}}]},
     {Which[given, "basisGiven", Max[Length /@ subspaces[[All, 2]]] > 1, "basisDegenerate",
         True, "basis"],
-      Grid[Prepend[{#[[1]], Column[#[[2]]]} & /@ subspaces,
+      Grid[Prepend[{#[[1]], Column[modeForm[#, asm] & /@ #[[2]]]} & /@ subspaces,
         tableText /@ tr /@ {"NormalModes:omega2", "NormalModes:modes"}],
       Alignment -> {Left, Center}, Spacings -> {3, 0.8}, Dividers -> {None, {2 -> GrayLevel[0.8]}}]},
     {"zero", Row[{tr["NormalModes:rank"], "(Kmat) = ", nn, " \[Minus] ", zero, " = ", nn - zero}]},
