@@ -173,7 +173,28 @@ AssociateTo[$texts, <|
     "English" -> "Lagrangian in normal coordinates: L = \[CapitalSigma] (\.bd Q\:0307_n\.b2 \[Minus] \.bd \[Omega]_n\.b2 Q_n\.b2). It has no cross terms: each Q_n oscillates on its own with its frequency \[Omega]_n, or moves with constant velocity if \[Omega]_n = 0."|>,
   "ModeResponse::args" -> <|
     "Spanish" -> "ModeResponse se llama con el resultado de NormalModes y las condiciones iniciales: ModeResponse[modos, q0, v0], o ModeResponse[modos, q0, v0, t] para elegir el símbolo del tiempo.",
-    "English" -> "ModeResponse takes a NormalModes result and the initial conditions: ModeResponse[modes, q0, v0], or ModeResponse[modes, q0, v0, t] to choose the time symbol."|>
+    "English" -> "ModeResponse takes a NormalModes result and the initial conditions: ModeResponse[modes, q0, v0], or ModeResponse[modes, q0, v0, t] to choose the time symbol."|>,
+  "ModeResponse::ic" -> <|
+    "Spanish" -> "Las posiciones iniciales q0 y las velocidades iniciales v0 deben ser listas de `1` valores, uno por coordenada: `2`.",
+    "English" -> "The initial positions q0 and the initial velocities v0 must be lists of `1` values, one per coordinate: `2`."|>,
+  "ModeResponse::rest" -> <|
+    "Spanish" -> "Las condiciones iniciales tienen energía cero: el sistema queda en reposo, en el equilibrio o desplazado a lo largo de un modo nulo. Las fracciones de energía (\"EnergyShares\") son todas 0.",
+    "English" -> "The initial conditions have zero energy: the system stays at rest, at equilibrium or displaced along a zero mode. The energy shares (\"EnergyShares\") are all 0."|>,
+  (* ModeResponse: textos de "Steps", los cuatro pasos del inciso (e) *)
+  "ModeResponse:initial" -> <|
+    "Spanish" -> "Condiciones iniciales en coordenadas normales: Q_n(0) = A_n\[CenterDot]Mmat\[CenterDot]q0 y Q\:0307_n(0) = A_n\[CenterDot]Mmat\[CenterDot]v0.",
+    "English" -> "Initial conditions in normal coordinates: Q_n(0) = A_n\[CenterDot]Mmat\[CenterDot]q0 and Q\:0307_n(0) = A_n\[CenterDot]Mmat\[CenterDot]v0."|>,
+  "ModeResponse:normal" -> <|
+    "Spanish" -> "Cada coordenada normal evoluciona sola: Q_n(t) = Q_n(0) cos(\[Omega]_n t) + Q\:0307_n(0)/\[Omega]_n sen(\[Omega]_n t). En un modo nulo (\[Omega]_n = 0) avanza con velocidad constante: Q_n(t) = Q_n(0) + Q\:0307_n(0) t.",
+    "English" -> "Each normal coordinate evolves on its own: Q_n(t) = Q_n(0) cos(\[Omega]_n t) + Q\:0307_n(0)/\[Omega]_n sin(\[Omega]_n t). In a zero mode (\[Omega]_n = 0) it moves with constant velocity: Q_n(t) = Q_n(0) + Q\:0307_n(0) t."|>,
+  "ModeResponse:solution" -> <|
+    "Spanish" -> "Movimiento en las coordenadas originales, como superposición de los modos: q(t) = \[CapitalSigma] A_n Q_n(t).",
+    "English" -> "Motion in the original coordinates, as a superposition of the modes: q(t) = \[CapitalSigma] A_n Q_n(t)."|>,
+  "ModeResponse:energy" -> <|
+    "Spanish" -> "Energía de cada modo, E_n = \.bd Q\:0307_n(0)\.b2 + \.bd \[Omega]_n\.b2 Q_n(0)\.b2, y su fracción de la energía total E = \[CapitalSigma] E_n. Cada modo conserva su energía: las condiciones iniciales deciden cuánta recibe cada uno.",
+    "English" -> "Energy of each mode, E_n = \.bd Q\:0307_n(0)\.b2 + \.bd \[Omega]_n\.b2 Q_n(0)\.b2, and its share of the total energy E = \[CapitalSigma] E_n. Each mode keeps its energy: the initial conditions decide how much each one gets."|>,
+  "ModeResponse:mode" -> <|"Spanish" -> "Modo", "English" -> "Mode"|>,
+  "ModeResponse:share" -> <|"Spanish" -> "Fracción", "English" -> "Share"|>
 |>];
 
 (* --- SpringNetwork: especificación en docs/specs/NormalModes.md --- *)
@@ -555,6 +576,55 @@ heldModeSum[names_, w2_, tt_, asm_] := HoldForm[Plus[##]] & @@ MapThread[
 NormalCoordinates[___] := (cmMessage[NormalCoordinates, "args"]; $Failed);
 
 (* --- ModeResponse: especificación en docs/specs/NormalModes.md --- *)
+
+ModeResponse[res_Association?modesQ, q0_, v0_] := ModeResponse[res, q0, v0, \[FormalT]];
+
+ModeResponse[res_Association?modesQ, q0_, v0_, t_Symbol] /;
+    FreeQ[{res["Mmat"], res["Kmat"], res["Modes"], res["Omega2"], q0, v0}, t] :=
+  Module[{mm, aa, w2, coords, asm, nn, zero, qq0, qd0, normal, sol, energies, total, shares,
+      steps},
+    mm = res["Mmat"]; aa = res["Modes"]; w2 = res["Omega2"]; coords = res["Coordinates"];
+    asm = Lookup[res, "Assumptions", True]; nn = Length[mm];
+    If[!VectorQ[q0] || !VectorQ[v0] || Length[q0] =!= nn || Length[v0] =!= nn,
+      cmMessage[ModeResponse, "ic", nn, {q0, v0}]; Return[$Failed]];
+
+    (* Q_n(0), Q̇_n(0) y la solución de cada modo; un modo nulo avanza con velocidad constante *)
+    qq0 = Simplify[aa . mm . q0, asm]; qd0 = Simplify[aa . mm . v0, asm];
+    zero = zeroQ[#, asm] & /@ w2;
+    normal = MapThread[If[#4, #1 + #2 t,
+        With[{w = Simplify[Sqrt[#3], asm]}, #1 Cos[w t] + #2/w Sin[w t]]] &,
+      {qq0, qd0, w2, zero}];
+    (* Agrupada por modo: un coeficiente simplificado por cada coseno, seno y t; un Simplify
+       de todo sacaría factores comunes como Sqrt[k kp (k + kp)/m] *)
+    sol = Collect[Expand[Transpose[aa] . normal], {Cos[_], Sin[_], t}, Simplify[#, asm] &];
+
+    energies = Simplify[qd0^2/2 + w2 qq0^2/2, asm];
+    total = Simplify[Total[energies], asm];
+    shares = If[zeroQ[total, asm],
+      cmMessage[ModeResponse, "rest"]; ConstantArray[0, nn],
+      Simplify[energies/total, asm]];
+
+    steps = {
+      {"initial", modeTable[{"Q_n(0)", "Q\:0307_n(0)"}, {qq0, qd0}]},
+      {"normal", Column[MapIndexed[Row[{Subscript["Q", First[#2]], "(", t, ")"}] == #1 &,
+        normal]]},
+      {"solution", Column[MapThread[#1[t] == #2 &, {coords, sol}]]},
+      {"energy", Column[{modeTable[{"E_n", tr["ModeResponse:share"]}, {energies, shares}],
+        "E" == total}, Spacings -> 1]}};
+    steps = <|"Description" -> tr["ModeResponse:" <> #[[1]]], "Expression" -> #[[2]]|> & /@
+      steps;
+
+    Join[KeyDrop[res, "Steps"],
+      <|"InitialQ" -> qq0, "InitialQdot" -> qd0, "NormalSolution" -> normal, "Solution" -> sol,
+        "ModeEnergies" -> energies, "EnergyShares" -> shares, "TotalEnergy" -> total,
+        "Time" -> t, "Steps" -> steps|>]
+  ];
+
+(* Tabla con una fila por modo: n y las columnas dadas *)
+modeTable[heads_List, cols_List] := Grid[
+  Prepend[Transpose[Prepend[cols, Range[Length[First[cols]]]]],
+    tableText /@ Prepend[heads, tr["ModeResponse:mode"]]],
+  Alignment -> Left, Spacings -> {3, 0.6}, Dividers -> {None, {2 -> GrayLevel[0.8]}}];
 
 ModeResponse[___] := (cmMessage[ModeResponse, "args"]; $Failed);
 

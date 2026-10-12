@@ -318,6 +318,15 @@ VerificationTest[
   TestID -> "respuesta-reposo-rest"
 ]
 
+(* "Steps": los cuatro pasos del inciso (e) *)
+VerificationTest[
+  Module[{steps = ModeResponse[nmBaseModes, ConstantArray[0, 8], v {1, 0, 0, 0, 0, 0, 0, 0}][
+      "Steps"]},
+    {Length[steps], AllTrue[steps, StringQ[#["Description"]] && KeyExistsQ[#, "Expression"] &]}],
+  {4, True},
+  TestID -> "respuesta-cuadrado-steps"
+]
+
 (* --- Casos con solución conocida (no están en la ayudantía) --- *)
 
 VerificationTest[
