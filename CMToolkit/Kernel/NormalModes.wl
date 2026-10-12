@@ -404,7 +404,23 @@ inexactQ[mats_] := AllTrue[Flatten[mats], NumericQ] && !FreeQ[mats, _Real];
 (* Simplify y, si termina en 2 s, FullSimplify: deja las raíces anidadas en forma legible,
    como Sqrt[2 - Sqrt[2]], sin arriesgar tiempos largos en sistemas grandes *)
 niceSimplify[e_, asm_] := With[{s = Simplify[e, asm]},
-  TimeConstrained[FullSimplify[s, asm], 2, s]];
+  tidy[TimeConstrained[FullSimplify[s, asm], 2, s], asm]];
+
+(* Dos formas que Simplify a veces deja y que se leen mal:
+   - un factor negativo delante de una suma cuyo primer término es negativo, como −(−2 + √2) g/l
+     o −m/(√2 − 2): se cambian los signos de la suma, (2 − √2) g/l o m/(2 − √2);
+   - un cuadrado dentro de una raíz, como √(l² m) con l > 0: sale de la raíz, l √m *)
+tidy[e_, asm_] := e //. {
+  (Times[c_?negativeNumberQ, p_Plus, r___] /; negativeTermQ[First[p]]) :> Times[-c, Minus /@ p, r],
+  (Times[c_?negativeNumberQ, Power[p_Plus, -1], r___] /; negativeTermQ[First[p]]) :>
+    Times[-c, Power[Minus /@ p, -1], r],
+  (Power[Times[a___, Power[x_, 2], b___], ex : (1/2 | -1/2)] /; TrueQ[Simplify[x > 0, asm]]) :>
+    x^(2 ex) Power[Times[a, b], ex]};
+negativeNumberQ[x_] := NumericQ[x] && TrueQ[x < 0];
+negativeTermQ[x_?NumericQ] := negativeNumberQ[x];
+negativeTermQ[Times[c_?NumericQ, __]] := negativeNumberQ[c];
+negativeTermQ[_] := False;
+tidySimplify[e_, asm_] := tidy[Simplify[e, asm], asm];
 
 (* Gram-Schmidt en el orden dado, con el producto u·Mmat·v *)
 massOrthonormalize[vecs_List, mm_, asm_] := Module[{basis = {}, u},
@@ -497,7 +513,7 @@ NormalModes[sys_Association?systemQ, opts : OptionsPattern[]] :=
 
     Join[KeyDrop[sys, "Steps"],
       <|"SecularDeterminant" -> det, "Omega2" -> omega2,
-        "Frequencies" -> Simplify[Sqrt[omega2], asm], "Modes" -> modes, "Degeneracies" -> deg,
+        "Frequencies" -> tidySimplify[Sqrt[omega2], asm], "Modes" -> modes, "Degeneracies" -> deg,
         "ZeroModes" -> zero, "Rank" -> nn - zero, "Steps" -> steps|>]
   ];
 
@@ -551,8 +567,8 @@ NormalCoordinates[res_Association?modesQ, names_List] /; normalNamesQ[names, res
     mm = res["Mmat"]; aa = res["Modes"]; w2 = res["Omega2"]; coords = res["Coordinates"];
     asm = Lookup[res, "Assumptions", True]; nn = Length[mm];
 
-    ofq = Simplify[aa . mm . coords, asm];
-    ofQ = Simplify[Transpose[aa] . names, asm];
+    ofq = tidySimplify[aa . mm . coords, asm];
+    ofQ = tidySimplify[Transpose[aa] . names, asm];
     lag = Sum[(names[[n]]'[tt]^2 - w2[[n]] names[[n]][tt]^2)/2, {n, nn}];
 
     steps = {
@@ -589,20 +605,20 @@ ModeResponse[res_Association?modesQ, q0_, v0_, t_Symbol] /;
       cmMessage[ModeResponse, "ic", nn, {q0, v0}]; Return[$Failed]];
 
     (* Q_n(0), Q̇_n(0) y la solución de cada modo; un modo nulo avanza con velocidad constante *)
-    qq0 = Simplify[aa . mm . q0, asm]; qd0 = Simplify[aa . mm . v0, asm];
+    qq0 = tidySimplify[aa . mm . q0, asm]; qd0 = tidySimplify[aa . mm . v0, asm];
     zero = zeroQ[#, asm] & /@ w2;
     normal = MapThread[If[#4, #1 + #2 t,
-        With[{w = Simplify[Sqrt[#3], asm]}, #1 Cos[w t] + #2/w Sin[w t]]] &,
+        With[{w = tidySimplify[Sqrt[#3], asm]}, #1 Cos[w t] + #2/w Sin[w t]]] &,
       {qq0, qd0, w2, zero}];
     (* Agrupada por modo: un coeficiente simplificado por cada coseno, seno y t; un Simplify
        de todo sacaría factores comunes como Sqrt[k kp (k + kp)/m] *)
-    sol = Collect[Expand[Transpose[aa] . normal], {Cos[_], Sin[_], t}, Simplify[#, asm] &];
+    sol = Collect[Expand[Transpose[aa] . normal], {Cos[_], Sin[_], t}, tidySimplify[#, asm] &];
 
-    energies = Simplify[qd0^2/2 + w2 qq0^2/2, asm];
-    total = Simplify[Total[energies], asm];
+    energies = tidySimplify[qd0^2/2 + w2 qq0^2/2, asm];
+    total = tidySimplify[Total[energies], asm];
     shares = If[zeroQ[total, asm],
       cmMessage[ModeResponse, "rest"]; ConstantArray[0, nn],
-      Simplify[energies/total, asm]];
+      tidySimplify[energies/total, asm]];
 
     steps = {
       {"initial", modeTable[{"Q_n(0)", "Q\:0307_n(0)"}, {qq0, qd0}]},
