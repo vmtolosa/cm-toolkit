@@ -47,10 +47,10 @@ del módulo dentro del paquete.
 | | `EquilibriumPoints`, `ClassifyEquilibrium` | Hecho |
 | | `EnergyFunction`, `SolveMotion`, `CompareHarmonic`, `PhasePortrait` | Hecho |
 | | `PotentialPlot`, `EquilibriumDiagram` | Pendiente (con especificación: `docs/specs/Motion1D.md`, parte B) |
-| Modos normales en N dimensiones | `SmallOscillations` (M y K desde un lagrangiano de N coordenadas) | Pendiente |
-| | `SpringNetwork` (redes de resortes en 1, 2 y 3 dimensiones) | Pendiente |
-| | `NormalModes` (degeneración, base M-ortonormal), `NormalCoordinates`, `ModeResponse` | Pendiente |
-| | `ModeGallery`, `AnimateMode` (2D y 3D), `AnimateMotion`, `SpectrumPlot`, `EnergySharesChart` | Pendiente |
+| Modos normales en N dimensiones | `SmallOscillations` (M y K desde un lagrangiano de N coordenadas) | Hecho |
+| | `SpringNetwork` (redes de resortes en 1, 2 y 3 dimensiones) | Hecho |
+| | `NormalModes` (degeneración, base M-ortonormal), `NormalCoordinates`, `ModeResponse` | Hecho |
+| | `ModeGallery`, `AnimateMode` (2D y 3D), `AnimateMotion`, `SpectrumPlot`, `EnergySharesChart` | Pendiente (con especificación: `docs/specs/NormalModes.md`, parte B) |
 | Amortiguadas y forzadas | `DampedOscillator`, `SteadyState`, `ResonanceCurve` | Pendiente |
 | Funciones de Green | `GreenFunction`, `GreenSolution`, `ConvolutionExplorer`, `ImpulseSuperposition`, `SolutionDecompositionPlot`, `InitialConditionExplorer` | Pendiente |
 | Oscilaciones no lineales y perturbaciones | Poincaré–Lindstedt y similares | Fuera de alcance por ahora |
