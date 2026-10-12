@@ -1,5 +1,5 @@
 (* Tests de DampedOscillator, GreenFunction, GreenSolution y SteadyState.
-   Especificación: docs/specs/DrivenOscillator.md (versión 1, Parte A).
+   Especificación: docs/specs/DrivenOscillator.md (versión 1.1, Parte A).
    Notación: ẍ + 2γ ẋ + ω0² x = F(t)/m. En el código, gam = γ y w0 = ω0.
    Valores de referencia: casos con solución conocida documentados en la especificación. *)
 
@@ -111,6 +111,20 @@ VerificationTest[
   TestID -> "oscilador-error-gamma-negativo-params"
 ]
 
+VerificationTest[
+  DampedOscillator[-1, 0.1, 1],
+  $Failed,
+  {DampedOscillator::params},
+  TestID -> "oscilador-error-masa-negativa-params"
+]
+
+VerificationTest[
+  DampedOscillator[1, 0.1, 0],
+  $Failed,
+  {DampedOscillator::params},
+  TestID -> "oscilador-error-omega0-cero-params"
+]
+
 (* === GreenFunction === *)
 
 VerificationTest[
@@ -195,6 +209,18 @@ VerificationTest[
     F0/(m w0^2) (1 - Exp[-gam t] (Cos[drWd t] + gam/drWd Sin[drWd t])), drTotalAsm && F0 > 0],
   True,
   TestID -> "solucion-escalon-desde-el-reposo"
+]
+
+(* Escalón retardado (v1.1, precisión 6): reposo antes de t1 y, después, la respuesta al escalón
+   desplazada en t1. Se compara a cada lado de t1 *)
+VerificationTest[
+  Module[{tot = GreenSolution[drOsc, F0 UnitStep[t - t1], {t, 0}, {0, 0}]["Total"],
+      asm = drAsm && F0 > 0 && t1 > 0},
+    {drZeroQ[tot, asm && 0 < t < t1],
+     drZeroQ[tot - F0/(m w0^2) (1 - Exp[-gam (t - t1)] (Cos[drWd (t - t1)] +
+       gam/drWd Sin[drWd (t - t1)])), asm && t > t1]}],
+  {True, True},
+  TestID -> "solucion-escalon-retardado"
 ]
 
 (* Golpe en t1: P G(t − t1) con su escalón. Se compara antes y después de t1, para no depender
@@ -351,10 +377,12 @@ VerificationTest[
   TestID -> "estacionario-numerico"
 ]
 
-(* γ = 0.9 < ω0 = 1, pero ω0² < 2γ²: no hay máximo fuera de ω = 0 *)
+(* γ = 0.9 < ω0 = 1, pero ω0² < 2γ²: no hay máximo fuera de ω = 0, y la amplitud máxima es la
+   de ω = 0, F0/(m ω0²) = 1 (v1.1, precisión 4) *)
 VerificationTest[
-  TrueQ[SteadyState[DampedOscillator[1, 0.9, 1], 1, 1]["ResonanceFrequency"] == 0],
-  True,
+  With[{ss = SteadyState[DampedOscillator[1, 0.9, 1], 1, 1]},
+    {TrueQ[ss["ResonanceFrequency"] == 0], Abs[ss["MaxAmplitude"] - 1] < 10^-10}],
+  {True, True},
   TestID -> "estacionario-sin-resonancia-frecuencia-cero"
 ]
 
@@ -365,14 +393,22 @@ VerificationTest[
   TestID -> "estacionario-resonancia-sin-amortiguamiento-resonance"
 ]
 
+VerificationTest[
+  SteadyState[drOsc, F0],
+  $Failed,
+  {SteadyState::args},
+  TestID -> "estacionario-error-dos-argumentos-args"
+]
+
 (* --- "Steps" y ShowSteps --- *)
 
 drStepsQ[res_] := MatchQ[res["Steps"], {__Association}] &&
   AllTrue[res["Steps"], StringQ[#["Description"]] && KeyExistsQ[#, "Expression"] &];
 
+(* v1.1, precisión 1: 4 pasos en DampedOscillator y 5 en SteadyState *)
 VerificationTest[
-  drStepsQ /@ {drOsc, drSS},
-  {True, True},
+  {drStepsQ[drOsc], Length[drOsc["Steps"]], drStepsQ[drSS], Length[drSS["Steps"]]},
+  {True, 4, True, 5},
   TestID -> "oscilador-y-estacionario-steps"
 ]
 
