@@ -16,6 +16,9 @@ Mathematica. El paquete es genérico: no menciona ningún curso, institución ni
   CMPlot, ShowSteps y CMToolkitVersion.
 - CMToolkit/Kernel/Oscillations1D.wl: un grado de libertad (HarmonicExpansion) y sus funciones
   privadas compartidas (validateDeviation1D, autonomousForm, assumptions1D, potentialCoefficients).
+- CMToolkit/Kernel/NormalModes.wl: modos normales en N dimensiones (SpringNetwork, SmallOscillations,
+  NormalModes, NormalCoordinates, ModeResponse) y sus funciones privadas (systemQ, modesQ,
+  niceSimplify, tidy, massOrthonormalize).
 - Cada módulo: símbolos públicos con ::usage antes de Begin["`Private`"]; sus textos se agregan
   a $texts con AssociateTo; sus defineAlias van al final del módulo. Un módulo nuevo se agrega
   al cargador.
