@@ -158,6 +158,19 @@ AssociateTo[$texts, <|
   "NormalCoordinates::args" -> <|
     "Spanish" -> "NormalCoordinates se llama con el resultado de NormalModes: NormalCoordinates[modos], o NormalCoordinates[modos, {Q1, Q2, \[Ellipsis]}] para elegir los nombres.",
     "English" -> "NormalCoordinates takes a NormalModes result: NormalCoordinates[modes], or NormalCoordinates[modes, {Q1, Q2, \[Ellipsis]}] to choose the names."|>,
+  (* NormalCoordinates: textos de "Steps", en el orden en que se haría a mano *)
+  "NormalCoordinates:definition" -> <|
+    "Spanish" -> "Coordenadas normales: con los modos Mmat-ortonormales (A_n\[CenterDot]Mmat\[CenterDot]A_m = \[Delta]_nm), el desplazamiento se escribe q = \[CapitalSigma] A_n Q_n, y cada Q_n es la componente de q en el modo n.",
+    "English" -> "Normal coordinates: with Mmat-orthonormal modes (A_n\[CenterDot]Mmat\[CenterDot]A_m = \[Delta]_nm), the displacement is written q = \[CapitalSigma] A_n Q_n, and each Q_n is the component of q along mode n."|>,
+  "NormalCoordinates:ofq" -> <|
+    "Spanish" -> "Coordenadas normales en función de las originales: Q_n = A_n\[CenterDot]Mmat\[CenterDot]q.",
+    "English" -> "Normal coordinates in terms of the original ones: Q_n = A_n\[CenterDot]Mmat\[CenterDot]q."|>,
+  "NormalCoordinates:ofQ" -> <|
+    "Spanish" -> "Coordenadas originales en función de las normales (la inversa): q = \[CapitalSigma] A_n Q_n.",
+    "English" -> "Original coordinates in terms of the normal ones (the inverse): q = \[CapitalSigma] A_n Q_n."|>,
+  "NormalCoordinates:lagrangian" -> <|
+    "Spanish" -> "Lagrangiano en coordenadas normales: L = \[CapitalSigma] (\.bd Q\:0307_n\.b2 \[Minus] \.bd \[Omega]_n\.b2 Q_n\.b2). No tiene términos cruzados: cada Q_n oscila sola con su frecuencia \[Omega]_n, o avanza con velocidad constante si \[Omega]_n = 0.",
+    "English" -> "Lagrangian in normal coordinates: L = \[CapitalSigma] (\.bd Q\:0307_n\.b2 \[Minus] \.bd \[Omega]_n\.b2 Q_n\.b2). It has no cross terms: each Q_n oscillates on its own with its frequency \[Omega]_n, or moves with constant velocity if \[Omega]_n = 0."|>,
   "ModeResponse::args" -> <|
     "Spanish" -> "ModeResponse se llama con el resultado de NormalModes y las condiciones iniciales: ModeResponse[modos, q0, v0], o ModeResponse[modos, q0, v0, t] para elegir el símbolo del tiempo.",
     "English" -> "ModeResponse takes a NormalModes result and the initial conditions: ModeResponse[modes, q0, v0], or ModeResponse[modes, q0, v0, t] to choose the time symbol."|>
@@ -495,6 +508,49 @@ normalModesSteps[mm_, det_, subspaces_, deg_, modes_, zero_, nn_, asm_, given_] 
 NormalModes[___] := (cmMessage[NormalModes, "args"]; $Failed);
 
 (* --- NormalCoordinates: especificación en docs/specs/NormalModes.md --- *)
+
+(* Un resultado de NormalModes: un sistema con N modos y N valores de ω² *)
+modesQ[res_Association] := systemQ[res] &&
+  MatrixQ[Lookup[res, "Modes"]] && Dimensions[res["Modes"]] === Dimensions[res["Mmat"]] &&
+    ListQ[Lookup[res, "Omega2"]] && Length[res["Omega2"]] === Length[res["Mmat"]];
+modesQ[_] := False;
+
+(* Nombres de las coordenadas normales: N símbolos distintos, sin valor, que no sean las
+   coordenadas originales; o los de \[FormalCapitalQ] *)
+normalNamesQ[names_List, res_] := Length[names] === Length[res["Mmat"]] &&
+  DuplicateFreeQ[names] && AllTrue[names, MatchQ[#, _Symbol | \[FormalCapitalQ][_]] &] &&
+    FreeQ[res["Coordinates"], Alternatives @@ names];
+normalNamesQ[_, _] := False;
+
+NormalCoordinates[res_Association?modesQ] :=
+  NormalCoordinates[res, Array[\[FormalCapitalQ], Length[res["Mmat"]]]];
+
+NormalCoordinates[res_Association?modesQ, names_List] /; normalNamesQ[names, res] :=
+  Module[{mm, aa, w2, coords, asm, nn, tt = \[FormalT], ofq, ofQ, lag, steps},
+    mm = res["Mmat"]; aa = res["Modes"]; w2 = res["Omega2"]; coords = res["Coordinates"];
+    asm = Lookup[res, "Assumptions", True]; nn = Length[mm];
+
+    ofq = Simplify[aa . mm . coords, asm];
+    ofQ = Simplify[Transpose[aa] . names, asm];
+    lag = Sum[(names[[n]]'[tt]^2 - w2[[n]] names[[n]][tt]^2)/2, {n, nn}];
+
+    steps = {
+      {"definition", Row[{"q = \[CapitalSigma] A_n Q_n", "     ",
+        "Q_n = A_n\[CenterDot]Mmat\[CenterDot]q"}]},
+      {"ofq", Column[Thread[names == ofq]]},
+      {"ofQ", Column[Thread[coords == ofQ]]},
+      {"lagrangian", "L" == heldModeSum[names, w2, tt, asm]}};
+    steps = <|"Description" -> tr["NormalCoordinates:" <> #[[1]]], "Expression" -> #[[2]]|> & /@
+      steps;
+
+    <|"NormalCoordinates" -> ofq, "Inverse" -> ofQ, "Lagrangian" -> lag, "Steps" -> steps|>
+  ];
+
+(* Σ (½ Q̇_n² − ½ ω_n² Q_n²) sin evaluar, para mostrarla en el orden de los modos (Plus la
+   reordenaría); en un modo nulo queda solo ½ Q̇_n² *)
+heldModeSum[names_, w2_, tt_, asm_] := HoldForm[Plus[##]] & @@ MapThread[
+  Function[{q, w}, If[zeroQ[w, asm], HoldForm[1/2 q'[tt]^2],
+    HoldForm[1/2 q'[tt]^2 - 1/2 w q[tt]^2]]], {names, w2}];
 
 NormalCoordinates[___] := (cmMessage[NormalCoordinates, "args"]; $Failed);
 

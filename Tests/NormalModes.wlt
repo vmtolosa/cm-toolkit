@@ -147,6 +147,14 @@ VerificationTest[
   TestID -> "modos-cuadrado-base-vector-no-propio-noteigen"
 ]
 
+(* Un vector de ceros: v·Mmat·v = 0, solo el mensaje noteigen (sin Power::infy ni Infinity::indet) *)
+VerificationTest[
+  NormalModes[nmSquare, "Basis" -> ReplacePart[nmBase, 3 -> ConstantArray[0, 8]]],
+  $Failed,
+  {NormalModes::noteigen},
+  TestID -> "modos-cuadrado-base-vector-cero-noteigen"
+]
+
 VerificationTest[
   NormalModes[nmSquare, "Basis" -> nmBase[[1 ;; 7]]],
   $Failed,
@@ -235,6 +243,14 @@ VerificationTest[
      Simplify[(ofQ /. Thread[qs -> ofq]) - coords, nmAsm]}],
   {ConstantArray[0, 8], ConstantArray[0, 8]},
   TestID -> "coordenadas-cuadrado-inversa-ecs-71-75"
+]
+
+(* "Steps": definición; Q(q); q(Q); lagrangiano diagonal *)
+VerificationTest[
+  Module[{steps = NormalCoordinates[nmBaseModes]["Steps"]},
+    {Length[steps], AllTrue[steps, StringQ[#["Description"]] && KeyExistsQ[#, "Expression"] &]}],
+  {4, True},
+  TestID -> "coordenadas-cuadrado-steps"
 ]
 
 (* === ModeResponse === *)
