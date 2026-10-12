@@ -9,5 +9,6 @@ BeginPackage["CMToolkit`"];
 Get[FileNameJoin[{DirectoryName[$InputFileName], "Core.wl"}]];
 Get[FileNameJoin[{DirectoryName[$InputFileName], "Oscillations1D.wl"}]];
 Get[FileNameJoin[{DirectoryName[$InputFileName], "NormalModes.wl"}]];
+Get[FileNameJoin[{DirectoryName[$InputFileName], "DrivenOscillator.wl"}]];
 
 EndPackage[];
