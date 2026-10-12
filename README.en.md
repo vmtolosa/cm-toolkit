@@ -93,6 +93,7 @@ solB = SolveMotion[Lnum, {x, t}, {0.05, 0.3}, 40];   (* with a push: visits both
 | Equilibria | `EquilibriumPoints`, `ClassifyEquilibrium` | Available |
 | Small oscillations | `HarmonicExpansion`, `ShowSteps` | Available |
 | Exact motion | `EnergyFunction`, `SolveMotion`, `CompareHarmonic`, `PhasePortrait` | Available |
+| Normal modes | `SpringNetwork`, `SmallOscillations`, `NormalModes`, `NormalCoordinates`, `ModeResponse` | Available |
 
 The Spanish name of each function is in its help: `?HarmonicExpansion`.
 The full plan, with the other topics of a classical mechanics course, is in the
@@ -152,7 +153,7 @@ published version.
 
 | Functions | What it does | Specification | Status |
 | --- | --- | --- | --- |
-| `SpringNetwork`, `SmallOscillations`, `NormalModes`, `NormalCoordinates`, `ModeResponse` | Mass and stiffness matrices; frequencies and Mmat-orthonormal modes, optionally in a basis chosen by the user; normal coordinates and diagonal Lagrangian; response to initial conditions and fraction of the energy in each mode | [NormalModes.md](docs/specs/NormalModes.md) (part A) | Specified |
+| `SpringNetwork`, `SmallOscillations`, `NormalModes`, `NormalCoordinates`, `ModeResponse` | Mass and stiffness matrices; frequencies and Mmat-orthonormal modes, optionally in a basis chosen by the user; normal coordinates and diagonal Lagrangian; response to initial conditions and fraction of the energy in each mode | [NormalModes.md](docs/specs/NormalModes.md) (part A) | Available |
 | `ModeGallery`, `AnimateMode`, `AnimateMotion`, `SpectrumPlot`, `EnergySharesChart` | All modes in a grid, animation of one mode or of the full motion (in 1D, 2D and 3D), ω² as a function of a parameter and bars with the energy of each mode; example notebook | [NormalModes.md](docs/specs/NormalModes.md) (part B) | Specified |
 
 **Version 0.3.0: damped and driven oscillator, Green's functions.** Classify the regime of the
