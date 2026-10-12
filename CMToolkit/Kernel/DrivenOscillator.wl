@@ -12,6 +12,13 @@ OsciladorAmortiguado::usage =
   "OsciladorAmortiguado[m, \[Gamma], \[Omega]0] es el alias en español de DampedOscillator. Los mensajes de error aparecen con el nombre DampedOscillator.\n\
 OsciladorAmortiguado[m, \[Gamma], \[Omega]0] is the Spanish alias of DampedOscillator. Error messages appear under the name DampedOscillator.";
 
+GreenFunction::usage =
+  "GreenFunction[osc, \[Tau]] entrega la función de Green causal del oscilador osc de DampedOscillator: la respuesta G(\[Tau]) a un golpe unitario, solución de G'' + 2\[Gamma] G' + \[Omega]0\.b2 G = \[Delta](\[Tau])/m con G = 0 para \[Tau] < 0. Entrega una Association con G completa, con el factor HeavisideTheta[\[Tau]] (\"GreenFunction\"), la expresión para \[Tau] > 0 (\"Causal\") y los pasos intermedios (\"Steps\"). Alias: FuncionDeGreen.\n\
+GreenFunction[osc, \[Tau]] gives the causal Green's function of the oscillator osc from DampedOscillator: the response G(\[Tau]) to a unit impulse, solution of G'' + 2\[Gamma] G' + \[Omega]0\.b2 G = \[Delta](\[Tau])/m with G = 0 for \[Tau] < 0. It returns an Association with the full G, with the factor HeavisideTheta[\[Tau]] (\"GreenFunction\"), the expression for \[Tau] > 0 (\"Causal\") and the intermediate steps (\"Steps\").";
+FuncionDeGreen::usage =
+  "FuncionDeGreen[osc, \[Tau]] es el alias en español de GreenFunction. Los mensajes de error aparecen con el nombre GreenFunction.\n\
+FuncionDeGreen[osc, \[Tau]] is the Spanish alias of GreenFunction. Error messages appear under the name GreenFunction.";
+
 Begin["`Private`"];
 
 (* Textos de este módulo: se agregan a la tabla $texts de Core.wl *)
@@ -46,7 +53,29 @@ AssociateTo[$texts, <|
     "English" -> "Critical damping (\[Gamma] = \[Omega]0): a double root, \[Minus]\[Gamma]. The system returns to equilibrium without oscillating, as fast as possible: x = (A + B t) e^(\[Minus]\[Gamma] t)."|>,
   "DampedOscillator:Overdamped" -> <|
     "Spanish" -> "Régimen sobreamortiguado (\[Gamma] > \[Omega]0): dos raíces reales negativas, \[Minus]\[Gamma] \[PlusMinus] \[CapitalGamma], con \[CapitalGamma] = \[Sqrt](\[Gamma]\.b2 \[Minus] \[Omega]0\.b2). El sistema vuelve al equilibrio sin oscilar, más lento que con amortiguamiento crítico.",
-    "English" -> "Overdamped regime (\[Gamma] > \[Omega]0): two negative real roots, \[Minus]\[Gamma] \[PlusMinus] \[CapitalGamma], with \[CapitalGamma] = \[Sqrt](\[Gamma]\.b2 \[Minus] \[Omega]0\.b2). The system returns to equilibrium without oscillating, more slowly than with critical damping."|>
+    "English" -> "Overdamped regime (\[Gamma] > \[Omega]0): two negative real roots, \[Minus]\[Gamma] \[PlusMinus] \[CapitalGamma], with \[CapitalGamma] = \[Sqrt](\[Gamma]\.b2 \[Minus] \[Omega]0\.b2). The system returns to equilibrium without oscillating, more slowly than with critical damping."|>,
+  "GreenFunction::args" -> <|
+    "Spanish" -> "GreenFunction se llama con un oscilador de DampedOscillator y el símbolo de la variable: GreenFunction[osc, \[Tau]].",
+    "English" -> "GreenFunction takes an oscillator from DampedOscillator and the symbol of the variable: GreenFunction[osc, \[Tau]]."|>,
+  "GreenFunction::var" -> <|
+    "Spanish" -> "La variable de la función de Green debe ser un símbolo sin valor asignado que no aparezca en el oscilador; `1` no cumple.",
+    "English" -> "The variable of the Green's function must be a symbol with no assigned value that does not appear in the oscillator; `1` does not qualify."|>,
+  (* GreenFunction: textos de "Steps", los cinco pasos de la especificación *)
+  "GreenFunction:equation" -> <|
+    "Spanish" -> "La función de Green es la respuesta a un golpe unitario en \[Tau] = 0: G'' + 2\[Gamma] G' + \[Omega]0\.b2 G = \[Delta](\[Tau])/m.",
+    "English" -> "The Green's function is the response to a unit impulse at \[Tau] = 0: G'' + 2\[Gamma] G' + \[Omega]0\.b2 G = \[Delta](\[Tau])/m."|>,
+  "GreenFunction:causal" -> <|
+    "Spanish" -> "Causalidad: antes del golpe el oscilador está en reposo, así que G = 0 para \[Tau] < 0.",
+    "English" -> "Causality: before the impulse the oscillator is at rest, so G = 0 for \[Tau] < 0."|>,
+  "GreenFunction:homogeneous" -> <|
+    "Spanish" -> "Después del golpe no hay fuerza: para \[Tau] > 0, G cumple la ecuación homogénea.",
+    "English" -> "After the impulse there is no force: for \[Tau] > 0, G satisfies the homogeneous equation."|>,
+  "GreenFunction:jump" -> <|
+    "Spanish" -> "Condiciones en \[Tau] = 0: G es continua (vale 0 justo después del golpe) y, al integrar la ecuación en un intervalo pequeño en torno a 0, G' salta en 1/m.",
+    "English" -> "Conditions at \[Tau] = 0: G is continuous (it is 0 just after the impulse) and, integrating the equation over a small interval around 0, G' jumps by 1/m."|>,
+  "GreenFunction:result" -> <|
+    "Spanish" -> "Resultado: la solución homogénea que cumple esas condiciones, multiplicada por el escalón HeavisideTheta[\[Tau]].",
+    "English" -> "Result: the homogeneous solution that satisfies those conditions, multiplied by the step HeavisideTheta[\[Tau]]."|>
 |>];
 
 (* --- Funciones privadas de este módulo --- *)
@@ -76,6 +105,25 @@ decideRegime[g_, w_, asm_] := Which[
 
 (* Término c·s de una suma retenida: se omite si c es 0 y se escribe solo s si c es 1 *)
 coefTerm[c_, s_] := Which[zeroQ[c, True], Nothing, c === 1, s, True, HoldForm[c s]];
+
+(* Una variable libre: un símbolo sin valor, no protegido, que no aparece en data *)
+freeVariableQ[v_, data_] := MatchQ[v, _Symbol] && !MemberQ[Attributes[v], Protected] &&
+  FreeQ[data, v];
+
+(* Datos de un oscilador en los que no puede aparecer la variable de G ni el tiempo *)
+oscillatorData[osc_] := Lookup[osc, {"Mass", "Gamma", "Omega0", "Assumptions"}];
+
+(* G(τ) para τ > 0, según el régimen (tabla de la especificación) *)
+greenCausal[osc_, tau_] := With[{m = osc["Mass"], g = osc["Gamma"], w = osc["Omega0"]},
+  Switch[osc["Regime"],
+    "Undamped", Sin[w tau]/(m w),
+    "Underdamped", Exp[-g tau] Sin[osc["OmegaD"] tau]/(m osc["OmegaD"]),
+    "Critical", tau Exp[-g tau]/m,
+    "Overdamped", Exp[-g tau] Sinh[osc["GammaD"] tau]/(m osc["GammaD"])]];
+
+(* Lado izquierdo y'' + 2γ y' + ω0² y retenido, con y el nombre dado (una cadena) *)
+heldOperator[y_String, var_, g_, w_] := heldSum[{HoldForm[Derivative[2][y][var]],
+  coefTerm[2 g, HoldForm[Derivative[1][y][var]]], coefTerm[w^2, HoldForm[y[var]]]}];
 
 (* --- DampedOscillator: especificación en docs/specs/DrivenOscillator.md --- *)
 
@@ -142,7 +190,33 @@ DampedOscillator[m_, a2_, a3_, opts : OptionsPattern[]] /; !OptionQ[a3] :=
 
 DampedOscillator[___] := (cmMessage[DampedOscillator, "args"]; $Failed);
 
+(* --- GreenFunction: especificación en docs/specs/DrivenOscillator.md --- *)
+
+GreenFunction[osc_Association?oscillatorQ, tau_] :=
+  Module[{m, g, w, causal, steps},
+    If[!freeVariableQ[tau, oscillatorData[osc]],
+      cmMessage[GreenFunction, "var", tau]; Return[$Failed]];
+    m = osc["Mass"]; g = osc["Gamma"]; w = osc["Omega0"];
+    causal = greenCausal[osc, tau];
+
+    steps = With[{mm = m, gg = HeavisideTheta[tau] causal},
+      {{"equation", heldOperator["G", tau, g, w] == DiracDelta[tau]/m},
+       {"causal", Row[{HoldForm["G"[tau] == 0], "     (", tau, " < 0)"}]},
+       {"homogeneous", Row[{heldOperator["G", tau, g, w] == 0, "     (", tau, " > 0)"}]},
+       {"jump", Row[{HoldForm["G"[Superscript[0, "+"]] == 0], ",     ",
+         HoldForm[Derivative[1]["G"][Superscript[0, "+"]] == 1/mm]}]},
+       {"result", HoldForm["G"[tau] == gg]}}];
+    steps = <|"Description" -> tr["GreenFunction:" <> #[[1]]], "Expression" -> #[[2]]|> & /@
+      steps;
+
+    <|"GreenFunction" -> HeavisideTheta[tau] causal, "Causal" -> causal, "Variable" -> tau,
+      "Steps" -> steps|>
+  ];
+
+GreenFunction[___] := (cmMessage[GreenFunction, "args"]; $Failed);
+
 (* --- Alias en español (al final, cuando las funciones ya tienen sus atributos) --- *)
 defineAlias[OsciladorAmortiguado, DampedOscillator];
+defineAlias[FuncionDeGreen, GreenFunction];
 
 End[];
